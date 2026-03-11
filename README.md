@@ -1,17 +1,19 @@
 # mineru-open-sdk
 
-MinerU API 的 Python SDK。一行代码把文档变成 Markdown。
+[中文文档](./README.zh-CN.md)
 
-## 安装
+Python SDK for the [MinerU](https://mineru.net) document extraction API. One line to turn documents into Markdown.
+
+## Install
 
 ```bash
 pip install mineru-open-sdk
 ```
 
-## 快速开始
+## Quick Start
 
 ```bash
-export MINERU_TOKEN="your-api-token"
+export MINERU_TOKEN="your-api-token"   # get it from https://mineru.net
 ```
 
 ```python
@@ -20,9 +22,11 @@ from mineru import MinerU
 md = MinerU().extract("https://example.com/report.pdf").markdown
 ```
 
-## 使用示例
+That's it. `extract()` submits the task, polls until done, downloads the result zip, and parses out the markdown — all in one blocking call.
 
-### 解析单个文档
+## Usage
+
+### Parse a single document
 
 ```python
 from mineru import MinerU
@@ -30,33 +34,47 @@ from mineru import MinerU
 client = MinerU()
 result = client.extract("https://example.com/paper.pdf")
 print(result.markdown)
+print(result.content_list)  # structured JSON
+print(result.images)        # list of extracted images
 ```
 
-### 本地文件
+### Local files
+
+Local files are uploaded automatically:
 
 ```python
 result = client.extract("./report.pdf")
 ```
 
-### 额外格式导出
+### Extra format export
+
+Request additional formats alongside the default markdown + JSON:
 
 ```python
 result = client.extract(
     "https://example.com/report.pdf",
-    extra_formats=["docx", "html"],
+    extra_formats=["docx", "html", "latex"],
 )
-result.save_docx("./report.docx")
-result.save_html("./report.html")
+
+result.save_markdown("./output/report.md")  # markdown + images/ dir
+result.save_docx("./output/report.docx")
+result.save_html("./output/report.html")
+result.save_latex("./output/report.tex")
+result.save_all("./output/full/")           # extract the full zip
 ```
 
-### 网页抓取
+### Crawl a web page
+
+`crawl()` is a shorthand for `extract(url, model="html")`:
 
 ```python
 result = client.crawl("https://news.example.com/article/123")
 print(result.markdown)
 ```
 
-### 批量解析
+### Batch extraction
+
+`extract_batch()` submits all tasks at once and yields results as each completes — first done, first yielded:
 
 ```python
 for result in client.extract_batch([
@@ -67,26 +85,94 @@ for result in client.extract_batch([
     print(f"{result.filename}: {result.markdown[:200]}")
 ```
 
-### 异步提交
+Batch crawling works the same way:
 
 ```python
-task_id = client.submit("https://example.com/big-report.pdf")
-# ... later ...
-result = client.get_task(task_id)
+for result in client.crawl_batch(["https://a.com/1", "https://a.com/2"]):
+    print(result.markdown[:200])
 ```
 
-## 参数
+### Async submit + query
 
-| 参数 | 类型 | 默认 | 说明 |
-|------|------|------|------|
-| `model` | `str` | 自动推断 | `"pipeline"` / `"vlm"` / `"html"` |
-| `ocr` | `bool` | `False` | 启用 OCR |
-| `formula` | `bool` | `True` | 公式识别 |
-| `table` | `bool` | `True` | 表格识别 |
-| `language` | `str` | `"ch"` | 文档语言 |
-| `pages` | `str` | `None` | 页码范围，如 `"1-10,15"` |
-| `extra_formats` | `list` | `None` | `["docx", "html", "latex"]` |
-| `timeout` | `int` | `300` | 超时秒数 |
+For background services or when you need to decouple submission from polling. `submit()` returns a plain `task_id` string — store it however you like:
+
+```python
+task_id = client.submit("https://example.com/big-report.pdf", model="vlm")
+print(task_id)  # "a90e6ab6-44f3-4554-..."
+
+# Later (same process, different script, whatever):
+result = client.get_task(task_id)
+if result.state == "done":
+    print(result.markdown[:500])
+else:
+    print(f"State: {result.state}, progress: {result.progress}")
+```
+
+Batch version:
+
+```python
+batch_id = client.submit_batch(["a.pdf", "b.pdf", "c.pdf"])
+
+results = client.get_batch(batch_id)
+for r in results:
+    print(f"{r.filename}: {r.state}")
+```
+
+### Full options
+
+```python
+result = client.extract(
+    "./paper.pdf",
+    model="vlm",             # "pipeline" | "vlm" | "html" (auto-inferred if omitted)
+    ocr=True,                # enable OCR for scanned documents
+    formula=True,            # formula recognition (default: True)
+    table=True,              # table recognition (default: True)
+    language="en",           # document language (default: "ch")
+    pages="1-20",            # page range, e.g. "1-10,15" or "2--2"
+    extra_formats=["docx"],  # also export as docx / html / latex
+    timeout=600,             # max seconds to wait (default: 300)
+)
+```
+
+## API Reference
+
+### Methods
+
+| Method | Input | Output | Blocking | Use case |
+|--------|-------|--------|----------|----------|
+| `extract(source)` | `str` | `ExtractResult` | Yes | Single document |
+| `extract_batch(sources)` | `list[str]` | `Iterator[ExtractResult]` | Yes (yields) | Batch documents |
+| `crawl(url)` | `str` | `ExtractResult` | Yes | Single web page |
+| `crawl_batch(urls)` | `list[str]` | `Iterator[ExtractResult]` | Yes (yields) | Batch web pages |
+| `submit(source)` | `str` | `str` (task_id) | No | Async submit |
+| `submit_batch(sources)` | `list[str]` | `str` (batch_id) | No | Async batch submit |
+| `get_task(task_id)` | `str` | `ExtractResult` | No | Query task state |
+| `get_batch(batch_id)` | `str` | `list[ExtractResult]` | No | Query batch state |
+
+### ExtractResult
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `markdown` | `str \| None` | Extracted markdown text |
+| `content_list` | `list[dict] \| None` | Structured JSON content |
+| `images` | `list[Image]` | Extracted images |
+| `docx` | `bytes \| None` | Docx bytes (requires `extra_formats`) |
+| `html` | `str \| None` | HTML text (requires `extra_formats`) |
+| `latex` | `str \| None` | LaTeX text (requires `extra_formats`) |
+| `state` | `str` | `"done"` / `"failed"` / `"pending"` / `"running"` |
+| `error` | `str \| None` | Error message when `state == "failed"` |
+| `progress` | `Progress \| None` | Page progress when `state == "running"` |
+
+Save methods: `save_markdown(path)`, `save_docx(path)`, `save_html(path)`, `save_latex(path)`, `save_all(dir)`.
+
+### Model versions
+
+| `model=` | Description |
+|----------|-------------|
+| `None` (default) | Auto-infer: `.html` → `"html"`, everything else → `"vlm"` |
+| `"vlm"` | Vision-language model (recommended) |
+| `"pipeline"` | Classic layout analysis |
+| `"html"` | Web page extraction |
 
 ## License
 
