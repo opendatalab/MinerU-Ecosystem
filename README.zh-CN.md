@@ -150,7 +150,7 @@ result, err := client.Extract(ctx, "./paper.pdf",
     mineru.WithLanguage("en"),           // 文档语言（默认 "ch"）
     mineru.WithPages("1-20"),            // 页码范围
     mineru.WithExtraFormats("docx"),     // 额外导出 docx / html / latex
-    mineru.WithTimeout(10*time.Minute),  // 最大等待时间（默认 5 分钟）
+    mineru.WithPollTimeout(10*time.Minute),  // 轮询最大等待时间（默认 5 分钟）
 )
 ```
 

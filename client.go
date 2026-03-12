@@ -22,6 +22,7 @@ import (
 const (
 	pollIntervalMin = 2 * time.Second
 	pollIntervalMax = 30 * time.Second
+	requestTimeout  = 30 * time.Second
 )
 
 var modelMap = map[string]string{
@@ -318,14 +319,16 @@ func (c *Client) downloadAndParse(ctx context.Context, r *ExtractResult) (*Extra
 }
 
 func (c *Client) waitSingle(ctx context.Context, taskID string, timeout time.Duration) (*ExtractResult, error) {
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
+	pollCtx, pollCancel := context.WithTimeout(ctx, timeout)
+	defer pollCancel()
 
 	interval := pollIntervalMin
 	for {
-		r, err := c.GetTask(ctx, taskID)
+		reqCtx, reqCancel := context.WithTimeout(pollCtx, requestTimeout)
+		r, err := c.GetTask(reqCtx, taskID)
+		reqCancel()
 		if err != nil {
-			if ctx.Err() != nil {
+			if pollCtx.Err() != nil {
 				return nil, newTimeoutError(timeout, taskID)
 			}
 			return nil, err
@@ -334,7 +337,7 @@ func (c *Client) waitSingle(ctx context.Context, taskID string, timeout time.Dur
 			return r, nil
 		}
 		select {
-		case <-ctx.Done():
+		case <-pollCtx.Done():
 			return nil, newTimeoutError(timeout, taskID)
 		case <-time.After(interval):
 		}
@@ -345,14 +348,16 @@ func (c *Client) waitSingle(ctx context.Context, taskID string, timeout time.Dur
 }
 
 func (c *Client) waitBatch(ctx context.Context, batchID string, timeout time.Duration) ([]*ExtractResult, error) {
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
+	pollCtx, pollCancel := context.WithTimeout(ctx, timeout)
+	defer pollCancel()
 
 	interval := pollIntervalMin
 	for {
-		results, err := c.GetBatch(ctx, batchID)
+		reqCtx, reqCancel := context.WithTimeout(pollCtx, requestTimeout)
+		results, err := c.GetBatch(reqCtx, batchID)
+		reqCancel()
 		if err != nil {
-			if ctx.Err() != nil {
+			if pollCtx.Err() != nil {
 				return nil, newTimeoutError(timeout, batchID)
 			}
 			return nil, err
@@ -368,7 +373,7 @@ func (c *Client) waitBatch(ctx context.Context, batchID string, timeout time.Dur
 			return results, nil
 		}
 		select {
-		case <-ctx.Done():
+		case <-pollCtx.Done():
 			return nil, newTimeoutError(timeout, batchID)
 		case <-time.After(interval):
 		}
@@ -379,8 +384,8 @@ func (c *Client) waitBatch(ctx context.Context, batchID string, timeout time.Dur
 }
 
 func (c *Client) yieldBatch(ctx context.Context, ch chan<- *ExtractResult, batchIDs []string, total int, timeout time.Duration) {
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
+	pollCtx, pollCancel := context.WithTimeout(ctx, timeout)
+	defer pollCancel()
 
 	type key struct {
 		bid string
@@ -391,7 +396,9 @@ func (c *Client) yieldBatch(ctx context.Context, ch chan<- *ExtractResult, batch
 
 	for len(yielded) < total {
 		for _, bid := range batchIDs {
-			results, err := c.GetBatch(ctx, bid)
+			reqCtx, reqCancel := context.WithTimeout(pollCtx, requestTimeout)
+			results, err := c.GetBatch(reqCtx, bid)
+			reqCancel()
 			if err != nil {
 				return
 			}
@@ -401,7 +408,7 @@ func (c *Client) yieldBatch(ctx context.Context, ch chan<- *ExtractResult, batch
 					yielded[k] = true
 					select {
 					case ch <- r:
-					case <-ctx.Done():
+					case <-pollCtx.Done():
 						return
 					}
 				}
@@ -411,7 +418,7 @@ func (c *Client) yieldBatch(ctx context.Context, ch chan<- *ExtractResult, batch
 			break
 		}
 		select {
-		case <-ctx.Done():
+		case <-pollCtx.Done():
 			return
 		case <-time.After(interval):
 		}

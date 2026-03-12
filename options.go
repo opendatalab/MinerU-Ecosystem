@@ -97,7 +97,11 @@ func WithExtraFormats(formats ...string) ExtractOption {
 	return func(c *extractConfig) { c.extraFormats = formats }
 }
 
-// WithTimeout sets the maximum time to wait for task completion (default: 5m).
-func WithTimeout(d time.Duration) ExtractOption {
+// WithPollTimeout sets the maximum duration for the SDK to poll for task
+// completion. If the caller's context already carries an earlier deadline,
+// that deadline takes precedence.
+//
+// Default: 5 minutes.
+func WithPollTimeout(d time.Duration) ExtractOption {
 	return func(c *extractConfig) { c.timeout = d }
 }

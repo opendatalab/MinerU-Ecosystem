@@ -148,7 +148,7 @@ result, err := client.Extract(ctx, "./paper.pdf",
     mineru.WithLanguage("en"),           // document language (default: "ch")
     mineru.WithPages("1-20"),            // page range
     mineru.WithExtraFormats("docx"),     // also export as docx / html / latex
-    mineru.WithTimeout(10*time.Minute),  // max wait time (default: 5m)
+    mineru.WithPollTimeout(10*time.Minute),  // max poll wait time (default: 5m)
 )
 ```
 
