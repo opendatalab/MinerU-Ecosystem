@@ -9,9 +9,15 @@ import (
 type APIError struct {
 	Code    string
 	Message string
+	TraceID string
 }
 
-func (e *APIError) Error() string { return fmt.Sprintf("[%s] %s", e.Code, e.Message) }
+func (e *APIError) Error() string {
+	if e.TraceID != "" {
+		return fmt.Sprintf("[%s] %s (trace: %s)", e.Code, e.Message, e.TraceID)
+	}
+	return fmt.Sprintf("[%s] %s", e.Code, e.Message)
+}
 
 // Typed errors for specific API error codes.
 type (
@@ -39,8 +45,8 @@ func newTimeoutError(timeout time.Duration, taskID string) *TimeoutError {
 	}
 }
 
-func errorForCode(code string, msg string) error {
-	base := APIError{Code: code, Message: msg}
+func errorForCode(code, msg, traceID string) error {
+	base := APIError{Code: code, Message: msg, TraceID: traceID}
 	switch code {
 	case "A0202", "A0211":
 		return &AuthError{base}

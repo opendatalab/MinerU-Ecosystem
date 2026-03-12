@@ -17,9 +17,10 @@ type apiClient struct {
 }
 
 type apiResponse struct {
-	Code any             `json:"code"`
-	Msg  string          `json:"msg"`
-	Data json.RawMessage `json:"data"`
+	Code    any             `json:"code"`
+	Msg     string          `json:"msg"`
+	TraceID string          `json:"trace_id"`
+	Data    json.RawMessage `json:"data"`
 }
 
 func (a *apiClient) post(ctx context.Context, path string, payload any) (json.RawMessage, error) {
@@ -97,7 +98,7 @@ func (a *apiClient) do(req *http.Request) (json.RawMessage, error) {
 	}
 	codeStr := codeToString(ar.Code)
 	if codeStr != "0" {
-		return nil, errorForCode(codeStr, ar.Msg)
+		return nil, errorForCode(codeStr, ar.Msg, ar.TraceID)
 	}
 	return ar.Data, nil
 }
