@@ -88,10 +88,18 @@ def _parse_task_result(data: dict) -> ExtractResult:
 
 
 class MinerU:
-    """MinerU API client.
+    """MinerU API client. Turn documents into Markdown with one method call.
+
+    Example::
+
+        from mineru import MinerU
+
+        client = MinerU()  # reads MINERU_TOKEN env var
+        md = client.extract("https://example.com/doc.pdf").markdown
 
     Args:
-        token: API token. Falls back to the ``MINERU_TOKEN`` environment variable.
+        token: API token. If not provided, reads from the ``MINERU_TOKEN``
+            environment variable. Raises :class:`AuthError` if neither is set.
         base_url: API base URL. Override for private deployments.
     """
 
@@ -106,6 +114,7 @@ class MinerU:
         self._api = ApiClient(resolved_token, base_url)
 
     def close(self) -> None:
+        """Release the underlying HTTP client."""
         self._api.close()
 
     def __enter__(self) -> MinerU:
@@ -133,9 +142,44 @@ class MinerU:
     ) -> ExtractResult:
         """Parse a single document. Blocks until the result is ready.
 
-        *source* can be a URL or a local file path. Local files are uploaded
-        automatically. The ``model`` is inferred from the file extension when
-        not specified (``.html`` → ``MinerU-HTML``, everything else → ``vlm``).
+        Example::
+
+            result = MinerU().extract("https://example.com/doc.pdf")
+            print(result.markdown)
+
+            # Local file with options
+            result = MinerU().extract(
+                "./paper.pdf",
+                model="vlm",
+                ocr=True,
+                extra_formats=["docx"],
+                timeout=600,
+            )
+            result.save_docx("paper.docx")
+
+        Args:
+            source: URL (``http://`` or ``https://``) or local file path.
+                Local files are uploaded automatically.
+            model: ``"pipeline"``, ``"vlm"``, or ``"html"``. When ``None``
+                (default), inferred from file extension — ``.html`` uses
+                ``"html"``, everything else uses ``"vlm"``.
+            ocr: Enable OCR. Only effective with ``pipeline`` or ``vlm`` models.
+            formula: Enable formula recognition. Defaults to ``True``.
+            table: Enable table recognition. Defaults to ``True``.
+            language: Document language code. Defaults to ``"ch"`` (Chinese).
+            pages: Page range string, e.g. ``"1-10,15"`` or ``"2--2"``.
+            extra_formats: Additional export formats. Accepts any combination
+                of ``"docx"``, ``"html"``, and ``"latex"``. Markdown and JSON
+                are always included.
+            timeout: Maximum seconds to wait for completion.
+
+        Returns:
+            An :class:`ExtractResult` with ``state="done"`` and content fields
+            populated (``markdown``, ``images``, etc.).
+
+        Raises:
+            TimeoutError: If the task does not complete within *timeout* seconds.
+            ExtractFailedError: If the server reports extraction failure.
         """
         model_version = _resolve_model(model, source)
         opts = _build_options(model_version, ocr, formula, table, language, pages, extra_formats)
@@ -163,7 +207,28 @@ class MinerU:
         """Parse multiple documents. Yields each result as it completes.
 
         All tasks are submitted at once via the batch API. Results are yielded
-        in completion order (first done, first yielded).
+        in completion order — the first document to finish is yielded first.
+
+        Example::
+
+            for result in MinerU().extract_batch(["a.pdf", "b.pdf", "c.pdf"]):
+                print(f"{result.filename}: {result.markdown[:200]}")
+
+        Args:
+            sources: List of URLs or local file paths (can be mixed).
+            model: Model version. See :meth:`extract` for details.
+            ocr: Enable OCR.
+            formula: Enable formula recognition.
+            table: Enable table recognition.
+            language: Document language code.
+            extra_formats: Additional export formats (``"docx"``/``"html"``/``"latex"``).
+            timeout: Maximum seconds to wait for *all* tasks to complete.
+
+        Yields:
+            :class:`ExtractResult` for each completed document.
+
+        Raises:
+            TimeoutError: If not all tasks complete within *timeout* seconds.
         """
         first_source = sources[0] if sources else ""
         model_version = _resolve_model(model, first_source)
@@ -187,7 +252,23 @@ class MinerU:
         extra_formats: list[str] | None = None,
         timeout: int = 300,
     ) -> ExtractResult:
-        """Crawl a web page and parse it to Markdown."""
+        """Crawl a web page and parse it to Markdown.
+
+        Equivalent to ``extract(url, model="html", ...)``.
+
+        Example::
+
+            result = MinerU().crawl("https://example.com/article")
+            print(result.markdown)
+
+        Args:
+            url: Web page URL.
+            extra_formats: Additional export formats.
+            timeout: Maximum seconds to wait.
+
+        Returns:
+            An :class:`ExtractResult` with the parsed content.
+        """
         return self.extract(url, model="html", extra_formats=extra_formats, timeout=timeout)
 
     def crawl_batch(
@@ -197,7 +278,23 @@ class MinerU:
         extra_formats: list[str] | None = None,
         timeout: int = 600,
     ) -> Iterator[ExtractResult]:
-        """Crawl multiple web pages. Yields results as each completes."""
+        """Crawl multiple web pages. Yields results as each completes.
+
+        Equivalent to ``extract_batch(urls, model="html", ...)``.
+
+        Example::
+
+            for result in MinerU().crawl_batch(["https://a.com", "https://b.com"]):
+                print(result.markdown[:200])
+
+        Args:
+            urls: List of web page URLs.
+            extra_formats: Additional export formats.
+            timeout: Maximum seconds to wait for all pages.
+
+        Yields:
+            :class:`ExtractResult` for each completed page.
+        """
         return self.extract_batch(urls, model="html", extra_formats=extra_formats, timeout=timeout)
 
     # ══════════════════════════════════════════════════════════════════
@@ -216,7 +313,32 @@ class MinerU:
         pages: str | None = None,
         extra_formats: list[str] | None = None,
     ) -> str:
-        """Submit a single task. Returns a ``task_id`` string immediately."""
+        """Submit a single task without waiting. Returns a task ID string.
+
+        Use :meth:`get_task` later to check the result.
+
+        Example::
+
+            task_id = MinerU().submit("https://example.com/doc.pdf")
+            print(task_id)  # "a90e6ab6-44f3-..."
+
+            # Later, in another script or after some time:
+            result = MinerU().get_task(task_id)
+
+        Args:
+            source: URL or local file path.
+            model: Model version. See :meth:`extract` for details.
+            ocr: Enable OCR.
+            formula: Enable formula recognition.
+            table: Enable table recognition.
+            language: Document language code.
+            pages: Page range string.
+            extra_formats: Additional export formats.
+
+        Returns:
+            A ``task_id`` string (for URL sources) or ``batch_id`` string
+            (for local file uploads).
+        """
         model_version = _resolve_model(model, source)
         opts = _build_options(model_version, ocr, formula, table, language, pages, extra_formats)
 
@@ -236,7 +358,32 @@ class MinerU:
         language: str = "ch",
         extra_formats: list[str] | None = None,
     ) -> str:
-        """Submit multiple tasks. Returns a ``batch_id`` string immediately."""
+        """Submit multiple tasks without waiting. Returns a batch ID string.
+
+        Use :meth:`get_batch` later to check results.
+
+        Example::
+
+            batch_id = MinerU().submit_batch(["a.pdf", "b.pdf"])
+            print(batch_id)
+
+            # Later:
+            results = MinerU().get_batch(batch_id)
+            for r in results:
+                print(r.filename, r.state)
+
+        Args:
+            sources: List of URLs or local file paths.
+            model: Model version. See :meth:`extract` for details.
+            ocr: Enable OCR.
+            formula: Enable formula recognition.
+            table: Enable table recognition.
+            language: Document language code.
+            extra_formats: Additional export formats.
+
+        Returns:
+            A ``batch_id`` string.
+        """
         first_source = sources[0] if sources else ""
         model_version = _resolve_model(model, first_source)
         opts = _build_options(model_version, ocr, formula, table, language, None, extra_formats)
@@ -248,12 +395,30 @@ class MinerU:
             return self._submit_urls_batch(urls, opts)
         if files and not urls:
             return self._upload_and_submit(files, opts)
-        # Mixed: prefer file upload batch (simpler to track with one batch_id).
-        # Upload everything via file-urls endpoint.
         return self._upload_and_submit(sources, opts)
 
     def get_task(self, task_id: str) -> ExtractResult:
-        """Query a single task. Downloads and parses the zip when done."""
+        """Query a single task's current state.
+
+        When ``state == "done"``, the result zip is downloaded and parsed
+        automatically — ``markdown``, ``images``, etc. are populated.
+        When the task is still running, ``markdown`` is ``None`` and
+        ``progress`` contains page-level progress.
+
+        Example::
+
+            result = MinerU().get_task("a90e6ab6-44f3-...")
+            if result.state == "done":
+                print(result.markdown[:200])
+            else:
+                print(f"State: {result.state}, progress: {result.progress}")
+
+        Args:
+            task_id: The task ID returned by :meth:`submit`.
+
+        Returns:
+            An :class:`ExtractResult` reflecting the current state.
+        """
         body = self._api.get(f"/extract/task/{task_id}")
         result = _parse_task_result(body["data"])
         if result.state == "done" and result.zip_url:
@@ -261,7 +426,23 @@ class MinerU:
         return result
 
     def get_batch(self, batch_id: str) -> list[ExtractResult]:
-        """Query all tasks in a batch."""
+        """Query all tasks in a batch.
+
+        Each sub-task has its own state. Completed tasks have their content
+        populated; in-progress tasks have ``markdown=None``.
+
+        Example::
+
+            results = MinerU().get_batch("2bb2f0ec-a336-...")
+            for r in results:
+                print(f"{r.filename}: {r.state}")
+
+        Args:
+            batch_id: The batch ID returned by :meth:`submit_batch`.
+
+        Returns:
+            A list of :class:`ExtractResult`, one per file in the batch.
+        """
         body = self._api.get(f"/extract-results/batch/{batch_id}")
         results: list[ExtractResult] = []
         for item in body["data"].get("extract_result", []):
@@ -307,7 +488,6 @@ class MinerU:
         return parsed
 
     def _wait_single(self, task_id: str, timeout: int) -> ExtractResult:
-        """Poll a single task until it reaches a terminal state."""
         deadline = time.monotonic() + timeout
         interval = 2.0
         while True:
@@ -320,7 +500,6 @@ class MinerU:
             interval = min(interval * 2, 30.0)
 
     def _wait_batch(self, batch_id: str, timeout: int) -> list[ExtractResult]:
-        """Poll a batch until all tasks reach a terminal state."""
         deadline = time.monotonic() + timeout
         interval = 2.0
         while True:
@@ -338,16 +517,15 @@ class MinerU:
         total: int,
         timeout: int,
     ) -> Iterator[ExtractResult]:
-        """Poll batch(es) and yield each result as it becomes done."""
         deadline = time.monotonic() + timeout
-        yielded: set[str] = set()  # track by filename or task_id
+        yielded: set[tuple[str, int]] = set()
         interval = 2.0
 
         while len(yielded) < total:
             for bid in batch_ids:
                 results = self.get_batch(bid)
-                for r in results:
-                    key = r.filename or r.task_id
+                for idx, r in enumerate(results):
+                    key = (bid, idx)
                     if key not in yielded and r.state in ("done", "failed"):
                         yielded.add(key)
                         yield r
