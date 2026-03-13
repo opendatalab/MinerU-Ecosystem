@@ -4,10 +4,12 @@ from __future__ import annotations
 class MinerUError(Exception):
     """Base exception for all MinerU SDK errors."""
 
-    def __init__(self, code: str | int, message: str) -> None:
+    def __init__(self, code: str | int, message: str, *, trace_id: str = "") -> None:
         self.code = str(code)
         self.message = message
-        super().__init__(f"[{self.code}] {message}")
+        self.trace_id = trace_id
+        tag = f" (trace: {trace_id})" if trace_id else ""
+        super().__init__(f"[{self.code}] {message}{tag}")
 
 
 class AuthError(MinerUError):
@@ -62,8 +64,8 @@ _CODE_TO_EXCEPTION: dict[str, type[MinerUError]] = {
 }
 
 
-def raise_for_code(code: int | str, msg: str) -> None:
+def raise_for_code(code: int | str, msg: str, trace_id: str = "") -> None:
     """Raise the appropriate exception for an API error code."""
     key = str(code)
     exc_cls = _CODE_TO_EXCEPTION.get(key, MinerUError)
-    raise exc_cls(code, msg)
+    raise exc_cls(code, msg, trace_id=trace_id)

@@ -56,5 +56,5 @@ class ApiClient:
         body: dict[str, Any] = resp.json()
         code = body.get("code", 0)
         if code != 0:
-            raise_for_code(code, body.get("msg", "unknown error"))
+            raise_for_code(code, body.get("msg", "unknown error"), body.get("trace_id", ""))
         return body

@@ -176,4 +176,4 @@ Save methods: `save_markdown(path)`, `save_docx(path)`, `save_html(path)`, `save
 
 ## License
 
-MIT
+Apache-2.0

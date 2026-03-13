@@ -176,4 +176,4 @@ result = client.extract(
 
 ## License
 
-MIT
+Apache-2.0
