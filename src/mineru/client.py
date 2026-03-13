@@ -391,11 +391,18 @@ class MinerU:
         urls = [s for s in sources if _is_url(s)]
         files = [s for s in sources if not _is_url(s)]
 
-        if urls and not files:
+        if not urls and not files:
+            raise ValueError("No sources provided.")
+
+        if urls and files:
+            raise ValueError(
+                "submit_batch() does not support mixing URLs and local files in one call. "
+                "Please submit them separately or use extract_batch() instead."
+            )
+
+        if urls:
             return self._submit_urls_batch(urls, opts)
-        if files and not urls:
-            return self._upload_and_submit(files, opts)
-        return self._upload_and_submit(sources, opts)
+        return self._upload_and_submit(files, opts)
 
     def get_task(self, task_id: str) -> ExtractResult:
         """Query a single task's current state.
