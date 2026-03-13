@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -17,185 +19,387 @@ import (
 )
 
 var (
-	extractOutput    string
-	extractFormat    string
-	extractModel     string
-	extractOCR       bool
-	extractNoFormula bool
-	extractNoTable   bool
-	extractLanguage  string
-	extractPages     string
-	extractTimeout   int
-	extractStdin     bool
-	extractStdinName string
-	extractStdout    bool
+	extractOutput      string
+	extractFormat      string
+	extractModel       string
+	extractOCR         bool
+	extractNoFormula   bool
+	extractNoTable     bool
+	extractLanguage    string
+	extractPages       string
+	extractTimeout     int
+	extractListFile    string
+	extractStdinList   bool
+	extractStdin       bool
+	extractStdinName   string
+	extractConcurrency int
 )
 
-// extractCmd represents the extract command
 var extractCmd = &cobra.Command{
-	Use:   "extract <file-or-url>",
-	Short: "Extract a document to Markdown",
-	Long:  `Parse a PDF, image, or webpage and convert it to Markdown.`,
-	Example: `  mineru extract report.pdf
-  mineru extract report.pdf -o ./output/ -f md,docx
-  mineru extract https://example.com/paper.pdf --model vlm --pages 1-10
-  mineru extract scan.pdf --ocr --language en
-  cat report.pdf | mineru extract --stdin -o result.md`,
-	Args: func(cmd *cobra.Command, args []string) error {
-		if extractStdin {
-			return nil // stdin mode doesn't require args
-		}
-		if len(args) < 1 {
-			return fmt.Errorf("requires file or URL argument, or use --stdin")
-		}
-		return nil
-	},
+	Use:   "extract <file-or-url> [...]",
+	Short: "Extract documents to Markdown",
+	Long:  `Parse PDFs, images, or other documents and convert to Markdown (or other formats).`,
+	Example: `  mineru extract report.pdf                         # markdown to stdout
+  mineru extract report.pdf -f html                  # html to stdout
+  mineru extract report.pdf -o ./out/                # save to file
+  mineru extract report.pdf -o ./out/ -f md,docx     # save multiple formats
+  mineru extract *.pdf -o ./results/                  # batch
+  mineru extract --list files.txt -o ./results/       # batch from file list`,
 	RunE: runExtract,
 }
 
 func init() {
 	rootCmd.AddCommand(extractCmd)
 
-	extractCmd.Flags().StringVarP(&extractOutput, "output", "o", "", "Output path (file or directory)")
-	extractCmd.Flags().StringVarP(&extractFormat, "format", "f", "md", "Output formats: md,docx,html,latex (comma-separated)")
+	extractCmd.Flags().StringVarP(&extractOutput, "output", "o", "", "Output path (file or dir); omit to output to stdout")
+	extractCmd.Flags().StringVarP(&extractFormat, "format", "f", "md", "Output format(s): md,json,html,latex,docx (comma-separated)")
 	extractCmd.Flags().StringVar(&extractModel, "model", "", "Model: vlm, pipeline, html (default: auto)")
 	extractCmd.Flags().BoolVar(&extractOCR, "ocr", false, "Enable OCR for scanned documents")
 	extractCmd.Flags().BoolVar(&extractNoFormula, "no-formula", false, "Disable formula recognition")
 	extractCmd.Flags().BoolVar(&extractNoTable, "no-table", false, "Disable table recognition")
-	extractCmd.Flags().StringVar(&extractLanguage, "language", "ch", "Document language (default: ch)")
-	extractCmd.Flags().StringVar(&extractPages, "pages", "", "Page range, e.g. '1-10,15' or '2--2'")
-	extractCmd.Flags().IntVar(&extractTimeout, "timeout", 300, "Timeout in seconds")
+	extractCmd.Flags().StringVar(&extractLanguage, "language", "ch", "Document language")
+	extractCmd.Flags().StringVar(&extractPages, "pages", "", "Page range, e.g. '1-10,15'")
+	extractCmd.Flags().IntVar(&extractTimeout, "timeout", 0, "Timeout in seconds (default: 300 single, 1800 batch)")
+	extractCmd.Flags().StringVar(&extractListFile, "list", "", "Read input list from file (one per line)")
+	extractCmd.Flags().BoolVar(&extractStdinList, "stdin-list", false, "Read input list from stdin")
 	extractCmd.Flags().BoolVar(&extractStdin, "stdin", false, "Read file content from stdin")
 	extractCmd.Flags().StringVar(&extractStdinName, "stdin-name", "stdin.pdf", "Filename for stdin mode")
-	extractCmd.Flags().BoolVar(&extractStdout, "stdout", false, "Output markdown to stdout")
+	extractCmd.Flags().IntVar(&extractConcurrency, "concurrency", 0, "Batch concurrency (0 = server default)")
 }
 
 func runExtract(cmd *cobra.Command, args []string) error {
-	var source string
-	var stdinData []byte
-
-	if extractStdin {
-		// Read from stdin
-		if !quietFlag {
-			fmt.Fprintln(os.Stderr, "Reading from stdin...")
-		}
-		var err error
-		stdinData, err = io.ReadAll(os.Stdin)
-		if err != nil {
-			return fmt.Errorf("failed to read from stdin: %w", err)
-		}
-		if len(stdinData) == 0 {
-			return fmt.Errorf("no data received from stdin")
-		}
-		if !quietFlag {
-			fmt.Fprintf(os.Stderr, "Received %s from stdin\n", humanBytes(len(stdinData)))
-		}
-		source = extractStdinName
-	} else {
-		if len(args) < 1 {
-			return fmt.Errorf("missing file or URL argument")
-		}
-		source = args[0]
+	sources, err := collectSources(args, extractListFile, extractStdinList)
+	if err != nil {
+		return err
 	}
 
-	// Resolve token
+	if len(sources) == 0 && !extractStdin {
+		return fmt.Errorf("no input files specified. Provide files as arguments, use --list, or --stdin")
+	}
+
+	formats := parseFormats(extractFormat)
+
+	if err := validateOutputMode(extractOutput, formats, sources, extractStdin); err != nil {
+		return err
+	}
+
 	tokenSrc, err := config.ResolveToken(cmd)
 	if err != nil {
-		return fmt.Errorf("failed to load config: %w", err)
+		return err
 	}
 	if tokenSrc.Token == "" {
 		return fmt.Errorf("no API token found. Run 'mineru auth' to configure your token")
 	}
 
-	// Load config for base URL
 	cfg, _ := config.Load()
-
-	// Build client options
 	var clientOpts []mineru.ClientOption
 	if baseURL := config.GetBaseURL(cmd, cfg); baseURL != "" {
 		clientOpts = append(clientOpts, mineru.WithBaseURL(baseURL))
 	}
 
-	// Create client
 	client, err := mineru.New(tokenSrc.Token, clientOpts...)
 	if err != nil {
-		return handleError(err)
+		return handleSDKError(err)
 	}
 
-	// Handle stdin data - write to temp file
-	if stdinData != nil {
-		tempFile, err := os.CreateTemp("", "mineru-stdin-*"+filepath.Ext(extractStdinName))
-		if err != nil {
-			return fmt.Errorf("failed to create temp file: %w", err)
-		}
-		defer os.Remove(tempFile.Name())
+	opts := buildExtractOpts()
 
-		if _, err := tempFile.Write(stdinData); err != nil {
-			tempFile.Close()
-			return fmt.Errorf("failed to write temp file: %w", err)
-		}
-		tempFile.Close()
-		source = tempFile.Name()
+	if extractStdin {
+		return runStdinExtract(client, opts)
+	}
+	if len(sources) == 1 {
+		return runSingleExtract(client, sources[0], formats, opts)
+	}
+	return runBatchExtract(client, sources, formats, opts)
+}
+
+// ── single file ──
+
+func runSingleExtract(client *mineru.Client, source string, formats []string, opts []mineru.ExtractOption) error {
+	timeout := time.Duration(extractTimeout) * time.Second
+	if extractTimeout == 0 {
+		timeout = 5 * time.Minute
 	}
 
-	// Build extract options
-	opts := buildExtractOptions()
-
-	// Determine output path
-	displaySource := extractStdinName
-	if !extractStdin {
-		displaySource = source
-	}
-	outputPath := resolveOutputPath(displaySource)
-
-	// Show progress if not quiet
-	if !quietFlag && !extractStdout {
-		fmt.Fprintf(os.Stderr, "%s %s...\n", output.Info("Extracting"), displaySource)
-	}
-
-	// Extract
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(extractTimeout)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	start := time.Now()
-	result, err := client.Extract(ctx, source, opts...)
+	output.Status("Uploading %s", filepath.Base(source))
+
+	taskID, err := client.Submit(ctx, source, opts...)
 	if err != nil {
-		return handleError(err)
+		return handleSDKError(err)
 	}
 
-	// Save or output results
-	if extractStdout {
-		fmt.Print(result.Markdown)
+	result, err := pollTask(ctx, client, taskID)
+	if err != nil {
+		return handleSDKError(err)
+	}
+
+	if result.State == "failed" {
+		return fmt.Errorf("extraction failed: %s", result.Error)
+	}
+
+	return outputResult(result, source, formats)
+}
+
+// ── stdin ──
+
+func runStdinExtract(client *mineru.Client, opts []mineru.ExtractOption) error {
+	data, err := io.ReadAll(os.Stdin)
+	if err != nil {
+		return fmt.Errorf("failed to read stdin: %w", err)
+	}
+	if len(data) == 0 {
+		return fmt.Errorf("no data received from stdin")
+	}
+
+	tmpFile, err := os.CreateTemp("", "mineru-stdin-*"+filepath.Ext(extractStdinName))
+	if err != nil {
+		return fmt.Errorf("failed to create temp file: %w", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.Write(data); err != nil {
+		tmpFile.Close()
+		return fmt.Errorf("failed to write temp file: %w", err)
+	}
+	tmpFile.Close()
+
+	formats := parseFormats(extractFormat)
+	return runSingleExtract(client, tmpFile.Name(), formats, opts)
+}
+
+// ── batch ──
+
+func runBatchExtract(client *mineru.Client, sources, formats []string, opts []mineru.ExtractOption) error {
+	timeout := time.Duration(extractTimeout) * time.Second
+	if extractTimeout == 0 {
+		timeout = 30 * time.Minute
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	if err := os.MkdirAll(extractOutput, 0o755); err != nil {
+		return fmt.Errorf("failed to create output directory: %w", err)
+	}
+
+	output.Status("Batch: %d files", len(sources))
+
+	batchID, err := client.SubmitBatch(ctx, sources, opts...)
+	if err != nil {
+		return handleSDKError(err)
+	}
+
+	total := len(sources)
+	downloaded := make(map[int]bool)
+	succeeded := 0
+	failed := 0
+	start := time.Now()
+	interval := 2 * time.Second
+
+	for {
+		results, err := client.GetBatch(ctx, batchID)
+		if err != nil {
+			if ctx.Err() != nil {
+				output.Status("Timeout: batch exceeded %ds limit", extractTimeout)
+				break
+			}
+			return handleSDKError(err)
+		}
+
+		for i, r := range results {
+			if downloaded[i] {
+				continue
+			}
+			if r.State != "done" && r.State != "failed" {
+				continue
+			}
+			downloaded[i] = true
+
+			src := sources[i]
+			if i < len(sources) {
+				src = sources[i]
+			}
+
+			if r.State == "done" {
+				outPath := filepath.Join(extractOutput, baseNameNoExt(src)+".md")
+				if err := r.SaveMarkdown(outPath, true); err != nil {
+					output.Status("[%d/%d] Error: %s - failed to save: %v", i+1, total, filepath.Base(src), err)
+					failed++
+				} else {
+					saveExtraFormatsToDir(r, extractOutput, baseNameNoExt(src), formats)
+					output.Status("[%d/%d] Done: %s -> %s (%s, %.1fs)", i+1, total,
+						filepath.Base(src), outPath, humanSize(len(r.Markdown)), time.Since(start).Seconds())
+					succeeded++
+				}
+			} else {
+				output.Status("[%d/%d] Error: %s - %s", i+1, total, filepath.Base(src), r.Error)
+				failed++
+			}
+		}
+
+		if len(downloaded) >= total {
+			break
+		}
+
+		select {
+		case <-ctx.Done():
+			output.Status("Timeout: batch exceeded %ds limit", extractTimeout)
+			goto summary
+		case <-time.After(interval):
+		}
+		if interval < 30*time.Second {
+			interval = interval * 3 / 2
+		}
+	}
+
+summary:
+	elapsed := time.Since(start).Seconds()
+	timedOut := total - succeeded - failed
+	if timedOut > 0 {
+		output.Status("Result: %d/%d succeeded, %d failed, %d timed out (%.1fs)", succeeded, total, failed, timedOut, elapsed)
 	} else {
-		// Save markdown
-		withImages := true
-		if err := result.SaveMarkdown(outputPath, withImages); err != nil {
-			return fmt.Errorf("failed to save output: %w", err)
-		}
-
-		// Save extra formats
-		if err := saveExtraFormats(result, outputPath); err != nil {
-			return err
-		}
-
-		// Output result
-		elapsed := time.Since(start).Seconds()
-		if jsonFlag {
-			fmt.Printf(`{"status":"done","file":"%s","output":"%s","pages":%d,"elapsed_seconds":%.1f}`+"\n",
-				filepath.Base(source), outputPath, getPageCount(result), elapsed)
-		} else if !quietFlag {
-			fmt.Fprintf(os.Stderr, "%s %s (%s, %.1fs)\n", output.Success("Done:"), outputPath, humanBytes(len(result.Markdown)), elapsed)
-		} else {
-			fmt.Println(outputPath)
-		}
+		output.Status("Result: %d/%d succeeded, %d failed (%.1fs)", succeeded, total, failed, elapsed)
 	}
 
+	if succeeded < total {
+		return fmt.Errorf("batch completed with errors: %d/%d failed", total-succeeded, total)
+	}
 	return nil
 }
 
-func buildExtractOptions() []mineru.ExtractOption {
-	var opts []mineru.ExtractOption
+// ── polling ──
 
+func pollTask(ctx context.Context, client *mineru.Client, taskID string) (*mineru.ExtractResult, error) {
+	interval := 2 * time.Second
+	for {
+		result, err := client.GetTask(ctx, taskID)
+		if err != nil {
+			return nil, err
+		}
+		if result.Progress != nil {
+			output.Status("Parsing %d/%d pages", result.Progress.ExtractedPages, result.Progress.TotalPages)
+		}
+		if result.State == "done" || result.State == "failed" {
+			return result, nil
+		}
+		select {
+		case <-ctx.Done():
+			return nil, fmt.Errorf("timeout waiting for task %s", taskID)
+		case <-time.After(interval):
+		}
+		if interval < 30*time.Second {
+			interval = interval * 3 / 2
+		}
+	}
+}
+
+// ── output ──
+
+func outputResult(result *mineru.ExtractResult, source string, formats []string) error {
+	if extractOutput == "" {
+		// stdout mode: output the requested format
+		f := formats[0]
+		switch f {
+		case "md":
+			fmt.Print(result.Markdown)
+		case "html":
+			fmt.Print(result.HTML)
+		case "latex":
+			fmt.Print(result.LaTeX)
+		case "json":
+			if result.ContentList != nil {
+				// ContentList is []map[string]any, serialize manually
+				fmt.Print(contentListToJSON(result.ContentList))
+			}
+		}
+		output.Status("Done: %d pages, %.1fs", pageCount(result), 0.0)
+		return nil
+	}
+
+	// file mode
+	base := baseNameNoExt(source)
+	dir := extractOutput
+
+	info, err := os.Stat(dir)
+	if err == nil && !info.IsDir() {
+		// -o points to a file path
+		dir = filepath.Dir(extractOutput)
+		base = baseNameNoExt(extractOutput)
+	}
+
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return fmt.Errorf("failed to create output directory: %w", err)
+	}
+
+	var saved []string
+	for _, f := range formats {
+		switch f {
+		case "md":
+			p := filepath.Join(dir, base+".md")
+			if err := result.SaveMarkdown(p, true); err != nil {
+				return fmt.Errorf("failed to save markdown: %w", err)
+			}
+			saved = append(saved, p)
+		case "docx":
+			p := filepath.Join(dir, base+".docx")
+			if err := result.SaveDocx(p); err != nil {
+				return fmt.Errorf("failed to save docx: %w", err)
+			}
+			saved = append(saved, p)
+		case "html":
+			p := filepath.Join(dir, base+".html")
+			if err := result.SaveHTML(p); err != nil {
+				return fmt.Errorf("failed to save html: %w", err)
+			}
+			saved = append(saved, p)
+		case "latex":
+			p := filepath.Join(dir, base+".tex")
+			if err := result.SaveLaTeX(p); err != nil {
+				return fmt.Errorf("failed to save latex: %w", err)
+			}
+			saved = append(saved, p)
+		}
+	}
+
+	output.Status("Done: %s (%d pages)", strings.Join(saved, ", "), pageCount(result))
+	return nil
+}
+
+// ── validation ──
+
+func validateOutputMode(outputPath string, formats []string, sources []string, isStdin bool) error {
+	if outputPath != "" {
+		return nil
+	}
+
+	count := len(sources)
+	if isStdin {
+		count = 1
+	}
+
+	if count > 1 {
+		return fmt.Errorf("batch mode requires -o to specify output directory")
+	}
+	if len(formats) > 1 {
+		return fmt.Errorf("multiple formats cannot output to stdout, use -o to save to file")
+	}
+	if len(formats) == 1 && isBinaryFormat(formats[0]) {
+		return fmt.Errorf("%s is binary format, cannot output to stdout, use -o to save to file", formats[0])
+	}
+	return nil
+}
+
+func isBinaryFormat(f string) bool {
+	return f == "docx"
+}
+
+// ── options builders ──
+
+func buildExtractOpts() []mineru.ExtractOption {
+	var opts []mineru.ExtractOption
 	if extractModel != "" {
 		opts = append(opts, mineru.WithModel(extractModel))
 	}
@@ -215,104 +419,111 @@ func buildExtractOptions() []mineru.ExtractOption {
 		opts = append(opts, mineru.WithPages(extractPages))
 	}
 
-	// Parse formats
-	formats := parseFormats(extractFormat)
-	if len(formats) > 0 {
-		opts = append(opts, mineru.WithExtraFormats(formats...))
+	extraFormats := extraFormatsForSDK(parseFormats(extractFormat))
+	if len(extraFormats) > 0 {
+		opts = append(opts, mineru.WithExtraFormats(extraFormats...))
 	}
-
 	return opts
 }
 
-func parseFormats(format string) []string {
-	if format == "" || format == "md" {
-		return nil
+// extraFormatsForSDK returns formats the SDK needs to request beyond default md.
+func extraFormatsForSDK(formats []string) []string {
+	var extra []string
+	for _, f := range formats {
+		if f != "md" && f != "json" {
+			extra = append(extra, f)
+		}
+	}
+	return extra
+}
+
+// ── shared helpers ──
+
+func collectSources(args []string, listFile string, stdinList bool) ([]string, error) {
+	var sources []string
+	sources = append(sources, args...)
+
+	if listFile != "" {
+		f, err := os.Open(listFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to open list file: %w", err)
+		}
+		defer f.Close()
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			if line != "" {
+				sources = append(sources, line)
+			}
+		}
+		if err := scanner.Err(); err != nil {
+			return nil, fmt.Errorf("failed to read list file: %w", err)
+		}
+	}
+
+	if stdinList {
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			if line != "" {
+				sources = append(sources, line)
+			}
+		}
+		if err := scanner.Err(); err != nil {
+			return nil, fmt.Errorf("failed to read stdin: %w", err)
+		}
+	}
+
+	return sources, nil
+}
+
+func parseFormats(raw string) []string {
+	if raw == "" {
+		return []string{"md"}
 	}
 	var formats []string
-	for _, f := range strings.Split(format, ",") {
+	for _, f := range strings.Split(raw, ",") {
 		f = strings.TrimSpace(strings.ToLower(f))
-		if f != "" && f != "md" {
+		if f != "" {
 			formats = append(formats, f)
 		}
+	}
+	if len(formats) == 0 {
+		return []string{"md"}
 	}
 	return formats
 }
 
-func resolveOutputPath(source string) string {
-	// If explicit output is provided
-	if extractOutput != "" {
-		// Check if it's a directory
-		info, err := os.Stat(extractOutput)
-		if err == nil && info.IsDir() {
-			base := filepath.Base(source)
-			ext := filepath.Ext(base)
-			name := base[:len(base)-len(ext)]
-			return filepath.Join(extractOutput, name+".md")
-		}
-		return extractOutput
-	}
-
-	// Default: same directory, same name with .md extension
+func baseNameNoExt(source string) string {
 	base := filepath.Base(source)
 	ext := filepath.Ext(base)
-	name := base[:len(base)-len(ext)]
-	return name + ".md"
+	if ext != "" {
+		return base[:len(base)-len(ext)]
+	}
+	return base
 }
 
-func saveExtraFormats(result *mineru.ExtractResult, mdPath string) error {
-	base := mdPath[:len(mdPath)-len(filepath.Ext(mdPath))]
-	dir := filepath.Dir(mdPath)
-
-	formats := parseFormats(extractFormat)
+func saveExtraFormatsToDir(result *mineru.ExtractResult, dir, base string, formats []string) {
 	for _, f := range formats {
 		switch f {
 		case "docx":
-			path := filepath.Join(dir, filepath.Base(base)+".docx")
-			if err := result.SaveDocx(path); err != nil {
-				return fmt.Errorf("failed to save docx: %w", err)
-			}
+			_ = result.SaveDocx(filepath.Join(dir, base+".docx"))
 		case "html":
-			path := filepath.Join(dir, filepath.Base(base)+".html")
-			if err := result.SaveHTML(path); err != nil {
-				return fmt.Errorf("failed to save html: %w", err)
-			}
+			_ = result.SaveHTML(filepath.Join(dir, base+".html"))
 		case "latex":
-			path := filepath.Join(dir, filepath.Base(base)+".tex")
-			if err := result.SaveLaTeX(path); err != nil {
-				return fmt.Errorf("failed to save latex: %w", err)
-			}
+			_ = result.SaveLaTeX(filepath.Join(dir, base+".tex"))
 		}
 	}
-	return nil
 }
 
-func handleError(err error) error {
-	info := exitcode.Wrap(err)
-	if info == nil {
-		return nil
-	}
-
-	if jsonFlag {
-		fmt.Printf(`{"status":"error","error_code":"%d","error_message":"%s"}`+"\n", info.Code, info.Message)
-	} else {
-		fmt.Fprintf(os.Stderr, "%s %s\n", output.Error("Error:"), info.Message)
-		if info.Hint != "" {
-			fmt.Fprintf(os.Stderr, "  %s %s\n", output.Info("Hint:"), info.Hint)
-		}
-	}
-
-	os.Exit(info.Code)
-	return nil // never reached
-}
-
-func getPageCount(result *mineru.ExtractResult) int {
-	if result.Progress != nil {
-		return result.Progress.TotalPages
+func pageCount(r *mineru.ExtractResult) int {
+	if r.Progress != nil {
+		return r.Progress.TotalPages
 	}
 	return 0
 }
 
-func humanBytes(n int) string {
+func humanSize(n int) string {
 	if n < 1024 {
 		return fmt.Sprintf("%d B", n)
 	}
@@ -320,4 +531,25 @@ func humanBytes(n int) string {
 		return fmt.Sprintf("%.1f KB", float64(n)/1024)
 	}
 	return fmt.Sprintf("%.1f MB", float64(n)/(1024*1024))
+}
+
+func contentListToJSON(cl []map[string]any) string {
+	data, err := json.Marshal(cl)
+	if err != nil {
+		return "[]"
+	}
+	return string(data)
+}
+
+func handleSDKError(err error) error {
+	info := exitcode.Wrap(err)
+	if info == nil {
+		return nil
+	}
+	output.Errorf("%s", info.Message)
+	if info.Hint != "" {
+		output.Status("Hint: %s", info.Hint)
+	}
+	os.Exit(info.Code)
+	return nil
 }

@@ -18,7 +18,6 @@ var (
 	statusTimeout int
 )
 
-// statusCmd represents the status command
 var statusCmd = &cobra.Command{
 	Use:   "status <task-id>",
 	Short: "Query the status of an async task",
@@ -41,7 +40,6 @@ func init() {
 func runStatus(cmd *cobra.Command, args []string) error {
 	taskID := args[0]
 
-	// Resolve token
 	tokenSrc, err := config.ResolveToken(cmd)
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
@@ -50,19 +48,15 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no API token found. Run 'mineru auth' to configure your token")
 	}
 
-	// Load config for base URL
 	cfg, _ := config.Load()
-
-	// Build client options
 	var clientOpts []mineru.ClientOption
 	if baseURL := config.GetBaseURL(cmd, cfg); baseURL != "" {
 		clientOpts = append(clientOpts, mineru.WithBaseURL(baseURL))
 	}
 
-	// Create client
 	client, err := mineru.New(tokenSrc.Token, clientOpts...)
 	if err != nil {
-		return handleError(err)
+		return handleSDKError(err)
 	}
 
 	ctx := context.Background()
@@ -81,102 +75,68 @@ func runStatus(cmd *cobra.Command, args []string) error {
 func checkTaskOnce(ctx context.Context, client *mineru.Client, taskID string) error {
 	result, err := client.GetTask(ctx, taskID)
 	if err != nil {
-		return handleError(err)
+		return handleSDKError(err)
 	}
 
-	if jsonFlag {
-		fmt.Printf(`{"task_id":"%s","state":"%s"`, taskID, result.State)
-		if result.Progress != nil {
-			fmt.Printf(",\"progress\":{\"extracted_pages\":%d,\"total_pages\":%d,\"percent\":%.0f}",
-				result.Progress.ExtractedPages, result.Progress.TotalPages, result.Progress.Percent())
-		}
-		if result.Error != "" {
-			fmt.Printf(",\"error\":%q", result.Error)
-		}
-		fmt.Println("}")
-	} else {
-		fmt.Printf("Task: %s\n", taskID)
-		fmt.Printf("State: %s\n", result.State)
-		if result.Progress != nil {
-			fmt.Printf("Progress: %s\n", result.Progress.String())
-		}
-		if result.Error != "" {
-			fmt.Printf("Error: %s\n", result.Error)
-		}
+	fmt.Printf("Task: %s\n", taskID)
+	fmt.Printf("State: %s\n", result.State)
+	if result.Progress != nil {
+		fmt.Printf("Progress: %s\n", result.Progress.String())
+	}
+	if result.Error != "" {
+		fmt.Printf("Error: %s\n", result.Error)
 	}
 
-	// Download results if requested and task is done
 	if statusOutput != "" && result.State == "done" {
-		return downloadResult(result, statusOutput)
+		return downloadStatusResult(result, statusOutput)
 	}
-
 	return nil
 }
 
 func waitForTask(ctx context.Context, client *mineru.Client, taskID string) error {
-	if !quietFlag && !jsonFlag {
-		fmt.Fprintf(os.Stderr, "%s task %s...\n", output.Info("Waiting for"), taskID)
-	}
+	output.Status("Waiting for task %s...", taskID)
 
 	start := time.Now()
+	interval := 2 * time.Second
+
 	for {
 		result, err := client.GetTask(ctx, taskID)
 		if err != nil {
-			return handleError(err)
+			return handleSDKError(err)
 		}
 
-		// Show progress
-		if !quietFlag && !jsonFlag && result.Progress != nil {
-			fmt.Fprintf(os.Stderr, "\rProgress: %s", result.Progress.String())
+		if result.Progress != nil {
+			output.Status("Progress: %s", result.Progress.String())
 		}
 
-		// Check if done
 		if result.State == "done" || result.State == "failed" {
-			if !quietFlag && !jsonFlag {
-				fmt.Fprintln(os.Stderr)
-			}
-
 			elapsed := time.Since(start).Seconds()
 
-			if jsonFlag {
-				status := "done"
-				errMsg := ""
-				if result.State == "failed" {
-					status = "error"
-					errMsg = result.Error
-				}
-				fmt.Printf(`{"task_id":"%s","status":"%s","error":"%s","elapsed_seconds":%.1f}`+"\n",
-					taskID, status, errMsg, elapsed)
+			if result.State == "done" {
+				output.Status("Done: %s (%.1fs)", taskID, elapsed)
 			} else {
-				if result.State == "done" {
-					fmt.Printf("%s %s (%.1fs)\n", output.Success("Done:"), taskID, elapsed)
-				} else {
-					fmt.Printf("%s %s - %s\n", output.Error("Failed:"), taskID, result.Error)
-				}
+				output.Status("Failed: %s - %s", taskID, result.Error)
 			}
 
-			// Download results if requested
 			if result.State == "done" && statusOutput != "" {
-				return downloadResult(result, statusOutput)
+				return downloadStatusResult(result, statusOutput)
 			}
 			return nil
 		}
 
-		// Wait before next poll
 		select {
 		case <-ctx.Done():
-			if !quietFlag && !jsonFlag {
-				fmt.Fprintln(os.Stderr)
-			}
 			return fmt.Errorf("timeout waiting for task %s", taskID)
-		case <-time.After(2 * time.Second):
-			// Continue polling
+		case <-time.After(interval):
+		}
+		if interval < 30*time.Second {
+			interval = interval * 3 / 2
 		}
 	}
 }
 
-func downloadResult(result *mineru.ExtractResult, outputDir string) error {
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+func downloadStatusResult(result *mineru.ExtractResult, outputDir string) error {
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
@@ -191,8 +151,6 @@ func downloadResult(result *mineru.ExtractResult, outputDir string) error {
 		return fmt.Errorf("failed to save result: %w", err)
 	}
 
-	if !quietFlag && !jsonFlag {
-		fmt.Printf("Saved to: %s\n", outputPath)
-	}
+	output.Status("Saved to: %s", outputPath)
 	return nil
 }

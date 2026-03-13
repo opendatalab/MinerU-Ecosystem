@@ -17,7 +17,6 @@ var (
 	authShow   bool
 )
 
-// authCmd represents the auth command
 var authCmd = &cobra.Command{
 	Use:   "auth",
 	Short: "Configure or verify API authentication",
@@ -36,17 +35,12 @@ func init() {
 }
 
 func runAuth(cmd *cobra.Command, args []string) error {
-	// Handle --show flag
 	if authShow {
 		return runAuthShow()
 	}
-
-	// Handle --verify flag
 	if authVerify {
 		return runAuthVerify()
 	}
-
-	// Interactive token setup
 	return runAuthSetup()
 }
 
@@ -55,7 +49,6 @@ func runAuthShow() error {
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-
 	if tokenSrc.Token == "" {
 		fmt.Println("No token configured.")
 		fmt.Println("Run 'mineru auth' to set up your API token.")
@@ -66,12 +59,10 @@ func runAuthShow() error {
 	fmt.Printf("Token source: %s\n", tokenSrc.Source)
 	fmt.Printf("Token: %s\n", masked)
 
-	// Load config to show additional settings
 	cfg, err := config.Load()
 	if err == nil && cfg.BaseURL != "" {
 		fmt.Printf("Base URL: %s\n", cfg.BaseURL)
 	}
-
 	return nil
 }
 
@@ -80,38 +71,28 @@ func runAuthVerify() error {
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-
 	if tokenSrc.Token == "" {
 		return fmt.Errorf("no token found. Run 'mineru auth' to configure your token")
 	}
 
-	// Try to create a client - this validates the token format
-	client, err := mineru.New(tokenSrc.Token)
+	_, err = mineru.New(tokenSrc.Token)
 	if err != nil {
 		return fmt.Errorf("invalid token: %w", err)
 	}
 
-	// Try a simple API call to verify the token works
-	// We use a minimal request - GetTask with empty ID will fail but show auth status
-	// Actually, let's just say the token format is valid
-	_ = client
-
-	fmt.Println(output.Success("Token format is valid"))
+	fmt.Println("Token format is valid")
 	fmt.Printf("  Source: %s\n", tokenSrc.Source)
-	fmt.Println("  Note: Full verification requires an API call. The token appears to be properly formatted.")
-
+	fmt.Println("  Note: full verification requires an API call.")
 	return nil
 }
 
 func runAuthSetup() error {
-	fmt.Println("MinerU API Token Setup")
-	fmt.Println("")
-	fmt.Println("Get your token from: https://mineru.net")
-	fmt.Println("")
+	output.Status("MinerU API Token Setup")
+	output.Status("Get your token from: https://mineru.net")
+	fmt.Println()
 
 	reader := bufio.NewReader(os.Stdin)
 
-	// Check if token already exists
 	existing, _ := config.ResolveToken(nil)
 	if existing.Token != "" {
 		fmt.Printf("Current token source: %s\n", existing.Source)
@@ -134,18 +115,16 @@ func runAuthSetup() error {
 		return fmt.Errorf("token is required")
 	}
 
-	// Validate token format by trying to create a client
 	_, err = mineru.New(token)
 	if err != nil {
 		return fmt.Errorf("invalid token: %w", err)
 	}
 
-	// Save token
 	if err := config.SetToken(token); err != nil {
 		return fmt.Errorf("failed to save token: %w", err)
 	}
 
-	fmt.Println(output.Success("Token saved successfully"))
+	output.Status("Token saved successfully")
 	return nil
 }
 
