@@ -148,16 +148,15 @@ func (c *Client) CrawlBatch(ctx context.Context, urls []string, opts ...ExtractO
 //  Async primitives (no polling, no waiting)
 // ═══════════════════════════════════════════════════════════════════
 
-// Submit submits a single task without waiting. Returns a task ID (for URLs)
-// or batch ID (for local files). Use [Client.GetTask] or [Client.GetBatch] to
-// check the result later.
+// Submit submits a single task without waiting. Always returns a batch ID.
+// Use [Client.GetBatch] to check the result later.
 func (c *Client) Submit(ctx context.Context, source string, opts ...ExtractOption) (string, error) {
 	cfg := applyOpts(opts)
 	modelVersion := resolveModel(cfg.model, source)
 	payload := buildPayload(cfg, modelVersion)
 
 	if isURL(source) {
-		return c.submitURL(ctx, source, payload)
+		return c.submitURLsBatch(ctx, []string{source}, payload)
 	}
 	return c.uploadAndSubmit(ctx, []string{source}, payload)
 }
