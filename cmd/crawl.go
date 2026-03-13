@@ -99,12 +99,12 @@ func runSingleCrawl(client *mineru.Client, url string, formats []string, opts []
 
 	output.Status("Crawling %s", url)
 
-	taskID, err := client.Submit(ctx, url, opts...)
+	batchID, err := client.Submit(ctx, url, opts...)
 	if err != nil {
 		return handleSDKError(err)
 	}
 
-	result, err := pollTask(ctx, client, taskID)
+	result, err := pollBatch(ctx, client, batchID)
 	if err != nil {
 		return handleSDKError(err)
 	}

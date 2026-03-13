@@ -126,12 +126,12 @@ func runSingleExtract(client *mineru.Client, source string, formats []string, op
 
 	output.Status("Uploading %s", filepath.Base(source))
 
-	taskID, err := client.Submit(ctx, source, opts...)
+	batchID, err := client.Submit(ctx, source, opts...)
 	if err != nil {
 		return handleSDKError(err)
 	}
 
-	result, err := pollTask(ctx, client, taskID)
+	result, err := pollBatch(ctx, client, batchID)
 	if err != nil {
 		return handleSDKError(err)
 	}
@@ -272,22 +272,25 @@ summary:
 
 // ── polling ──
 
-func pollTask(ctx context.Context, client *mineru.Client, taskID string) (*mineru.ExtractResult, error) {
+func pollBatch(ctx context.Context, client *mineru.Client, batchID string) (*mineru.ExtractResult, error) {
 	interval := 2 * time.Second
 	for {
-		result, err := client.GetTask(ctx, taskID)
+		results, err := client.GetBatch(ctx, batchID)
 		if err != nil {
 			return nil, err
 		}
-		if result.Progress != nil {
-			output.Status("Parsing %d/%d pages", result.Progress.ExtractedPages, result.Progress.TotalPages)
-		}
-		if result.State == "done" || result.State == "failed" {
-			return result, nil
+		if len(results) > 0 {
+			r := results[0]
+			if r.Progress != nil {
+				output.Status("Parsing %d/%d pages", r.Progress.ExtractedPages, r.Progress.TotalPages)
+			}
+			if r.State == "done" || r.State == "failed" {
+				return r, nil
+			}
 		}
 		select {
 		case <-ctx.Done():
-			return nil, fmt.Errorf("timeout waiting for task %s", taskID)
+			return nil, fmt.Errorf("timeout waiting for batch %s", batchID)
 		case <-time.After(interval):
 		}
 		if interval < 30*time.Second {
