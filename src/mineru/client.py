@@ -313,17 +313,19 @@ class MinerU:
         pages: str | None = None,
         extra_formats: list[str] | None = None,
     ) -> str:
-        """Submit a single task without waiting. Returns a task ID string.
+        """Submit a single task without waiting. Always returns a batch ID.
 
-        Use :meth:`get_task` later to check the result.
+        Use :meth:`get_batch` later to check the result.
 
         Example::
 
-            task_id = MinerU().submit("https://example.com/doc.pdf")
-            print(task_id)  # "a90e6ab6-44f3-..."
+            batch_id = MinerU().submit("https://example.com/doc.pdf")
+            # or local file:
+            batch_id = MinerU().submit("./report.pdf")
 
-            # Later, in another script or after some time:
-            result = MinerU().get_task(task_id)
+            # Later, check the result:
+            results = MinerU().get_batch(batch_id)
+            print(results[0].state)
 
         Args:
             source: URL or local file path.
@@ -336,14 +338,13 @@ class MinerU:
             extra_formats: Additional export formats.
 
         Returns:
-            A ``task_id`` string (for URL sources) or ``batch_id`` string
-            (for local file uploads).
+            A ``batch_id`` string. Use :meth:`get_batch` to poll for results.
         """
         model_version = _resolve_model(model, source)
         opts = _build_options(model_version, ocr, formula, table, language, pages, extra_formats)
 
         if _is_url(source):
-            return self._submit_url(source, opts)
+            return self._submit_urls_batch([source], opts)
         else:
             return self._upload_and_submit([source], opts)
 
@@ -405,23 +406,20 @@ class MinerU:
         return self._upload_and_submit(files, opts)
 
     def get_task(self, task_id: str) -> ExtractResult:
-        """Query a single task's current state.
+        """Query a single task by task ID.
+
+        This is a low-level method for querying tasks by their task ID
+        (as returned by the ``/extract/task`` API endpoint). For results
+        from :meth:`submit`, use :meth:`get_batch` instead — ``submit``
+        always returns a batch ID.
 
         When ``state == "done"``, the result zip is downloaded and parsed
         automatically — ``markdown``, ``images``, etc. are populated.
         When the task is still running, ``markdown`` is ``None`` and
         ``progress`` contains page-level progress.
 
-        Example::
-
-            result = MinerU().get_task("a90e6ab6-44f3-...")
-            if result.state == "done":
-                print(result.markdown[:200])
-            else:
-                print(f"State: {result.state}, progress: {result.progress}")
-
         Args:
-            task_id: The task ID returned by :meth:`submit`.
+            task_id: A task ID from the ``/extract/task`` endpoint.
 
         Returns:
             An :class:`ExtractResult` reflecting the current state.
@@ -435,17 +433,26 @@ class MinerU:
     def get_batch(self, batch_id: str) -> list[ExtractResult]:
         """Query all tasks in a batch.
 
+        Use this to check results from :meth:`submit` (single file) or
+        :meth:`submit_batch` (multiple files) — both return a batch ID.
+
         Each sub-task has its own state. Completed tasks have their content
         populated; in-progress tasks have ``markdown=None``.
 
         Example::
 
-            results = MinerU().get_batch("2bb2f0ec-a336-...")
-            for r in results:
-                print(f"{r.filename}: {r.state}")
+            # Single file
+            batch_id = client.submit("report.pdf")
+            results = client.get_batch(batch_id)
+            print(results[0].markdown[:200])
+
+            # Multiple files
+            batch_id = client.submit_batch(["a.pdf", "b.pdf"])
+            results = client.get_batch(batch_id)
 
         Args:
-            batch_id: The batch ID returned by :meth:`submit_batch`.
+            batch_id: The batch ID returned by :meth:`submit` or
+                :meth:`submit_batch`.
 
         Returns:
             A list of :class:`ExtractResult`, one per file in the batch.
