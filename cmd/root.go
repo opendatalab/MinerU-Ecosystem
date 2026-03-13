@@ -12,8 +12,9 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "mineru",
-	Short: "MinerU CLI — turn documents into Markdown",
+	Use:     "mineru",
+	Short:   "MinerU CLI — turn documents into Markdown",
+	Version: version,
 	Long: `MinerU CLI is a command-line tool for extracting content from documents.
 
   mineru extract report.pdf                  # markdown to stdout
