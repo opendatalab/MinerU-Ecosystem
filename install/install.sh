@@ -10,7 +10,7 @@ set -e
 #   INSTALL_DIR      - install directory (default: /usr/local/bin)
 
 VERSION="${MINERU_VERSION:-latest}"
-BASE_URL="${MINERU_BASE_URL:-https://mineru.net/cli}"
+BASE_URL="${MINERU_BASE_URL:-https://mineru.net/mineru-open-api}"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
 detect_platform() {
@@ -31,7 +31,7 @@ detect_platform() {
 }
 
 download_and_install() {
-    BINARY="mineru-${OS}-${ARCH}"
+    BINARY="mineru-open-api-cli-${OS}-${ARCH}"
     URL="${BASE_URL}/${VERSION}/${BINARY}"
     TMP="$(mktemp)"
 
@@ -55,19 +55,19 @@ download_and_install() {
 
     # Install
     if [ -w "$INSTALL_DIR" ]; then
-        mv "$TMP" "${INSTALL_DIR}/mineru"
-        chmod +x "${INSTALL_DIR}/mineru"
+        mv "$TMP" "${INSTALL_DIR}/mineru-open-api"
+        chmod +x "${INSTALL_DIR}/mineru-open-api"
     else
         echo "Installing to ${INSTALL_DIR} (requires sudo)..."
-        sudo mv "$TMP" "${INSTALL_DIR}/mineru"
-        sudo chmod +x "${INSTALL_DIR}/mineru"
+        sudo mv "$TMP" "${INSTALL_DIR}/mineru-open-api"
+        sudo chmod +x "${INSTALL_DIR}/mineru-open-api"
     fi
 
     echo ""
     echo "Installed successfully!"
-    "${INSTALL_DIR}/mineru" version
+    "${INSTALL_DIR}/mineru-open-api" version
     echo ""
-    echo "Run 'mineru auth' to configure your API token."
+    echo "Run 'mineru-open-api auth' to configure your API token."
 }
 
 detect_platform

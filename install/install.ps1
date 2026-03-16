@@ -9,7 +9,7 @@
 $ErrorActionPreference = "Stop"
 
 $Version = if ($env:MINERU_VERSION) { $env:MINERU_VERSION } else { "latest" }
-$BaseURL = if ($env:MINERU_BASE_URL) { $env:MINERU_BASE_URL } else { "https://mineru.net/cli" }
+$BaseURL = if ($env:MINERU_BASE_URL) { $env:MINERU_BASE_URL } else { "https://mineru.net/mineru-open-api" }
 $InstallDir = if ($env:INSTALL_DIR) { $env:INSTALL_DIR } else { "$HOME\.mineru\bin" }
 
 $Arch = if ([Environment]::Is64BitOperatingSystem) {
@@ -18,9 +18,9 @@ $Arch = if ([Environment]::Is64BitOperatingSystem) {
     Write-Error "32-bit Windows is not supported"; exit 1
 }
 
-$Binary = "mineru-windows-${Arch}.exe"
+$Binary = "mineru-open-api-cli-windows-${Arch}.exe"
 $URL = "${BaseURL}/${Version}/${Binary}"
-$DestPath = Join-Path $InstallDir "mineru.exe"
+$DestPath = Join-Path $InstallDir "mineru-open-api.exe"
 
 Write-Host "Downloading mineru ${Version} for windows/${Arch}..."
 Write-Host "  ${URL}"
@@ -53,4 +53,4 @@ Write-Host ""
 Write-Host "Installed successfully!"
 & $DestPath version
 Write-Host ""
-Write-Host "Run 'mineru auth' to configure your API token."
+Write-Host "Run 'mineru-open-api auth' to configure your API token."

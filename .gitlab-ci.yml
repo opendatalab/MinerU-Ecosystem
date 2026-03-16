@@ -1,18 +1,23 @@
+variables:
+  BINARY_NAME: mineru-open-api-cli
+  OSS_PATH: mineru-open-api
+  RUNNER_TAG: ecs
+  # 内网 Go 镜像，Docker Hub 拉不到就用阿里云镜像源
+  GO_IMAGE: registry.cn-shanghai.aliyuncs.com/library/golang:1.21
+
 stages:
   - build
   - release
-
-variables:
-  GO_VERSION: "1.21"
-  BINARY_NAME: mineru
-  OSS_PATH: mineru-cli
 
 # ── build: 每次 push 都编译验证 ──
 
 build:
   stage: build
-  image: golang:${GO_VERSION}
+  tags:
+    - $RUNNER_TAG
+  image: $GO_IMAGE
   script:
+    - go env -w GOPROXY=https://goproxy.cn,direct
     - go build ./...
     - go vet ./...
   except:
@@ -22,12 +27,16 @@ build:
 
 release:
   stage: release
-  image: golang:${GO_VERSION}
+  tags:
+    - $RUNNER_TAG
+  image: $GO_IMAGE
   only:
     - tags
   variables:
     LDFLAGS: "-s -w -X github.com/OpenDataLab/mineru-open-cli/cmd.version=${CI_COMMIT_TAG} -X github.com/OpenDataLab/mineru-open-cli/cmd.commit=${CI_COMMIT_SHORT_SHA} -X github.com/OpenDataLab/mineru-open-cli/cmd.date=${CI_PIPELINE_CREATED_AT}"
   script:
+    - go env -w GOPROXY=https://goproxy.cn,direct
+
     # 交叉编译 5 个平台
     - CGO_ENABLED=0 GOOS=linux   GOARCH=amd64 go build -ldflags="${LDFLAGS}" -o ${BINARY_NAME}-linux-amd64
     - CGO_ENABLED=0 GOOS=linux   GOARCH=arm64 go build -ldflags="${LDFLAGS}" -o ${BINARY_NAME}-linux-arm64
@@ -38,9 +47,9 @@ release:
     # 安装 ossutil
     - curl -fsSL -o ossutil https://gosspublic.alicdn.com/ossutil/1.7.19/ossutil-v1.7.19-linux-amd64
     - chmod +x ossutil
+    - ./ossutil config -e ${OSS_ENDPOINT} -i ${OSS_ACCESS_KEY_ID} -k ${OSS_ACCESS_KEY_SECRET}
 
     # 上传到版本目录
-    - ./ossutil config -e ${OSS_ENDPOINT} -i ${OSS_ACCESS_KEY_ID} -k ${OSS_ACCESS_KEY_SECRET}
     - ./ossutil cp ${BINARY_NAME}-linux-amd64       oss://${OSS_BUCKET}/${OSS_PATH}/${CI_COMMIT_TAG}/ -f
     - ./ossutil cp ${BINARY_NAME}-linux-arm64       oss://${OSS_BUCKET}/${OSS_PATH}/${CI_COMMIT_TAG}/ -f
     - ./ossutil cp ${BINARY_NAME}-darwin-amd64      oss://${OSS_BUCKET}/${OSS_PATH}/${CI_COMMIT_TAG}/ -f

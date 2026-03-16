@@ -12,18 +12,18 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:     "mineru-open-api-cli",
-	Short:   "MinerU CLI — turn documents into Markdown",
+	Use:     "mineru-open-api",
+	Short:   "MinerU Open API CLI — turn documents into Markdown",
 	Version: version,
-	Long: `MinerU CLI is a command-line tool for extracting content from documents.
+	Long: `MinerU Open API CLI is a command-line tool for extracting content from documents.
 
-  mineru-open-api-cli extract report.pdf                  # markdown to stdout
-  mineru-open-api-cli extract report.pdf -o ./out/        # save to file
-  mineru-open-api-cli crawl https://example.com/article   # web page to stdout
+  mineru-open-api extract report.pdf                  # markdown to stdout
+  mineru-open-api extract report.pdf -o ./out/        # save to file
+  mineru-open-api crawl https://example.com/article   # web page to stdout
 
 Authenticate first:
 
-  mineru-open-api-cli auth
+  mineru-open-api auth
 
 For more information, visit https://mineru.net`,
 	SilenceUsage:  true,

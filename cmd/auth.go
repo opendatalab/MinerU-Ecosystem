@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/OpenDataLab/mineru-open-api-cli/internal/config"
-	"github.com/OpenDataLab/mineru-open-api-cli/internal/output"
+	"github.com/OpenDataLab/mineru-open-cli/internal/config"
+	"github.com/OpenDataLab/mineru-open-cli/internal/output"
 	mineru "github.com/OpenDataLab/mineru-open-sdk"
 	"github.com/spf13/cobra"
 )
@@ -21,9 +21,9 @@ var authCmd = &cobra.Command{
 	Use:   "auth",
 	Short: "Configure or verify API authentication",
 	Long:  `Set up your MinerU API token, verify it, or view the current configuration.`,
-	Example: `  mineru-open-api-cli auth              # Interactive token setup
-  mineru-open-api-cli auth --verify     # Verify current token
-  mineru-open-api-cli auth --show       # Show token source`,
+	Example: `  mineru-open-api auth              # Interactive token setup
+  mineru-open-api auth --verify     # Verify current token
+  mineru-open-api auth --show       # Show token source`,
 	RunE: runAuth,
 }
 
@@ -51,7 +51,7 @@ func runAuthShow() error {
 	}
 	if tokenSrc.Token == "" {
 		fmt.Println("No token configured.")
-		fmt.Println("Run 'mineru-open-api-cli auth' to set up your API token.")
+		fmt.Println("Run 'mineru-open-api auth' to set up your API token.")
 		return nil
 	}
 
@@ -72,7 +72,7 @@ func runAuthVerify() error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 	if tokenSrc.Token == "" {
-		return fmt.Errorf("no token found. Run 'mineru-open-api-cli auth' to configure your token")
+		return fmt.Errorf("no token found. Run 'mineru-open-api auth' to configure your token")
 	}
 
 	_, err = mineru.New(tokenSrc.Token)

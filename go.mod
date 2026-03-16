@@ -1,4 +1,4 @@
-module github.com/OpenDataLab/mineru-open-api-cli
+module github.com/OpenDataLab/mineru-open-cli
 
 go 1.21
 

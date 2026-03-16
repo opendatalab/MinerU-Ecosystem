@@ -1,6 +1,6 @@
-# MinerU Open API CLI 技术方案
+# MinerU CLI 技术方案
 
-> 项目代号: `mineru-open-api-cli`
+> 项目代号: `mineru-open-cli`
 > 最后更新: 2026-03-13
 
 ---
@@ -10,7 +10,7 @@
 为没有 Python/Go 运行环境的用户提供一个**零依赖、单二进制**的命令行工具，一条命令把文档变成 Markdown。
 
 ```bash
-mineru-open-api-cli extract report.pdf
+mineru-open-api extract report.pdf
 # markdown 内容直接输出到 stdout
 ```
 
@@ -28,7 +28,7 @@ mineru-open-api-cli extract report.pdf
 | **语言** | Go | 单二进制、交叉编译、复用已有 Go SDK |
 | **CLI 框架** | [cobra](https://github.com/spf13/cobra) | 业界标准（kubectl/docker/gh 同款），子命令、帮助文档、shell 补全开箱即用 |
 | **配置文件** | [viper](https://github.com/spf13/viper) | cobra 官方搭档，支持 YAML/TOML/ENV 多源配置合并 |
-| **构建发布** | [goreleaser](https://goreleaser.com/) | 一键交叉编译 + 打包 + 投 GitHub Release + Homebrew |
+| **构建发布** | [goreleaser](https://goreleaser.com/) | 一键交叉编译 + 打包 + 发 GitHub Release + Homebrew |
 | **依赖的 SDK** | `mineru-open-sdk-go` | 所有 API 调用走 SDK，CLI 只做交互层 |
 
 > **去掉了 spinner/进度条库。** 默认输出不做任何终端美化（无 spinner、无颜色、无 ANSI），
@@ -41,7 +41,7 @@ mineru-open-api-cli extract report.pdf
 ### 3.1 命令树
 
 ```
-mineru-open-api-cli
+mineru-open-api
 ├── extract <file-or-url> [...] [flags]    # 解析文档（支持单个或多个）
 ├── crawl <url> [...] [flags]              # 抓取网页（支持单个或多个）
 ├── status <task-id>                       # 查询异步任务状态
@@ -89,45 +89,45 @@ mineru-open-api-cli
 **错误信息（三种不同场景）：**
 
 ```bash
-mineru-open-api-cli extract report.pdf -f docx
+mineru-open-api extract report.pdf -f docx
 # Error: docx is binary format, cannot output to stdout. Use -o to save to file.
 
-mineru-open-api-cli extract report.pdf -f md,html
+mineru-open-api extract report.pdf -f md,html
 # Error: multiple formats cannot output to stdout. Use -o to save to file.
 
-mineru-open-api-cli extract *.pdf
+mineru-open-api extract *.pdf
 # Error: batch mode requires -o to specify output directory.
 ```
 
 ### 3.3 命令详细设计
 
-#### `mineru-open-api-cli extract`
+#### `mineru-open-api extract`
 
 ```
 Usage:
-  mineru-open-api-cli extract <file-or-url> [...] [flags]
+  mineru-open-api extract <file-or-url> [...] [flags]
 
 Examples:
   # 内容到 stdout（默认 markdown）
-  mineru-open-api-cli extract report.pdf
-  mineru-open-api-cli extract report.pdf -f html
-  mineru-open-api-cli extract report.pdf -f json
-  mineru-open-api-cli extract report.pdf | head -20
+  mineru-open-api extract report.pdf
+  mineru-open-api extract report.pdf -f html
+  mineru-open-api extract report.pdf -f json
+  mineru-open-api extract report.pdf | head -20
 
   # 内容保存到文件
-  mineru-open-api-cli extract report.pdf -o report.md
-  mineru-open-api-cli extract report.pdf -o ./out/
-  mineru-open-api-cli extract report.pdf -o ./out/ -f md,docx
-  mineru-open-api-cli extract report.pdf -o ./out/ -f docx
+  mineru-open-api extract report.pdf -o report.md
+  mineru-open-api extract report.pdf -o ./out/
+  mineru-open-api extract report.pdf -o ./out/ -f md,docx
+  mineru-open-api extract report.pdf -o ./out/ -f docx
 
   # 批量（必须 -o）
-  mineru-open-api-cli extract *.pdf -o ./results/
-  mineru-open-api-cli extract ch1.pdf ch2.pdf -o ./out/ -f md,docx
-  mineru-open-api-cli extract --list files.txt -o ./results/
-  ls *.pdf | mineru-open-api-cli extract --stdin-list -o ./out/
+  mineru-open-api extract *.pdf -o ./results/
+  mineru-open-api extract ch1.pdf ch2.pdf -o ./out/ -f md,docx
+  mineru-open-api extract --list files.txt -o ./results/
+  ls *.pdf | mineru-open-api extract --stdin-list -o ./out/
 
   # stdin 读取文件内容
-  cat report.pdf | mineru-open-api-cli extract --stdin --stdin-name report.pdf
+  cat report.pdf | mineru-open-api extract --stdin --stdin-name report.pdf
 
 Flags:
   -o, --output <path>        输出路径（文件或目录）；不指定则内容输出到 stdout
@@ -158,25 +158,25 @@ Global Flags:
 参数数量 > 1 或有 --list/--stdin-list   →  批量模式（调用 SDK SubmitBatch + GetBatch）
 ```
 
-#### `mineru-open-api-cli crawl`
+#### `mineru-open-api crawl`
 
 ```
 Usage:
-  mineru-open-api-cli crawl <url> [...] [flags]
+  mineru-open-api crawl <url> [...] [flags]
 
 Examples:
   # 内容到 stdout
-  mineru-open-api-cli crawl https://example.com/article
-  mineru-open-api-cli crawl https://example.com/article -f html
+  mineru-open-api crawl https://example.com/article
+  mineru-open-api crawl https://example.com/article -f html
 
   # 内容保存到文件
-  mineru-open-api-cli crawl https://example.com/article -o output.md
-  mineru-open-api-cli crawl https://example.com/article -o ./out/ -f md,html
+  mineru-open-api crawl https://example.com/article -o output.md
+  mineru-open-api crawl https://example.com/article -o ./out/ -f md,html
 
   # 批量抓取（必须 -o）
-  mineru-open-api-cli crawl https://a.com/1 https://a.com/2 -o ./pages/
-  mineru-open-api-cli crawl --list urls.txt -o ./pages/
-  cat urls.txt | mineru-open-api-cli crawl --stdin-list -o ./pages/
+  mineru-open-api crawl https://a.com/1 https://a.com/2 -o ./pages/
+  mineru-open-api crawl --list urls.txt -o ./pages/
+  cat urls.txt | mineru-open-api crawl --stdin-list -o ./pages/
 
 Flags:
   -o, --output <path>        输出路径；不指定则内容输出到 stdout
@@ -190,32 +190,32 @@ Flags:
 crawl 等同于 extract --model html，但精简了不适用于网页的 flag
 （去掉 --ocr / --no-formula / --no-table / --pages / --language）。
 
-#### `mineru-open-api-cli auth`
+#### `mineru-open-api auth`
 
 ```
 Usage:
-  mineru-open-api-cli auth [flags]
+  mineru-open-api auth [flags]
 
 Examples:
-  mineru-open-api-cli auth                  # 交互式输入 token 并保存
-  mineru-open-api-cli auth --verify         # 验证当前 token 是否有效
-  mineru-open-api-cli auth --show           # 显示当前 token 来源
+  mineru-open-api auth                  # 交互式输入 token 并保存
+  mineru-open-api auth --verify         # 验证当前 token 是否有效
+  mineru-open-api auth --show           # 显示当前 token 及其来源
 
 Flags:
       --verify               验证 token
       --show                 显示当前 token 配置来源
 ```
 
-#### `mineru-open-api-cli status`
+#### `mineru-open-api status`
 
 ```
 Usage:
-  mineru-open-api-cli status <task-id> [flags]
+  mineru-open-api status <task-id> [flags]
 
 Examples:
-  mineru-open-api-cli status abc-123-def
-  mineru-open-api-cli status abc-123-def --wait          # 阻塞等待完成
-  mineru-open-api-cli status abc-123-def --wait -o ./    # 等待完成并下载结果
+  mineru-open-api status abc-123-def
+  mineru-open-api status abc-123-def --wait          # 阻塞等待完成
+  mineru-open-api status abc-123-def --wait -o ./    # 等待完成并下载结果
 ```
 
 ---
@@ -227,13 +227,13 @@ Token 从以下来源按优先级获取（高到低）：
 ```
 1. --token flag          命令行直接传
 2. MINERU_TOKEN 环境变量  CI/CD 场景最常用
-3. ~/.mineru-open-api-cli/config.yaml  mineru-open-api-cli auth 交互式保存
+3. ~/.mineru/config.yaml  mineru-open-api auth 交互式保存
 ```
 
 配置文件格式：
 
 ```yaml
-# ~/.mineru-open-api-cli/config.yaml
+# ~/.mineru/config.yaml
 token: "eyJ..."
 base_url: "https://mineru.net/api/v4"   # 可选，私有化部署时覆盖
 ```
@@ -263,7 +263,7 @@ base_url: "https://mineru.net/api/v4"   # 可选，私有化部署时覆盖
 **stdout 模式（无 -o）：**
 
 ```
-$ mineru-open-api-cli extract report.pdf
+$ mineru-open-api extract report.pdf
 Uploading report.pdf (2.3 MB)                  ← stderr
 Parsing 12/24 pages                             ← stderr
 Parsing 24/24 pages                             ← stderr
@@ -277,25 +277,25 @@ Agent 拿到 stdout 就是 markdown 内容，stderr 的状态信息在 Agent 的
 **指定文本格式：**
 
 ```
-$ mineru-open-api-cli extract report.pdf -f html 2>/dev/null
+$ mineru-open-api extract report.pdf -f html 2>/dev/null
 <html><body><h1>Introduction</h1>...
 
-$ mineru-open-api-cli extract report.pdf -f json 2>/dev/null
+$ mineru-open-api extract report.pdf -f json 2>/dev/null
 [{"type":"text","content":"Introduction",...},...]
 
-$ mineru-open-api-cli crawl https://example.com -f html 2>/dev/null
+$ mineru-open-api crawl https://example.com -f html 2>/dev/null
 <html><body>...
 ```
 
 **文件模式（有 -o）：**
 
 ```
-$ mineru-open-api-cli extract report.pdf -o ./out/
+$ mineru-open-api extract report.pdf -o ./out/
 Uploading report.pdf (2.3 MB)
 Parsing 24/24 pages
 Done: ./out/report.md (15.2 KB, 24 pages, 8.3s)
 
-$ mineru-open-api-cli extract report.pdf -o ./out/ -f md,docx
+$ mineru-open-api extract report.pdf -o ./out/ -f md,docx
 Uploading report.pdf (2.3 MB)
 Parsing 24/24 pages
 Done: ./out/report.md (15.2 KB), ./out/report.docx (45.2 KB), 24 pages, 8.3s
@@ -304,7 +304,7 @@ Done: ./out/report.md (15.2 KB), ./out/report.docx (45.2 KB), 24 pages, 8.3s
 ### 5.3 批量输出（必须 -o）
 
 ```
-$ mineru-open-api-cli extract *.pdf -o ./results/
+$ mineru-open-api extract *.pdf -o ./results/
 Batch: 3 files
 [1/3] Done: ch1.pdf -> ./results/ch1.md (12.1 KB, 3.2s)
 [2/3] Done: ch2.pdf -> ./results/ch2.md (9.8 KB, 4.1s)
@@ -315,7 +315,7 @@ Result: 2/3 succeeded, 1 failed (8.3s)
 crawl 批量同理：
 
 ```
-$ mineru-open-api-cli crawl https://a.com/1 https://a.com/2 -o ./pages/
+$ mineru-open-api crawl https://a.com/1 https://a.com/2 -o ./pages/
 Batch: 2 URLs
 [1/2] Done: a.com/1 -> ./pages/a_com_1.md (8.2 KB, 2.3s)
 [2/2] Done: a.com/2 -> ./pages/a_com_2.md (6.5 KB, 1.8s)
@@ -325,11 +325,11 @@ Result: 2/2 succeeded (5.1s)
 ### 5.4 错误输出
 
 ```
-$ mineru-open-api-cli extract huge.pdf
+$ mineru-open-api extract huge.pdf
 Error: file exceeds 200 MB limit (-60005)
 
-$ mineru-open-api-cli extract report.pdf
-Error: token is invalid or expired (A0202). Run 'mineru-open-api-cli auth' to reconfigure.
+$ mineru-open-api extract report.pdf
+Error: token is invalid or expired (A0202). Run 'mineru-open-api auth' to reconfigure.
 ```
 
 错误信息走 stderr，退出码非零。Agent 通过退出码判断成败，
@@ -355,14 +355,14 @@ Error: token is invalid or expired (A0202). Run 'mineru-open-api-cli auth' to re
 ## 7. 项目结构
 
 ```
-mineru-open-api-cli/
+mineru-open-cli/
 ├── cmd/                          # cobra 命令定义
 │   ├── root.go                   # 根命令 + global flags
-│   ├── extract.go                # mineru-open-api-cli extract（含单个+批量）
-│   ├── crawl.go                  # mineru-open-api-cli crawl（含单个+批量）
-│   ├── auth.go                   # mineru-open-api-cli auth
-│   ├── status.go                 # mineru-open-api-cli status
-│   └── version.go                # mineru-open-api-cli version
+│   ├── extract.go                # mineru-open-api extract（含单个+批量）
+│   ├── crawl.go                  # mineru-open-api crawl（含单个+批量）
+│   ├── auth.go                   # mineru-open-api auth
+│   ├── status.go                 # mineru-open-api status
+│   └── version.go                # mineru-open-api version
 ├── internal/
 │   ├── config/
 │   │   └── config.go             # token 读取优先级链、配置文件读写
@@ -384,7 +384,7 @@ mineru-open-api-cli/
 └── TECHNICAL_SPEC.md             # 本文档
 ```
 
-> 对比原方案，`internal/output/` 从三个文件精简到一个—
+> 对比原方案，`internal/output/` 从三个文件精简到一个——
 > 去掉了 `color.go`（无颜色）、`progress.go`（无 spinner）、
 > `printer.go`（无多模式输出）。
 
@@ -396,7 +396,7 @@ mineru-open-api-cli/
 
 ```
 ┌──────────────────────────────────────────────┐
-│  CLI 层 (mineru-open-api-cli)                     │
+│  CLI 层 (mineru-open-cli)                     │
 │  - 参数解析、校验                              │
 │  - -o 有无 → stdout/文件模式切换               │
 │  - Token 优先级链                              │
@@ -545,7 +545,7 @@ fmt.Fprintf(os.Stderr, "Result: %d/%d succeeded, %d failed (%.1fs)\n", ...)
 批量超时后的行为：已完成的任务保留结果，未完成的标记为超时。
 
 ```
-$ mineru-open-api-cli extract huge1.pdf huge2.pdf small.pdf --timeout 120 -o ./out/
+$ mineru-open-api extract huge1.pdf huge2.pdf small.pdf --timeout 120 -o ./out/
 Batch: 3 files
 [1/3] Done: small.pdf -> ./out/small.md (5.2 KB, 8.1s)
 Timeout: batch exceeded 120s limit
@@ -574,7 +574,7 @@ Result: 1/3 succeeded, 2 timed out (120.0s)
 project_name: mineru-open-api-cli
 builds:
   - main: ./main.go
-    binary: mineru-open-api-cli
+    binary: mineru-open-api
     goos: [linux, darwin, windows]
     goarch: [amd64, arm64]
     ldflags:
@@ -595,7 +595,7 @@ brews:
       owner: OpenDataLab
       name: homebrew-tap
     homepage: https://mineru.net
-    description: "MinerU Open API CLI — turn documents into Markdown"
+    description: "MinerU CLI — turn documents into Markdown"
 
 changelog:
   sort: asc
@@ -606,19 +606,19 @@ changelog:
 | 渠道 | 用户操作 | 覆盖 |
 |------|---------|------|
 | **GitHub Releases** | 下载 tar.gz / zip 解压 | 所有平台 |
-| **install.sh** | `curl -sSL https://mineru.net/install.sh \| sh` | macOS / Linux |
-| **Homebrew** | `brew install opendatalab/tap/mineru-open-api-cli` | macOS / Linux |
-| **Scoop** | `scoop bucket add mineru-open-api-cli ...; scoop install mineru-open-api-cli` | Windows |
-| **Docker** | `docker run mineru-open-api-cli extract ...` | 全平台 |
+| **install.sh** | `curl -sSL https://mineru.net/mineru-open-api/install.sh \| sh` | macOS / Linux |
+| **Homebrew** | `brew install opendatalab/tap/mineru-open-api` | macOS / Linux |
+| **Scoop** | `scoop bucket add mineru-open-api ...; scoop install mineru-open-api` | Windows |
+| **Docker** | `docker run mineru-open-api extract ...` | 全平台 |
 
 ### 9.4 install.sh 逻辑
 
 ```
 1. 检测 OS + ARCH
 2. 从 GitHub Releases 下载对应二进制
-3. 放到 /usr/local/bin/mineru-open-api-cli
+3. 放到 /usr/local/bin/mineru-open-api
 4. chmod +x
-5. 打印 "mineru-open-api-cli installed, run: mineru-open-api-cli version"
+5. 打印 "mineru-open-api installed, run: mineru-open-api version"
 ```
 
 ---
@@ -637,8 +637,8 @@ var (
 ```
 
 ```bash
-$ mineru-open-api-cli version
-mineru-open-api-cli v0.1.0 (commit: a1b2c3d, built: 2026-03-15)
+$ mineru-open-api version
+mineru-open-api v0.1.0 (commit: a1b2c3d, built: 2026-03-15)
 ```
 
 ---
@@ -660,7 +660,7 @@ mineru-open-api-cli v0.1.0 (commit: a1b2c3d, built: 2026-03-15)
 - [ ] `extract` 批量模式（多参数 + --list + --stdin-list + 自己轮询进度）
 - [ ] `crawl` 命令（单个 + 批量，复用 extract 的逻辑）
 - [ ] `status` 命令
-- [ ] `--stdin" 输入模式
+- [ ] `--stdin` 输入模式
 - [ ] 批量超时（总超时语义）
 
 ### Phase 3: 能发（1-2 天）
@@ -675,17 +675,17 @@ mineru-open-api-cli v0.1.0 (commit: a1b2c3d, built: 2026-03-15)
 
 - [ ] Homebrew / Scoop 包管理器集成
 - [ ] Docker 镜像
-- [ ] `mineru-open-api-cli config` 子命令（管理 base_url 等高级配置）
-- [ ] 自动更新检查（`mineru-open-api-cli update`）
+- [ ] `mineru-open-api config` 子命令（管理 base_url 等高级配置）
+- [ ] 自动更新检查（`mineru-open-api update`）
 
 ---
 
 ## 12. 与 SDK 的依赖关系
 
 ```
-mineru-open-api-cli 的 go.mod:
+mineru-open-cli 的 go.mod:
 
-module github.com/OpenDataLab/mineru-open-api-cli
+module github.com/OpenDataLab/mineru-open-cli
 
 require github.com/OpenDataLab/mineru-open-sdk-go v0.1.0
 
@@ -701,13 +701,14 @@ require github.com/OpenDataLab/mineru-open-sdk-go v0.1.0
 
 | 维度 | 值 |
 |------|----|
-| 二进制名 | `mineru-open-api-cli` |
-| Go module | `github.com/OpenDataLab/mineru-open-api-cli` |
-| GitHub 仓库 | `OpenDataLab/mineru-open-api-cli` |
-| Homebrew formula | `mineru-open-api-cli` |
+| 编译产物名 | `mineru-open-api-cli-{os}-{arch}` |
+| 安装后命令名 | `mineru-open-api` |
+| Go module | `github.com/OpenDataLab/mineru-open-cli` |
+| GitHub 仓库 | `OpenDataLab/mineru-open-cli` |
+| Homebrew formula | `mineru-open-api` |
 | PyPI 无关 | CLI 是独立发布，和 Python SDK 无关联 |
 
-用户只需要记住一个词：`mineru-open-api-cli`。
+用户在终端里敲的命令是 `mineru-open-api`，与产品名一致，避免与本地开源版 `mineru` 冲突。
 
 ---
 
@@ -717,7 +718,7 @@ require github.com/OpenDataLab/mineru-open-sdk-go v0.1.0
 |---|------|------|
 | D1 | 去掉 `batch` 命令，extract/crawl 自带批量 | 少一个命令少一个概念，用户不需要多记一个词 |
 | D2 | 默认无美化（无 spinner/颜色/ANSI） | 2026 年最大调用方是 AI Agent，TTY 检测区分不了人和 Agent |
-| D3 | 砍掉 `--json`/`-q`/`--no-color`/`--stdout` | 默认输出已经对 Agent 和人都友好，减少概念 and 维护成本 |
+| D3 | 砍掉 `--json`/`-q`/`--no-color`/`--stdout` | 默认输出已经对 Agent 和人都友好，减少概念和维护成本 |
 | D4 | `-o` 决定输出模式（curl 风格） | 无 -o 内容到 stdout，有 -o 存文件；一个 flag 控制一切 |
 | D5 | `-f` 在 stdout 模式下支持单个文本格式 | Agent 可能需要 html/json/latex，不只是 markdown |
 | D6 | CLI 自己轮询，不用 SDK 的 ExtractBatch | SDK channel 吞掉 running 状态的中间进度，CLI 需要展示 |
