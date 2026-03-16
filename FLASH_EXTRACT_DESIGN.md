@@ -124,23 +124,13 @@ Go/TypeScript 通过类型系统在编译期阻止传入不兼容参数（如 `W
 
 ### 2.6 返回类型
 
-复用 `ExtractResult`，新增 `MarkdownURL` 字段：
-
-```go
-type ExtractResult struct {
-    // ... 现有字段不变 ...
-
-    MarkdownURL string // Flash 模式返回的 CDN 链接
-}
-```
+复用 `ExtractResult`，不新增字段。SDK 内部下载 `markdown_url` 的内容后直接填入 `Markdown` 字段，CDN 链接不暴露给用户（有过期时间，暴露无意义）。
 
 Flash 模式下：
-- `Markdown` — 有值（SDK 自动下载 markdown_url 的内容填入）
-- `MarkdownURL` — 有值（原始 CDN 链接，供需要的用户使用）
+- `Markdown` — 有值（SDK 自动下载填入）
 - `Images`, `ContentList`, `Docx`, `HTML`, `LaTeX` — 均为零值
 - `ZipURL` — 空
 - `Progress` — 轮询期间有值（`extracted_pages` / `total_pages`）
-- `Meta` — 新增字段，完成时有值（`pages`, `file_size`）
 
 ### 2.7 错误处理
 
@@ -162,7 +152,7 @@ type FlashParamError struct{ APIError }          // -30004
 | 文件 | 改动 |
 |------|------|
 | `options.go` | 新增 `FlashExtractOption` 类型及 `WithFlashLanguage` / `WithFlashPages` / `WithFlashTimeout` |
-| `models.go` | `ExtractResult` 新增 `MarkdownURL string` 字段 |
+| `models.go` | `ExtractResult` 不变（Flash 填入 `Markdown` 字段即可） |
 | `errors.go` | 新增 Flash 专属错误类型 + `errorForCode()` 映射 |
 | `api.go` | `post()` / `get()` 新增 nil receiver 守卫 |
 | **`flash_api.go`** (新增) | `flashApiClient` 结构体，实现 `postFlash()` / `getFlash()` / `putFile()` / `downloadMarkdown()` |
