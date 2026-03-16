@@ -70,3 +70,7 @@ release:
     # 上传安装脚本
     - ./ossutil cp install/install.sh  oss://${OSS_BUCKET}/${OSS_PATH}/install.sh  -f --meta Content-Type:text/plain
     - ./ossutil cp install/install.ps1 oss://${OSS_BUCKET}/${OSS_PATH}/install.ps1 -f --meta Content-Type:text/plain
+
+    # 写入版本号文件（供安装脚本和 CLI 自更新读取）
+    - echo ${CI_COMMIT_TAG} > VERSION
+    - ./ossutil cp VERSION oss://${OSS_BUCKET}/${OSS_PATH}/VERSION -f --meta Content-Type:text/plain
