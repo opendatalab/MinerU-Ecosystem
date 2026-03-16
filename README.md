@@ -1,0 +1,201 @@
+# mineru
+
+[中文文档](./README.zh-CN.md)
+
+TypeScript/JavaScript SDK for the [MinerU](https://mineru.net) document extraction API. One line to turn documents into Markdown.
+
+## Install
+
+```bash
+npm install mineru
+```
+
+## Quick Start
+
+```bash
+export MINERU_TOKEN="your-api-token"   # get it from https://mineru.net
+```
+
+```typescript
+import { MinerU } from "mineru";
+
+const md = (await new MinerU().extract("https://example.com/report.pdf")).markdown;
+```
+
+That's it. `extract()` submits the task, polls until done, downloads the result zip, and parses out the markdown — all in one async call.
+
+## Usage
+
+### Parse a single document
+
+```typescript
+import { MinerU } from "mineru";
+
+const client = new MinerU();
+const result = await client.extract("https://example.com/paper.pdf");
+console.log(result.markdown);
+console.log(result.contentList);  // structured JSON
+console.log(result.images);       // list of extracted images
+```
+
+### Local files
+
+Local files are uploaded automatically:
+
+```typescript
+const result = await client.extract("./report.pdf");
+```
+
+### Extra format export
+
+Request additional formats alongside the default markdown + JSON:
+
+```typescript
+import { saveMarkdown, saveDocx, saveHtml, saveLatex, saveAll } from "mineru";
+
+const result = await client.extract("https://example.com/report.pdf", {
+  extraFormats: ["docx", "html", "latex"],
+});
+
+await saveMarkdown(result, "./output/report.md");  // markdown + images/ dir
+await saveDocx(result, "./output/report.docx");
+await saveHtml(result, "./output/report.html");
+await saveLatex(result, "./output/report.tex");
+await saveAll(result, "./output/full/");            // extract the full zip
+```
+
+### Crawl a web page
+
+`crawl()` is a shorthand for `extract(url, { model: "html" })`:
+
+```typescript
+const result = await client.crawl("https://news.example.com/article/123");
+console.log(result.markdown);
+```
+
+### Batch extraction
+
+`extractBatch()` submits all tasks at once and yields results as each completes — first done, first yielded:
+
+```typescript
+for await (const result of client.extractBatch([
+  "https://example.com/ch1.pdf",
+  "https://example.com/ch2.pdf",
+  "https://example.com/ch3.pdf",
+])) {
+  console.log(`${result.filename}: ${result.markdown?.slice(0, 200)}`);
+}
+```
+
+Batch crawling works the same way:
+
+```typescript
+for await (const result of client.crawlBatch(["https://a.com/1", "https://a.com/2"])) {
+  console.log(result.markdown?.slice(0, 200));
+}
+```
+
+### Async submit + query
+
+For background services or when you need to decouple submission from polling. `submit()` returns a plain task ID string — store it however you like:
+
+```typescript
+const taskId = await client.submit("https://example.com/big-report.pdf", { model: "vlm" });
+console.log(taskId);  // "a90e6ab6-44f3-4554-..."
+
+// Later (same process, different script, whatever):
+const result = await client.getTask(taskId);
+if (result.state === "done") {
+  console.log(result.markdown?.slice(0, 500));
+} else {
+  console.log(`State: ${result.state}, progress: ${result.progress}`);
+}
+```
+
+Batch version:
+
+```typescript
+const batchId = await client.submitBatch(["a.pdf", "b.pdf", "c.pdf"]);
+
+const results = await client.getBatch(batchId);
+for (const r of results) {
+  console.log(`${r.filename}: ${r.state}`);
+}
+```
+
+### Full options
+
+```typescript
+const result = await client.extract("./paper.pdf", {
+  model: "vlm",              // "pipeline" | "vlm" | "html" (auto-inferred if omitted)
+  ocr: true,                 // enable OCR for scanned documents
+  formula: true,             // formula recognition (default: true)
+  table: true,               // table recognition (default: true)
+  language: "en",            // document language (default: "ch")
+  pages: "1-20",             // page range, e.g. "1-10,15" or "2--2"
+  extraFormats: ["docx"],    // also export as docx / html / latex
+  timeout: 600,              // max seconds to wait (default: 300)
+});
+```
+
+### CommonJS (require)
+
+```javascript
+const { MinerU } = require("mineru");
+
+async function main() {
+  const client = new MinerU();
+  const result = await client.extract("https://example.com/doc.pdf");
+  console.log(result.markdown);
+}
+main();
+```
+
+## API Reference
+
+### Methods
+
+| Method | Input | Output | Blocking | Use case |
+|--------|-------|--------|----------|----------|
+| `extract(source, opts?)` | `string` | `Promise<ExtractResult>` | Yes (await) | Single document |
+| `extractBatch(sources, opts?)` | `string[]` | `AsyncGenerator<ExtractResult>` | Yes (for await) | Batch documents |
+| `crawl(url, opts?)` | `string` | `Promise<ExtractResult>` | Yes (await) | Single web page |
+| `crawlBatch(urls, opts?)` | `string[]` | `AsyncGenerator<ExtractResult>` | Yes (for await) | Batch web pages |
+| `submit(source, opts?)` | `string` | `Promise<string>` (task_id) | No | Async submit |
+| `submitBatch(sources, opts?)` | `string[]` | `Promise<string>` (batch_id) | No | Async batch submit |
+| `getTask(taskId)` | `string` | `Promise<ExtractResult>` | No | Query task state |
+| `getBatch(batchId)` | `string` | `Promise<ExtractResult[]>` | No | Query batch state |
+
+### ExtractResult
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `markdown` | `string \| null` | Extracted markdown text |
+| `contentList` | `object[] \| null` | Structured JSON content |
+| `images` | `Image[]` | Extracted images |
+| `docx` | `Uint8Array \| null` | Docx bytes (requires `extraFormats`) |
+| `html` | `string \| null` | HTML text (requires `extraFormats`) |
+| `latex` | `string \| null` | LaTeX text (requires `extraFormats`) |
+| `state` | `string` | `"done"` / `"failed"` / `"pending"` / `"running"` |
+| `error` | `string \| null` | Error message when `state === "failed"` |
+| `progress` | `Progress \| null` | Page progress when `state === "running"` |
+
+Save helpers: `saveMarkdown(result, path)`, `saveDocx(result, path)`, `saveHtml(result, path)`, `saveLatex(result, path)`, `saveAll(result, dir)`.
+
+### Model versions
+
+| `model` | Description |
+|---------|-------------|
+| `undefined` (default) | Auto-infer: `.html` → `"html"`, everything else → `"vlm"` |
+| `"vlm"` | Vision-language model (recommended) |
+| `"pipeline"` | Classic layout analysis |
+| `"html"` | Web page extraction |
+
+## Requirements
+
+- Node.js >= 18 (uses native `fetch`)
+- Also works with Bun and Deno
+
+## License
+
+Apache-2.0
