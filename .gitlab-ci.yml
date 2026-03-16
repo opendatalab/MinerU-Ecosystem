@@ -1,6 +1,6 @@
 variables:
   BINARY_NAME: mineru-open-api-cli
-  OSS_PATH: mineru-open-api
+  OSS_PATH: open-api-cli
   GO_IMAGE: golang:1.21
   SDK_REPO: https://oauth2:${CI_USER_TOKEN}@gitlab.pjlab.org.cn/yangqi/mineru-open-sdk-go.git
 

@@ -10,7 +10,7 @@ set -e
 #   INSTALL_DIR      - install directory (default: /usr/local/bin)
 
 VERSION="${MINERU_VERSION:-latest}"
-BASE_URL="${MINERU_BASE_URL:-https://mineru.net/mineru-open-api}"
+BASE_URL="${MINERU_BASE_URL:-https://mineru.oss-cn-shanghai.aliyuncs.com/open-api-cli}"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
 detect_platform() {
