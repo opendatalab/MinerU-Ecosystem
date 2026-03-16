@@ -11,7 +11,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const configDirName = ".mineru"
+const configDirName = ".mineru-open-api-cli"
 const configFileName = "config.yaml"
 
 // Config represents the configuration file structure.
@@ -83,7 +83,7 @@ type TokenSource struct {
 // ResolveToken resolves the API token from multiple sources in priority order:
 // 1. --token flag
 // 2. MINERU_TOKEN env var
-// 3. ~/.mineru/config.yaml
+// 3. ~/.mineru-open-api-cli/config.yaml
 func ResolveToken(cmd *cobra.Command) (*TokenSource, error) {
 	// 1. Check --token flag
 	if cmd != nil {

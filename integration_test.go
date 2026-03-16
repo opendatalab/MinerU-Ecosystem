@@ -15,14 +15,14 @@ import (
 var binaryPath string
 
 func TestMain(m *testing.M) {
-	tmp, err := os.MkdirTemp("", "mineru-cli-test-*")
+	tmp, err := os.MkdirTemp("", "mineru-open-api-cli-test-*")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "create temp dir: %v\n", err)
 		os.Exit(1)
 	}
 	defer os.RemoveAll(tmp)
 
-	binaryPath = filepath.Join(tmp, "mineru.exe")
+	binaryPath = filepath.Join(tmp, "mineru-open-api-cli.exe")
 	cmd := exec.Command("go", "build", "-o", binaryPath, ".")
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -74,7 +74,7 @@ func TestVersion(t *testing.T) {
 	if r.exitCode != 0 {
 		t.Fatalf("exit code = %d, stderr: %s", r.exitCode, r.stderr)
 	}
-	if !strings.Contains(r.stdout, "mineru version") {
+	if !strings.Contains(r.stdout, "mineru-open-api-cli version") {
 		t.Errorf("unexpected output: %s", r.stdout)
 	}
 }

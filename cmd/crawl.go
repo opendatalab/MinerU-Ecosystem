@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OpenDataLab/mineru-open-cli/internal/config"
-	"github.com/OpenDataLab/mineru-open-cli/internal/output"
+	"github.com/OpenDataLab/mineru-open-api-cli/internal/config"
+	"github.com/OpenDataLab/mineru-open-api-cli/internal/output"
 	mineru "github.com/OpenDataLab/mineru-open-sdk"
 	"github.com/spf13/cobra"
 )
@@ -27,11 +27,11 @@ var crawlCmd = &cobra.Command{
 	Use:   "crawl <url> [...]",
 	Short: "Crawl web pages and convert to Markdown",
 	Long:  `Fetch web pages and convert their content to Markdown (or other text formats).`,
-	Example: `  mineru crawl https://example.com/article              # markdown to stdout
-  mineru crawl https://example.com/article -f html       # html to stdout
-  mineru crawl https://example.com/article -o ./out/      # save to file
-  mineru crawl url1 url2 -o ./pages/                      # batch
-  mineru crawl --list urls.txt -o ./pages/                # batch from file list`,
+	Example: `  mineru-open-api-cli crawl https://example.com/article              # markdown to stdout
+  mineru-open-api-cli crawl https://example.com/article -f html       # html to stdout
+  mineru-open-api-cli crawl https://example.com/article -o ./out/      # save to file
+  mineru-open-api-cli crawl url1 url2 -o ./pages/                      # batch
+  mineru-open-api-cli crawl --list urls.txt -o ./pages/                # batch from file list`,
 	RunE: runCrawl,
 }
 
@@ -66,7 +66,7 @@ func runCrawl(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if tokenSrc.Token == "" {
-		return fmt.Errorf("no API token found. Run 'mineru auth' to configure your token")
+		return fmt.Errorf("no API token found. Run 'mineru-open-api-cli auth' to configure your token")
 	}
 
 	cfg, _ := config.Load()

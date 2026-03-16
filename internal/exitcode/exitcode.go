@@ -38,7 +38,7 @@ func Wrap(err error) *ErrorInfo {
 		return &ErrorInfo{
 			Code:    AuthError,
 			Message: err.Error(),
-			Hint:    "Token is invalid or expired. Run 'mineru auth' to configure a new token.",
+			Hint:    "Token is invalid or expired. Run 'mineru-open-api-cli auth' to configure a new token.",
 		}
 	}
 
@@ -74,7 +74,7 @@ func Wrap(err error) *ErrorInfo {
 		return &ErrorInfo{
 			Code:    TimeoutError,
 			Message: err.Error(),
-			Hint:    "Task timed out. You can check status with 'mineru status <task-id>'.",
+			Hint:    "Task timed out. You can check status with 'mineru-open-api-cli status <task-id>'.",
 		}
 	}
 

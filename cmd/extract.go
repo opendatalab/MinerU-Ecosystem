@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OpenDataLab/mineru-open-cli/internal/config"
-	"github.com/OpenDataLab/mineru-open-cli/internal/exitcode"
-	"github.com/OpenDataLab/mineru-open-cli/internal/output"
+	"github.com/OpenDataLab/mineru-open-api-cli/internal/config"
+	"github.com/OpenDataLab/mineru-open-api-cli/internal/exitcode"
+	"github.com/OpenDataLab/mineru-open-api-cli/internal/output"
 	mineru "github.com/OpenDataLab/mineru-open-sdk"
 	"github.com/spf13/cobra"
 )
@@ -39,12 +39,12 @@ var extractCmd = &cobra.Command{
 	Use:   "extract <file-or-url> [...]",
 	Short: "Extract documents to Markdown",
 	Long:  `Parse PDFs, images, or other documents and convert to Markdown (or other formats).`,
-	Example: `  mineru extract report.pdf                         # markdown to stdout
-  mineru extract report.pdf -f html                  # html to stdout
-  mineru extract report.pdf -o ./out/                # save to file
-  mineru extract report.pdf -o ./out/ -f md,docx     # save multiple formats
-  mineru extract *.pdf -o ./results/                  # batch
-  mineru extract --list files.txt -o ./results/       # batch from file list`,
+	Example: `  mineru-open-api-cli extract report.pdf                         # markdown to stdout
+  mineru-open-api-cli extract report.pdf -f html                  # html to stdout
+  mineru-open-api-cli extract report.pdf -o ./out/                # save to file
+  mineru-open-api-cli extract report.pdf -o ./out/ -f md,docx     # save multiple formats
+  mineru-open-api-cli extract *.pdf -o ./results/                  # batch
+  mineru-open-api-cli extract --list files.txt -o ./results/       # batch from file list`,
 	RunE: runExtract,
 }
 
@@ -88,7 +88,7 @@ func runExtract(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if tokenSrc.Token == "" {
-		return fmt.Errorf("no API token found. Run 'mineru auth' to configure your token")
+		return fmt.Errorf("no API token found. Run 'mineru-open-api-cli auth' to configure your token")
 	}
 
 	cfg, _ := config.Load()

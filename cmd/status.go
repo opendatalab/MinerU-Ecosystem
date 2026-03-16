@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/OpenDataLab/mineru-open-cli/internal/config"
-	"github.com/OpenDataLab/mineru-open-cli/internal/output"
+	"github.com/OpenDataLab/mineru-open-api-cli/internal/config"
+	"github.com/OpenDataLab/mineru-open-api-cli/internal/output"
 	mineru "github.com/OpenDataLab/mineru-open-sdk"
 	"github.com/spf13/cobra"
 )
@@ -22,9 +22,9 @@ var statusCmd = &cobra.Command{
 	Use:   "status <task-id>",
 	Short: "Query the status of an async task",
 	Long:  `Check the status of a previously submitted extraction task.`,
-	Example: `  mineru status abc-123-def
-  mineru status abc-123-def --wait
-  mineru status abc-123-def --wait -o ./`,
+	Example: `  mineru-open-api-cli status abc-123-def
+  mineru-open-api-cli status abc-123-def --wait
+  mineru-open-api-cli status abc-123-def --wait -o ./`,
 	Args: cobra.ExactArgs(1),
 	RunE: runStatus,
 }
@@ -45,7 +45,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 	if tokenSrc.Token == "" {
-		return fmt.Errorf("no API token found. Run 'mineru auth' to configure your token")
+		return fmt.Errorf("no API token found. Run 'mineru-open-api-cli auth' to configure your token")
 	}
 
 	cfg, _ := config.Load()
