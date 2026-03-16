@@ -2,6 +2,7 @@ variables:
   BINARY_NAME: mineru-open-api-cli
   OSS_PATH: mineru-open-api
   GO_IMAGE: golang:1.21
+  SDK_REPO: https://oauth2:${CI_JOB_TOKEN}@gitlab.pjlab.org.cn/yangqi/mineru-open-sdk-go.git
 
 stages:
   - build
@@ -14,9 +15,12 @@ build:
   tags:
     - ecs
   script:
+    - git clone ${SDK_REPO} $PWD/../mineru-open-sdk-go
     - >
       docker run --rm
-      -v $PWD:/src -w /src
+      -v $PWD:/src
+      -v $PWD/../mineru-open-sdk-go:/mineru-open-sdk-go
+      -w /src
       -e GOPROXY=https://goproxy.cn,direct
       ${GO_IMAGE} sh -c "go build ./... && go vet ./..."
   except:
@@ -31,12 +35,15 @@ release:
   only:
     - tags
   script:
+    - git clone ${SDK_REPO} $PWD/../mineru-open-sdk-go
     - export LDFLAGS="-s -w -X github.com/OpenDataLab/mineru-open-cli/cmd.version=${CI_COMMIT_TAG} -X github.com/OpenDataLab/mineru-open-cli/cmd.commit=${CI_COMMIT_SHORT_SHA} -X github.com/OpenDataLab/mineru-open-cli/cmd.date=${CI_PIPELINE_CREATED_AT}"
 
-    # 交叉编译 5 个平台（在 golang 容器里执行）
+    # 交叉编译 5 个平台
     - >
       docker run --rm
-      -v $PWD:/src -w /src
+      -v $PWD:/src
+      -v $PWD/../mineru-open-sdk-go:/mineru-open-sdk-go
+      -w /src
       -e GOPROXY=https://goproxy.cn,direct
       ${GO_IMAGE} sh -c "
       CGO_ENABLED=0 GOOS=linux   GOARCH=amd64 go build -ldflags=\"${LDFLAGS}\" -o ${BINARY_NAME}-linux-amd64 &&
