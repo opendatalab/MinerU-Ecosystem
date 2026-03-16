@@ -16,15 +16,10 @@ build:
     - ecs
   script:
     - >
-      docker run --rm --network host
-      -v $PWD:/src -w /src
-      -e GOPROXY=https://goproxy.cn,direct
-      -e SDK_REPO=${SDK_REPO}
-      ${GO_IMAGE} sh -c "
-      git clone \${SDK_REPO} /mineru-open-sdk-go &&
-      go build ./... &&
-      go vet ./...
-      "
+      docker build --network host
+      --build-arg SDK_REPO="${SDK_REPO}"
+      --build-arg TARGETS="verify"
+      -f Dockerfile.ci .
   except:
     - tags
 
@@ -41,18 +36,17 @@ release:
 
     # 交叉编译 5 个平台
     - >
-      docker run --rm --network host
-      -v $PWD:/src -w /src
-      -e GOPROXY=https://goproxy.cn,direct
-      -e SDK_REPO=${SDK_REPO}
-      ${GO_IMAGE} sh -c "
-      git clone \${SDK_REPO} /mineru-open-sdk-go &&
-      CGO_ENABLED=0 GOOS=linux   GOARCH=amd64 go build -ldflags=\"${LDFLAGS}\" -o ${BINARY_NAME}-linux-amd64 &&
-      CGO_ENABLED=0 GOOS=linux   GOARCH=arm64 go build -ldflags=\"${LDFLAGS}\" -o ${BINARY_NAME}-linux-arm64 &&
-      CGO_ENABLED=0 GOOS=darwin  GOARCH=amd64 go build -ldflags=\"${LDFLAGS}\" -o ${BINARY_NAME}-darwin-amd64 &&
-      CGO_ENABLED=0 GOOS=darwin  GOARCH=arm64 go build -ldflags=\"${LDFLAGS}\" -o ${BINARY_NAME}-darwin-arm64 &&
-      CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags=\"${LDFLAGS}\" -o ${BINARY_NAME}-windows-amd64.exe
-      "
+      docker build --network host
+      --build-arg SDK_REPO="${SDK_REPO}"
+      --build-arg LDFLAGS="${LDFLAGS}"
+      --build-arg TARGETS="linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64"
+      -t ${BINARY_NAME}:build
+      -f Dockerfile.ci .
+
+    # 从构建镜像里提取二进制
+    - docker create --name extract ${BINARY_NAME}:build
+    - docker cp extract:/output/. .
+    - docker rm extract
 
     # 安装 ossutil
     - curl -fsSL -o ossutil https://gosspublic.alicdn.com/ossutil/1.7.19/ossutil-v1.7.19-linux-amd64
