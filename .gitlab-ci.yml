@@ -16,7 +16,7 @@ build:
     - ecs
   script:
     - >
-      docker run --rm
+      docker run --rm --network host
       -v $PWD:/src -w /src
       -e GOPROXY=https://goproxy.cn,direct
       -e SDK_REPO=${SDK_REPO}
@@ -41,7 +41,7 @@ release:
 
     # 交叉编译 5 个平台
     - >
-      docker run --rm
+      docker run --rm --network host
       -v $PWD:/src -w /src
       -e GOPROXY=https://goproxy.cn,direct
       -e SDK_REPO=${SDK_REPO}
