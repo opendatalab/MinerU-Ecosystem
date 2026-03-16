@@ -1,7 +1,6 @@
 variables:
   BINARY_NAME: mineru-open-api-cli
   OSS_PATH: mineru-open-api
-  RUNNER_TAG: ecs
   # 内网 Go 镜像，Docker Hub 拉不到就用阿里云镜像源
   GO_IMAGE: registry.cn-shanghai.aliyuncs.com/library/golang:1.21
 
@@ -13,8 +12,6 @@ stages:
 
 build:
   stage: build
-  tags:
-    - $RUNNER_TAG
   image: $GO_IMAGE
   script:
     - go env -w GOPROXY=https://goproxy.cn,direct
@@ -27,8 +24,6 @@ build:
 
 release:
   stage: release
-  tags:
-    - $RUNNER_TAG
   image: $GO_IMAGE
   only:
     - tags
