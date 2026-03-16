@@ -567,6 +567,8 @@ Result: 1/3 succeeded, 2 timed out (120.0s)
 | windows | amd64 | `mineru-open-api-cli-windows-amd64.exe` |
 | windows | arm64 | `mineru-open-api-cli-windows-arm64.exe` |
 
+> 共 6 个平台，3 OS × 2 架构。
+
 ### 9.2 goreleaser 配置要点
 
 ```yaml
