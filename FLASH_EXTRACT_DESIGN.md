@@ -152,7 +152,7 @@ type FlashParamError struct{ APIError }          // -30004
 | 文件 | 改动 |
 |------|------|
 | `options.go` | 新增 `FlashExtractOption` 类型及 `WithFlashLanguage` / `WithFlashPages` / `WithFlashTimeout` |
-| `models.go` | `ExtractResult` 不变（Flash 填入 `Markdown` 字段即可） |
+| `models.go` | `ExtractResult` 结构体不变；`SaveDocx/SaveHTML/SaveLaTeX/SaveAll` 错误信息改为通用措辞（如 "no docx content available"），不假设调用模式 |
 | `errors.go` | 新增 Flash 专属错误类型 + `errorForCode()` 映射 |
 | `api.go` | `post()` / `get()` 新增 nil receiver 守卫 |
 | **`flash_api.go`** (新增) | `flashApiClient` 结构体，实现 `postFlash()` / `getFlash()` / `putFile()` / `downloadMarkdown()` |
