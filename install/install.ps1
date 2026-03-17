@@ -9,7 +9,7 @@
 $ErrorActionPreference = "Stop"
 
 $Version = if ($env:MINERU_VERSION) { $env:MINERU_VERSION } else { "latest" }
-$BaseURL = if ($env:MINERU_BASE_URL) { $env:MINERU_BASE_URL } else { "https://mineru.oss-cn-shanghai.aliyuncs.com/open-api-cli" }
+$BaseURL = if ($env:MINERU_BASE_URL) { $env:MINERU_BASE_URL } else { "https://cdn-mineru.openxlab.org.cn/open-api-cli" }
 $InstallDir = if ($env:INSTALL_DIR) { $env:INSTALL_DIR } else { "$HOME\.mineru\bin" }
 
 $Arch = if ([Environment]::Is64BitOperatingSystem) {
