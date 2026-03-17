@@ -134,6 +134,32 @@ result = client.extract(
 )
 ```
 
+### Flash 模式（无需 token）
+
+Flash 模式使用轻量级 API，速度优先。无需 API token，仅输出 Markdown —— 不支持模型选择和额外格式导出。
+
+```python
+client = MinerU()  # 无需 token
+result = client.flash_extract("https://example.com/report.pdf")
+print(result.markdown)
+```
+
+带参数：
+
+```python
+result = client.flash_extract(
+    "./report.pdf",
+    language="en",       # 文档语言（默认 "ch"）
+    page_range="1-10",   # 页码范围
+    timeout=300,         # 最大等待秒数（默认 300）
+)
+result.save_markdown("./output/report.md")
+```
+
+Flash 模式限制：最多 50 页，最大 10 MB。
+
+`MinerU("token")` 创建的客户端同时支持 `extract()` 和 `flash_extract()`。`MinerU()` 无 token 创建的客户端仅支持 `flash_extract()`，调用标准方法会抛出 `NoAuthClientError`。
+
 ## API 速查
 
 ### 方法
@@ -148,6 +174,7 @@ result = client.extract(
 | `submit_batch(sources)` | `list[str]` | `str`（batch_id） | 否 | 异步批量提交 |
 | `get_task(task_id)` | `str` | `ExtractResult` | 否 | 查询状态 |
 | `get_batch(batch_id)` | `str` | `list[ExtractResult]` | 否 | 查询批量状态 |
+| `flash_extract(source)` | `str` | `ExtractResult` | 是 | Flash 模式（无需 token） |
 
 ### ExtractResult 字段
 

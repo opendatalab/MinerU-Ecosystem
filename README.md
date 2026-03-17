@@ -134,6 +134,32 @@ result = client.extract(
 )
 ```
 
+### Flash mode (no token required)
+
+Flash mode uses a lightweight API optimised for speed. No API token needed, only outputs Markdown — no model selection, no extra formats.
+
+```python
+client = MinerU()  # no token needed
+result = client.flash_extract("https://example.com/report.pdf")
+print(result.markdown)
+```
+
+With options:
+
+```python
+result = client.flash_extract(
+    "./report.pdf",
+    language="en",       # document language (default: "ch")
+    page_range="1-10",   # page range
+    timeout=300,         # max seconds to wait (default: 300)
+)
+result.save_markdown("./output/report.md")
+```
+
+Flash mode limitations: max 50 pages, max 10 MB file size.
+
+When you create `MinerU("token")`, both `extract()` and `flash_extract()` are available. When you create `MinerU()` without a token, only `flash_extract()` works — calling standard methods raises `NoAuthClientError`.
+
 ## API Reference
 
 ### Methods
@@ -148,6 +174,7 @@ result = client.extract(
 | `submit_batch(sources)` | `list[str]` | `str` (batch_id) | No | Async batch submit |
 | `get_task(task_id)` | `str` | `ExtractResult` | No | Query task state |
 | `get_batch(batch_id)` | `str` | `list[ExtractResult]` | No | Query batch state |
+| `flash_extract(source)` | `str` | `ExtractResult` | Yes | Flash mode (no token) |
 
 ### ExtractResult
 
