@@ -163,6 +163,15 @@ Flash 模式限制：最多 50 页，最大 10 MB。
 
 `new MinerU("token")` 创建的客户端同时支持 `extract()` 和 `flashExtract()`。`new MinerU()` 无 token 创建的客户端仅支持 `flashExtract()`，调用标准方法会抛出 `NoAuthClientError`。
 
+### 来源标识
+
+每个 API 请求会自动携带 `source` header 标识调用来源，默认值为 `open-api-sdk-js`。如果你基于 SDK 构建自己的服务，可以覆盖它：
+
+```typescript
+const client = new MinerU("token");
+client.setSource("my-backend-service");
+```
+
 ### CommonJS（require）
 
 ```javascript

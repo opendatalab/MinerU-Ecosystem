@@ -163,6 +163,15 @@ Flash mode limitations: max 50 pages, max 10 MB file size.
 
 When you create `new MinerU("token")`, both `extract()` and `flashExtract()` are available. When you create `new MinerU()` without a token, only `flashExtract()` works — calling standard methods throws `NoAuthClientError`.
 
+### Source tracking
+
+Every API request includes a `source` header to identify the calling application. The default is `open-api-sdk-js`. Override it if you're building your own service on top of the SDK:
+
+```typescript
+const client = new MinerU("token");
+client.setSource("my-backend-service");
+```
+
 ### CommonJS (require)
 
 ```javascript
