@@ -24,7 +24,8 @@ func NewFlash(opts ...ClientOption) *Client {
 		flashBase = cfg.baseURL
 	}
 	return &Client{
-		flashApi: &flashApiClient{httpClient: cfg.httpClient, baseURL: flashBase},
+		flashApi: &flashApiClient{httpClient: cfg.httpClient, baseURL: flashBase, source: defaultSource},
+		source:   defaultSource,
 	}
 }
 

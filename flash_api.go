@@ -17,6 +17,7 @@ const defaultFlashBaseURL = "https://staging.mineru.org.cn/api/v1/agent"
 type flashApiClient struct {
 	httpClient *http.Client
 	baseURL    string
+	source     string
 }
 
 func (a *flashApiClient) post(ctx context.Context, path string, payload any) (json.RawMessage, error) {
@@ -29,6 +30,9 @@ func (a *flashApiClient) post(ctx context.Context, path string, payload any) (js
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	if a.source != "" {
+		req.Header.Set("source", a.source)
+	}
 	return a.do(req)
 }
 

@@ -14,6 +14,7 @@ type apiClient struct {
 	httpClient *http.Client
 	baseURL    string
 	token      string
+	source     string
 }
 
 type apiResponse struct {
@@ -37,6 +38,9 @@ func (a *apiClient) post(ctx context.Context, path string, payload any) (json.Ra
 	}
 	req.Header.Set("Authorization", "Bearer "+a.token)
 	req.Header.Set("Content-Type", "application/json")
+	if a.source != "" {
+		req.Header.Set("source", a.source)
+	}
 	return a.do(req)
 }
 

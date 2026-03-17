@@ -35,7 +35,10 @@ var modelMap = map[string]string{
 type Client struct {
 	api      *apiClient      // standard API (nil when created via NewFlash)
 	flashApi *flashApiClient // flash/agent API (always available)
+	source   string          // source header for tracking API usage origin
 }
+
+const defaultSource = "open-api-sdk-go"
 
 // New creates a new MinerU [Client]. If token is empty, MINERU_TOKEN env var is used.
 func New(token string, opts ...ClientOption) (*Client, error) {
@@ -50,9 +53,22 @@ func New(token string, opts ...ClientOption) (*Client, error) {
 		opt(&cfg)
 	}
 	return &Client{
-		api:      &apiClient{httpClient: cfg.httpClient, baseURL: cfg.baseURL, token: token},
-		flashApi: &flashApiClient{httpClient: cfg.httpClient, baseURL: defaultFlashBaseURL},
+		api:      &apiClient{httpClient: cfg.httpClient, baseURL: cfg.baseURL, token: token, source: defaultSource},
+		flashApi: &flashApiClient{httpClient: cfg.httpClient, baseURL: defaultFlashBaseURL, source: defaultSource},
+		source:   defaultSource,
 	}, nil
+}
+
+// SetSource overrides the source identifier sent with API requests.
+// This is used to track which application or integration is making the call.
+func (c *Client) SetSource(source string) {
+	c.source = source
+	if c.api != nil {
+		c.api.source = source
+	}
+	if c.flashApi != nil {
+		c.flashApi.source = source
+	}
 }
 
 // ═══════════════════════════════════════════════════════════════════
