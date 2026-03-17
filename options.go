@@ -105,3 +105,39 @@ func WithExtraFormats(formats ...string) ExtractOption {
 func WithPollTimeout(d time.Duration) ExtractOption {
 	return func(c *extractConfig) { c.timeout = d }
 }
+
+// ---------------------------------------------------------------------------
+// FlashExtract options
+// ---------------------------------------------------------------------------
+
+type flashExtractConfig struct {
+	language string
+	pages    *string
+	timeout  time.Duration
+}
+
+func defaultFlashExtractConfig() flashExtractConfig {
+	return flashExtractConfig{
+		language: "ch",
+		timeout:  5 * time.Minute,
+	}
+}
+
+// FlashExtractOption configures a [Client.FlashExtract] request.
+type FlashExtractOption func(*flashExtractConfig)
+
+// WithFlashLanguage sets the document language for flash extraction (default: "ch").
+func WithFlashLanguage(lang string) FlashExtractOption {
+	return func(c *flashExtractConfig) { c.language = lang }
+}
+
+// WithFlashPages sets the page range for flash extraction, e.g. "1-10".
+func WithFlashPages(pages string) FlashExtractOption {
+	return func(c *flashExtractConfig) { c.pages = &pages }
+}
+
+// WithFlashTimeout sets the maximum polling duration for flash extraction.
+// Default: 5 minutes.
+func WithFlashTimeout(d time.Duration) FlashExtractOption {
+	return func(c *flashExtractConfig) { c.timeout = d }
+}

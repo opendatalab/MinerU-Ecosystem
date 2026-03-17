@@ -270,3 +270,28 @@ mineru-open-api-cli flash-extract report.pdf
 | **Phase 4** | TypeScript SDK 新增 flashExtract | client/models/errors 扩展 |
 
 Phase 1 和 Phase 2 可以在同一个开发周期内完成（Go SDK 改完后 CLI 直接集成）。Phase 3 和 Phase 4 照搬相同模式。
+
+---
+
+## 七、待办：多端统一文案
+
+Flash 模式 vs 标准模式的差异说明需要在以下位置补充，文案确定后多端统一填入：
+
+| 位置 | 文件 | 当前状态 |
+|------|------|---------|
+| Go SDK `NewFlash` / `FlashExtract` 文档注释 | `flash.go` | `TODO(docs)` 已标记 |
+| CLI `flash-extract` Long 描述 | `cmd/flash_extract.go` | `TODO(docs)` 已标记 |
+| Python SDK `flash_extract` 文档字符串 | 待实现 | Phase 3 时补充 |
+| TypeScript SDK `flashExtract` JSDoc | 待实现 | Phase 4 时补充 |
+
+### 差异要点（供文案参考）
+
+- 无需 Token，通过 IP 限频防滥用
+- 使用 pipeline 轻量模型，**禁用表格识别和公式识别**
+- 仅输出 Markdown，不支持 docx/html/latex/images 导出
+- 文件限制：10MB / 50 页
+- 不支持批量提交
+- 不支持选择模型（vlm/pipeline/html）
+- 页码范围仅支持 `from-to` 格式，不支持逗号分隔
+- URL 模式不支持 HTML 网页
+- IP 限频：每分钟/每小时有请求数上限

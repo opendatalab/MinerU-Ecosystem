@@ -72,7 +72,7 @@ type ExtractResult struct {
 // an images/ directory is created alongside the markdown file.
 func (r *ExtractResult) SaveMarkdown(path string, withImages bool) error {
 	if r.Markdown == "" {
-		return fmt.Errorf("no markdown content available (state != done)")
+		return fmt.Errorf("no markdown content available")
 	}
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
@@ -97,7 +97,7 @@ func (r *ExtractResult) SaveMarkdown(path string, withImages bool) error {
 // SaveDocx writes the docx bytes to path.
 func (r *ExtractResult) SaveDocx(path string) error {
 	if r.Docx == nil {
-		return fmt.Errorf("no docx content — did you pass WithExtraFormats(\"docx\")?")
+		return fmt.Errorf("no docx content available")
 	}
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
@@ -108,7 +108,7 @@ func (r *ExtractResult) SaveDocx(path string) error {
 // SaveHTML writes the HTML string to path.
 func (r *ExtractResult) SaveHTML(path string) error {
 	if r.HTML == "" {
-		return fmt.Errorf("no html content — did you pass WithExtraFormats(\"html\")?")
+		return fmt.Errorf("no html content available")
 	}
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
@@ -119,7 +119,7 @@ func (r *ExtractResult) SaveHTML(path string) error {
 // SaveLaTeX writes the LaTeX string to path.
 func (r *ExtractResult) SaveLaTeX(path string) error {
 	if r.LaTeX == "" {
-		return fmt.Errorf("no latex content — did you pass WithExtraFormats(\"latex\")?")
+		return fmt.Errorf("no latex content available")
 	}
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
@@ -130,7 +130,7 @@ func (r *ExtractResult) SaveLaTeX(path string) error {
 // SaveAll extracts the full result zip to dir.
 func (r *ExtractResult) SaveAll(dir string) error {
 	if r.zipBytes == nil {
-		return fmt.Errorf("no zip data available (state != done)")
+		return fmt.Errorf("no zip data available")
 	}
 	zr, err := zip.NewReader(bytes.NewReader(r.zipBytes), int64(len(r.zipBytes)))
 	if err != nil {

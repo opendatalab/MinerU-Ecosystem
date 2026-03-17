@@ -29,7 +29,8 @@ func TestMain(m *testing.M) {
 	var err error
 	client, err = mineru.New("")
 	if err != nil {
-		panic("failed to create client (is MINERU_TOKEN set?): " + err.Error())
+		// No token — skip standard API setup, flash tests can still run.
+		os.Exit(m.Run())
 	}
 
 	ctx := context.Background()
@@ -87,7 +88,31 @@ var minimalPDF = []byte(
 //  Extract — single PDF
 // ═══════════════════════════════════════════════════════════════════
 
+func requireStandardClient(t *testing.T) {
+	t.Helper()
+	if client == nil {
+		t.Skip("MINERU_TOKEN not set, skipping standard API test")
+	}
+}
+
+func requirePDFResult(t *testing.T) {
+	t.Helper()
+	requireStandardClient(t)
+	if pdfResult == nil {
+		t.Skip("pdfResult not available")
+	}
+}
+
+func requireLocalPDFResult(t *testing.T) {
+	t.Helper()
+	requireStandardClient(t)
+	if localPDFResult == nil {
+		t.Skip("localPDFResult not available")
+	}
+}
+
 func TestExtract_ReturnsDoneWithMarkdown(t *testing.T) {
+	requirePDFResult(t)
 	if pdfResult.State != "done" {
 		t.Fatalf("expected state=done, got %s", pdfResult.State)
 	}
@@ -97,6 +122,7 @@ func TestExtract_ReturnsDoneWithMarkdown(t *testing.T) {
 }
 
 func TestExtract_HasContentList(t *testing.T) {
+	requirePDFResult(t)
 	if pdfResult.ContentList == nil {
 		t.Fatal("content_list is nil")
 	}
@@ -106,6 +132,7 @@ func TestExtract_HasContentList(t *testing.T) {
 }
 
 func TestExtract_HasMetadata(t *testing.T) {
+	requirePDFResult(t)
 	if pdfResult.TaskID == "" {
 		t.Fatal("task_id is empty")
 	}
@@ -122,6 +149,7 @@ func TestExtract_HasMetadata(t *testing.T) {
 // ═══════════════════════════════════════════════════════════════════
 
 func TestExtractLocal_ReturnsMarkdown(t *testing.T) {
+	requireLocalPDFResult(t)
 	if localPDFResult.State != "done" {
 		t.Fatalf("expected state=done, got %s", localPDFResult.State)
 	}
@@ -135,6 +163,7 @@ func TestExtractLocal_ReturnsMarkdown(t *testing.T) {
 // ═══════════════════════════════════════════════════════════════════
 
 func TestExtract_DocxExport(t *testing.T) {
+	requirePDFResult(t)
 	if pdfResult.Docx == nil {
 		t.Fatal("docx is nil")
 	}
@@ -144,6 +173,7 @@ func TestExtract_DocxExport(t *testing.T) {
 }
 
 func TestExtract_SaveDocxToFile(t *testing.T) {
+	requirePDFResult(t)
 	out := filepath.Join(t.TempDir(), "report.docx")
 	if err := pdfResult.SaveDocx(out); err != nil {
 		t.Fatalf("SaveDocx: %v", err)
@@ -162,6 +192,7 @@ func TestExtract_SaveDocxToFile(t *testing.T) {
 // ═══════════════════════════════════════════════════════════════════
 
 func TestCrawl_ReturnsMarkdown(t *testing.T) {
+	requireStandardClient(t)
 	ctx := context.Background()
 	result, err := client.Crawl(ctx, testHTMLURL, mineru.WithPollTimeout(testTimeout))
 	if err != nil {
@@ -176,6 +207,7 @@ func TestCrawl_ReturnsMarkdown(t *testing.T) {
 }
 
 func TestCrawl_EquivalentToExtractHTML(t *testing.T) {
+	requireStandardClient(t)
 	ctx := context.Background()
 	result, err := client.Extract(ctx, testHTMLURL,
 		mineru.WithModel("html"),
@@ -197,6 +229,7 @@ func TestCrawl_EquivalentToExtractHTML(t *testing.T) {
 // ═══════════════════════════════════════════════════════════════════
 
 func TestSubmit_ReturnsTaskID(t *testing.T) {
+	requireStandardClient(t)
 	ctx := context.Background()
 	taskID, err := client.Submit(ctx, testPDFURL, mineru.WithModel(testModel))
 	if err != nil {
@@ -208,6 +241,7 @@ func TestSubmit_ReturnsTaskID(t *testing.T) {
 }
 
 func TestGetTask_ReturnsResult(t *testing.T) {
+	requireStandardClient(t)
 	ctx := context.Background()
 	taskID, err := client.Submit(ctx, testPDFURL, mineru.WithModel(testModel))
 	if err != nil {
@@ -224,6 +258,7 @@ func TestGetTask_ReturnsResult(t *testing.T) {
 }
 
 func TestGetTask_EventuallyDone(t *testing.T) {
+	requireStandardClient(t)
 	ctx := context.Background()
 	// Use HTML crawl for speed — tests the submit+poll workflow, not the model.
 	taskID, err := client.Submit(ctx, testHTMLURL, mineru.WithModel("html"))
@@ -255,6 +290,7 @@ func TestGetTask_EventuallyDone(t *testing.T) {
 // ═══════════════════════════════════════════════════════════════════
 
 func TestSubmitBatch_ReturnsBatchID(t *testing.T) {
+	requireStandardClient(t)
 	ctx := context.Background()
 	batchID, err := client.SubmitBatch(ctx, []string{testPDFURL, testPDFURL},
 		mineru.WithModel(testModel),
@@ -268,6 +304,7 @@ func TestSubmitBatch_ReturnsBatchID(t *testing.T) {
 }
 
 func TestGetBatch_ReturnsList(t *testing.T) {
+	requireStandardClient(t)
 	ctx := context.Background()
 	batchID, err := client.SubmitBatch(ctx, []string{testPDFURL},
 		mineru.WithModel(testModel),
@@ -289,6 +326,7 @@ func TestGetBatch_ReturnsList(t *testing.T) {
 // ═══════════════════════════════════════════════════════════════════
 
 func TestExtractBatch_YieldsAllResults(t *testing.T) {
+	requireStandardClient(t)
 	ctx := context.Background()
 	ch, err := client.ExtractBatch(ctx, []string{testPDFURL, testPDFURL},
 		mineru.WithModel(testModel),
@@ -312,6 +350,7 @@ func TestExtractBatch_YieldsAllResults(t *testing.T) {
 }
 
 func TestExtractBatch_DoneResultsHaveMarkdown(t *testing.T) {
+	requireStandardClient(t)
 	ctx := context.Background()
 	ch, err := client.ExtractBatch(ctx, []string{testPDFURL, testPDFURL},
 		mineru.WithModel(testModel),
@@ -328,6 +367,7 @@ func TestExtractBatch_DoneResultsHaveMarkdown(t *testing.T) {
 }
 
 func TestCrawlBatch_YieldsResults(t *testing.T) {
+	requireStandardClient(t)
 	ctx := context.Background()
 	ch, err := client.CrawlBatch(ctx,
 		[]string{"https://www.example.com", "https://www.example.org"},

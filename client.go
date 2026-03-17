@@ -33,7 +33,8 @@ var modelMap = map[string]string{
 
 // Client is the MinerU API client.
 type Client struct {
-	api *apiClient
+	api      *apiClient      // standard API (nil when created via NewFlash)
+	flashApi *flashApiClient // flash/agent API (always available)
 }
 
 // New creates a new MinerU [Client]. If token is empty, MINERU_TOKEN env var is used.
@@ -49,7 +50,8 @@ func New(token string, opts ...ClientOption) (*Client, error) {
 		opt(&cfg)
 	}
 	return &Client{
-		api: &apiClient{httpClient: cfg.httpClient, baseURL: cfg.baseURL, token: token},
+		api:      &apiClient{httpClient: cfg.httpClient, baseURL: cfg.baseURL, token: token},
+		flashApi: &flashApiClient{httpClient: cfg.httpClient, baseURL: defaultFlashBaseURL},
 	}, nil
 }
 

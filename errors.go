@@ -30,6 +30,20 @@ type (
 	QuotaExceededError struct{ APIError }
 )
 
+// Flash API specific errors.
+type (
+	FlashFileTooLargeError    struct{ APIError } // -30001: file > 10MB
+	FlashUnsupportedTypeError struct{ APIError } // -30002: unsupported file type
+	FlashPageLimitError       struct{ APIError } // -30003: file > 50 pages
+	FlashParamError           struct{ APIError } // -30004: bad request params
+)
+
+// ErrNoAuthClient is returned when a flash-only client attempts a standard API call.
+var ErrNoAuthClient = &ParamError{APIError{
+	Code:    "-1",
+	Message: "this operation requires an authenticated client; use mineru.New(token) instead of NewFlash()",
+}}
+
 // TimeoutError is raised by the SDK when polling exceeds the configured timeout.
 type TimeoutError struct {
 	APIError
@@ -62,6 +76,14 @@ func errorForCode(code, msg, traceID string) error {
 		return &TaskNotFoundError{base}
 	case "-60018", "-60019":
 		return &QuotaExceededError{base}
+	case "-30001":
+		return &FlashFileTooLargeError{base}
+	case "-30002":
+		return &FlashUnsupportedTypeError{base}
+	case "-30003":
+		return &FlashPageLimitError{base}
+	case "-30004":
+		return &FlashParamError{base}
 	default:
 		return &base
 	}
