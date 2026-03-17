@@ -160,6 +160,15 @@ Flash mode limitations: max 50 pages, max 10 MB file size.
 
 When you create `MinerU("token")`, both `extract()` and `flash_extract()` are available. When you create `MinerU()` without a token, only `flash_extract()` works — calling standard methods raises `NoAuthClientError`.
 
+### Source tracking
+
+Every API request includes a `source` header to identify the calling application. The default is `open-api-sdk-python`. Override it if you're building your own service on top of the SDK:
+
+```python
+client = MinerU("token")
+client.set_source("my-backend-service")
+```
+
 ## API Reference
 
 ### Methods
