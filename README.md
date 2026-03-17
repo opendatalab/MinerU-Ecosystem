@@ -161,6 +161,31 @@ client, _ := mineru.New("token",
 )
 ```
 
+### Flash mode (no token required)
+
+Flash mode uses a lightweight API optimised for speed. No API token needed, only outputs Markdown — no model selection, no extra formats.
+
+```go
+client := mineru.NewFlash()
+result, _ := client.FlashExtract(ctx, "https://example.com/report.pdf")
+fmt.Println(result.Markdown)
+```
+
+With options:
+
+```go
+result, _ := client.FlashExtract(ctx, "./report.pdf",
+    mineru.WithFlashLanguage("en"),   // document language (default: "ch")
+    mineru.WithFlashPages("1-10"),    // page range
+    mineru.WithFlashTimeout(10*time.Minute),  // max poll wait (default: 5m)
+)
+result.SaveMarkdown("./output/report.md", false)
+```
+
+Flash mode limitations: max 50 pages, max 10 MB file size.
+
+`mineru.New("token")` creates a client that supports both `Extract()` and `FlashExtract()`. `mineru.NewFlash()` creates a flash-only client — calling standard methods returns `ErrNoAuthClient`.
+
 ## API Reference
 
 ### Methods
@@ -175,6 +200,7 @@ client, _ := mineru.New("token",
 | `SubmitBatch(ctx, sources)` | `[]string` | `string` (batch_id) | No | Async batch submit |
 | `GetTask(ctx, taskID)` | `string` | `*ExtractResult` | No | Query task state |
 | `GetBatch(ctx, batchID)` | `string` | `[]*ExtractResult` | No | Query batch state |
+| `FlashExtract(ctx, source)` | `string` | `*ExtractResult` | Yes | Flash mode (no token) |
 
 All methods accept variadic `ExtractOption` arguments (except `GetTask` and `GetBatch`).
 

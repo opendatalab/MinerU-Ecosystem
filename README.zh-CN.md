@@ -163,6 +163,31 @@ client, _ := mineru.New("token",
 )
 ```
 
+### Flash 模式（无需 token）
+
+Flash 模式使用轻量级 API，速度优先。无需 API token，仅输出 Markdown —— 不支持模型选择和额外格式导出。
+
+```go
+client := mineru.NewFlash()
+result, _ := client.FlashExtract(ctx, "https://example.com/report.pdf")
+fmt.Println(result.Markdown)
+```
+
+带参数：
+
+```go
+result, _ := client.FlashExtract(ctx, "./report.pdf",
+    mineru.WithFlashLanguage("en"),   // 文档语言（默认 "ch"）
+    mineru.WithFlashPages("1-10"),    // 页码范围
+    mineru.WithFlashTimeout(10*time.Minute),  // 轮询最大等待（默认 5 分钟）
+)
+result.SaveMarkdown("./output/report.md", false)
+```
+
+Flash 模式限制：最多 50 页，最大 10 MB。
+
+`mineru.New("token")` 创建的客户端同时支持 `Extract()` 和 `FlashExtract()`。`mineru.NewFlash()` 创建的仅 flash 客户端，调用标准方法会返回 `ErrNoAuthClient`。
+
 ## API 速查
 
 ### 方法
@@ -177,6 +202,7 @@ client, _ := mineru.New("token",
 | `SubmitBatch(ctx, sources)` | `[]string` | `string`（batch_id） | 否 | 异步批量提交 |
 | `GetTask(ctx, taskID)` | `string` | `*ExtractResult` | 否 | 查询状态 |
 | `GetBatch(ctx, batchID)` | `string` | `[]*ExtractResult` | 否 | 查询批量状态 |
+| `FlashExtract(ctx, source)` | `string` | `*ExtractResult` | 是 | Flash 模式（无需 token） |
 
 所有方法都接受可变参数 `ExtractOption`（`GetTask` 和 `GetBatch` 除外）。
 
