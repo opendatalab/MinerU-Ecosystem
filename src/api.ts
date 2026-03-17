@@ -10,22 +10,32 @@ interface ApiResponse {
 export class ApiClient {
   private readonly baseUrl: string;
   private readonly headers: Record<string, string>;
+  private source: string;
 
-  constructor(token: string, baseUrl: string) {
+  constructor(token: string, baseUrl: string, source = "") {
     this.baseUrl = baseUrl;
     this.headers = {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     };
+    this.source = source;
+  }
+
+  setSource(source: string): void {
+    this.source = source;
   }
 
   async post(
     path: string,
     json: Record<string, unknown>,
   ): Promise<ApiResponse> {
+    const headers: Record<string, string> = { ...this.headers };
+    if (this.source) {
+      headers["source"] = this.source;
+    }
     const resp = await fetch(`${this.baseUrl}${path}`, {
       method: "POST",
-      headers: this.headers,
+      headers,
       body: JSON.stringify(json),
     });
     return this.handle(resp);

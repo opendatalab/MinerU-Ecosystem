@@ -16,6 +16,8 @@ const MODEL_MAP: Record<string, string> = {
 
 const HTML_EXTENSIONS = new Set([".html", ".htm"]);
 
+const DEFAULT_SOURCE = "open-api-sdk-js";
+
 function isUrl(source: string): boolean {
   return source.startsWith("http://") || source.startsWith("https://");
 }
@@ -156,11 +158,22 @@ export class MinerU {
   ) {
     const resolved = token ?? process.env["MINERU_TOKEN"];
     if (resolved) {
-      this.api = new ApiClient(resolved, baseUrl);
+      this.api = new ApiClient(resolved, baseUrl, DEFAULT_SOURCE);
     } else {
       this.api = null; // flash-only mode
     }
-    this.flashApi = new FlashApiClient(flashBaseUrl);
+    this.flashApi = new FlashApiClient(flashBaseUrl, DEFAULT_SOURCE);
+  }
+
+  /**
+   * Override the source identifier sent with API requests.
+   * Used to track which application or integration is making the call.
+   */
+  setSource(source: string): void {
+    if (this.api !== null) {
+      this.api.setSource(source);
+    }
+    this.flashApi.setSource(source);
   }
 
   private requireAuth(): ApiClient {

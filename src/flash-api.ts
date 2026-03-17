@@ -15,19 +15,29 @@ export { DEFAULT_FLASH_BASE_URL };
 export class FlashApiClient {
   private readonly baseUrl: string;
   private readonly headers: Record<string, string>;
+  private source: string;
 
-  constructor(baseUrl: string = DEFAULT_FLASH_BASE_URL) {
+  constructor(baseUrl: string = DEFAULT_FLASH_BASE_URL, source = "") {
     this.baseUrl = baseUrl;
     this.headers = { "Content-Type": "application/json" };
+    this.source = source;
+  }
+
+  setSource(source: string): void {
+    this.source = source;
   }
 
   async post(
     path: string,
     json: Record<string, unknown>,
   ): Promise<FlashApiResponse> {
+    const headers: Record<string, string> = { ...this.headers };
+    if (this.source) {
+      headers["source"] = this.source;
+    }
     const resp = await fetch(`${this.baseUrl}${path}`, {
       method: "POST",
-      headers: this.headers,
+      headers,
       body: JSON.stringify(json),
     });
     return this.handle(resp);
