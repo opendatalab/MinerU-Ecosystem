@@ -8,8 +8,9 @@ from pathlib import Path, PurePosixPath
 from typing import Iterator
 
 from ._api import ApiClient
+from ._flash_api import DEFAULT_FLASH_BASE_URL, FlashApiClient
 from ._zip import parse_zip
-from .exceptions import AuthError, TimeoutError
+from .exceptions import NoAuthClientError, TimeoutError
 from .models import ExtractResult, Progress
 
 _MODEL_MAP = {
@@ -77,10 +78,15 @@ def _parse_task_result(data: dict) -> ExtractResult:
             total_pages=ep.get("total_pages", 0),
             start_time=ep.get("start_time", ""),
         )
+
+    err_code_raw = data.get("err_code")
+    err_code = "" if err_code_raw is None else str(err_code_raw)
+
     return ExtractResult(
         task_id=data.get("task_id", ""),
         state=data.get("state", "unknown"),
         filename=data.get("file_name"),
+        err_code=err_code,
         error=data.get("err_msg") or None,
         zip_url=data.get("full_zip_url"),
         progress=progress,
@@ -97,31 +103,54 @@ class MinerU:
         client = MinerU()  # reads MINERU_TOKEN env var
         md = client.extract("https://example.com/doc.pdf").markdown
 
+    When no token is provided and ``MINERU_TOKEN`` is not set, a flash-only
+    client is created. Only :meth:`flash_extract` is available; calling
+    standard methods raises :class:`NoAuthClientError`.
+
     Args:
         token: API token. If not provided, reads from the ``MINERU_TOKEN``
-            environment variable. Raises :class:`AuthError` if neither is set.
+            environment variable.
         base_url: API base URL. Override for private deployments.
+        flash_base_url: Flash API base URL. Override for testing or
+            private deployments.
     """
 
     def __init__(
         self,
         token: str | None = None,
         base_url: str = "https://mineru.net/api/v4",
+        flash_base_url: str | None = None,
     ) -> None:
         resolved_token = token or os.environ.get("MINERU_TOKEN")
-        if not resolved_token:
-            raise AuthError("NO_TOKEN", "No token provided. Pass token= or set MINERU_TOKEN env var.")
-        self._api = ApiClient(resolved_token, base_url)
+        if resolved_token:
+            self._api: ApiClient | None = ApiClient(resolved_token, base_url)
+        else:
+            self._api = None  # flash-only mode
+
+        flash_url = flash_base_url or DEFAULT_FLASH_BASE_URL
+        self._flash_api = FlashApiClient(flash_url)
 
     def close(self) -> None:
-        """Release the underlying HTTP client."""
-        self._api.close()
+        """Release the underlying HTTP clients."""
+        if self._api is not None:
+            self._api.close()
+        self._flash_api.close()
 
     def __enter__(self) -> MinerU:
         return self
 
     def __exit__(self, *exc) -> None:
         self.close()
+
+    # ══════════════════════════════════════════════════════════════════
+    #  Auth guard
+    # ══════════════════════════════════════════════════════════════════
+
+    def _require_auth(self) -> ApiClient:
+        """Guard: raise if this is a flash-only client."""
+        if self._api is None:
+            raise NoAuthClientError()
+        return self._api
 
     # ══════════════════════════════════════════════════════════════════
     #  Synchronous (blocking) methods
@@ -182,6 +211,7 @@ class MinerU:
             ExtractFailedError: If the server reports extraction failure.
         """
         model_version = _resolve_model(model, source)
+        self._require_auth()
         opts = _build_options(model_version, ocr, formula, table, language, pages, extra_formats)
 
         if _is_url(source):
@@ -232,6 +262,7 @@ class MinerU:
         """
         first_source = sources[0] if sources else ""
         model_version = _resolve_model(model, first_source)
+        self._require_auth()
         opts = _build_options(model_version, ocr, formula, table, language, None, extra_formats)
 
         urls = [s for s in sources if _is_url(s)]
@@ -340,6 +371,7 @@ class MinerU:
             (for local file uploads).
         """
         model_version = _resolve_model(model, source)
+        self._require_auth()
         opts = _build_options(model_version, ocr, formula, table, language, pages, extra_formats)
 
         if _is_url(source):
@@ -386,6 +418,7 @@ class MinerU:
         """
         first_source = sources[0] if sources else ""
         model_version = _resolve_model(model, first_source)
+        self._require_auth()
         opts = _build_options(model_version, ocr, formula, table, language, None, extra_formats)
 
         urls = [s for s in sources if _is_url(s)]
@@ -426,7 +459,7 @@ class MinerU:
         Returns:
             An :class:`ExtractResult` reflecting the current state.
         """
-        body = self._api.get(f"/extract/task/{task_id}")
+        body = self._require_auth().get(f"/extract/task/{task_id}")
         result = _parse_task_result(body["data"])
         if result.state == "done" and result.zip_url:
             return self._download_and_parse(result)
@@ -450,7 +483,7 @@ class MinerU:
         Returns:
             A list of :class:`ExtractResult`, one per file in the batch.
         """
-        body = self._api.get(f"/extract-results/batch/{batch_id}")
+        body = self._require_auth().get(f"/extract-results/batch/{batch_id}")
         results: list[ExtractResult] = []
         for item in body["data"].get("extract_result", []):
             r = _parse_task_result(item)
@@ -465,31 +498,32 @@ class MinerU:
 
     def _submit_url(self, url: str, opts: dict) -> str:
         payload = {"url": url, **opts}
-        body = self._api.post("/extract/task", payload)
+        body = self._require_auth().post("/extract/task", payload)
         return body["data"]["task_id"]
 
     def _submit_urls_batch(self, urls: list[str], opts: dict) -> str:
         files = [{"url": u} for u in urls]
         payload = {"files": files, **opts}
-        body = self._api.post("/extract/task/batch", payload)
+        body = self._require_auth().post("/extract/task/batch", payload)
         return body["data"]["batch_id"]
 
     def _upload_and_submit(self, file_paths: list[str], opts: dict) -> str:
+        api = self._require_auth()
         files_meta = [{"name": Path(p).name} for p in file_paths]
         payload = {"files": files_meta, **opts}
-        body = self._api.post("/file-urls/batch", payload)
+        body = api.post("/file-urls/batch", payload)
         batch_id: str = body["data"]["batch_id"]
         upload_urls: list[str] = body["data"]["file_urls"]
 
         for local_path, upload_url in zip(file_paths, upload_urls):
             data = Path(local_path).read_bytes()
-            self._api.put_file(upload_url, data)
+            api.put_file(upload_url, data)
 
         return batch_id
 
     def _download_and_parse(self, result: ExtractResult) -> ExtractResult:
         assert result.zip_url is not None
-        zip_bytes = self._api.download(result.zip_url)
+        zip_bytes = self._require_auth().download(result.zip_url)
         parsed = parse_zip(zip_bytes, task_id=result.task_id, filename=result.filename)
         parsed.zip_url = result.zip_url
         return parsed
@@ -543,3 +577,112 @@ class MinerU:
                 raise TimeoutError(timeout, ",".join(batch_ids))
             time.sleep(min(interval, max(0, deadline - time.monotonic())))
             interval = min(interval * 2, 30.0)
+
+    # ══════════════════════════════════════════════════════════════════
+    #  Flash (agent) mode
+    # ══════════════════════════════════════════════════════════════════
+
+    def flash_extract(
+        self,
+        source: str,
+        *,
+        language: str = "ch",
+        page_range: str | None = None,
+        timeout: int = 300,
+    ) -> ExtractResult:
+        """Parse a document using the flash (agent) API.
+
+        Flash mode requires no API token, only outputs Markdown, and is
+        optimised for speed. No model selection, no extra formats.
+
+        Example::
+
+            client = MinerU()  # no token needed for flash mode
+            result = client.flash_extract("report.pdf")
+            print(result.markdown)
+
+        Args:
+            source: URL or local file path.
+            language: Document language code. Default ``"ch"``.
+            page_range: Page range, e.g. ``"1-10"``.
+            timeout: Maximum seconds to wait.
+
+        Returns:
+            :class:`ExtractResult` with ``markdown`` populated. Other fields
+            (``images``, ``docx``, ``html``, ``latex``) are always ``None``.
+
+        Raises:
+            TimeoutError: If the task does not complete within *timeout* seconds.
+            FlashPageLimitError: If the document exceeds 50 pages.
+            FlashFileTooLargeError: If the file exceeds 10 MB.
+        """
+        if _is_url(source):
+            task_id = self._flash_submit_url(source, language, page_range)
+        else:
+            task_id = self._flash_submit_file(source, language, page_range)
+
+        return self._flash_wait(task_id, timeout)
+
+    # ── Flash internal helpers ──
+
+    def _flash_submit_url(self, url: str, language: str, page_range: str | None) -> str:
+        payload: dict = {"url": url, "language": language}
+        if page_range is not None:
+            payload["page_range"] = page_range
+        body = self._flash_api.post("/parse/url", payload)
+        return body["data"]["task_id"]
+
+    def _flash_submit_file(self, file_path: str, language: str, page_range: str | None) -> str:
+        file_name = Path(file_path).name
+        payload: dict = {"file_name": file_name, "language": language}
+        if page_range is not None:
+            payload["page_range"] = page_range
+        body = self._flash_api.post("/parse/file", payload)
+        task_id: str = body["data"]["task_id"]
+        file_url: str = body["data"]["file_url"]
+
+        data = Path(file_path).read_bytes()
+        self._flash_api.put_file(file_url, data)
+        return task_id
+
+    def _flash_wait(self, task_id: str, timeout: int) -> ExtractResult:
+        deadline = time.monotonic() + timeout
+        interval = 2.0
+        while True:
+            result = self._flash_get_task(task_id)
+            if result.state in ("done", "failed"):
+                return result
+            if time.monotonic() > deadline:
+                raise TimeoutError(timeout, task_id)
+            time.sleep(min(interval, max(0, deadline - time.monotonic())))
+            interval = min(interval * 2, 30.0)
+
+    def _flash_get_task(self, task_id: str) -> ExtractResult:
+        body = self._flash_api.get(f"/parse/{task_id}")
+        return self._parse_flash_task(body["data"])
+
+    def _parse_flash_task(self, data: dict) -> ExtractResult:
+        progress = None
+        ep = data.get("extract_progress")
+        if ep:
+            progress = Progress(
+                extracted_pages=ep.get("extracted_pages", 0),
+                total_pages=ep.get("total_pages", 0),
+                start_time=ep.get("start_time", ""),
+            )
+
+        err_code_raw = data.get("err_code")
+        err_code = "" if err_code_raw is None else str(err_code_raw)
+
+        result = ExtractResult(
+            task_id=data.get("task_id", ""),
+            state=data.get("state", "unknown"),
+            err_code=err_code,
+            error=data.get("err_msg") or None,
+            progress=progress,
+        )
+
+        if result.state == "done" and data.get("markdown_url"):
+            result.markdown = self._flash_api.download_text(data["markdown_url"])
+
+        return result

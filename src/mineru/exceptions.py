@@ -49,6 +49,35 @@ class QuotaExceededError(MinerUError):
     """Daily parsing quota exhausted (-60018, -60019)."""
 
 
+# Flash API specific errors
+
+class FlashFileTooLargeError(MinerUError):
+    """File exceeds 10 MB limit (-30001)."""
+
+
+class FlashUnsupportedTypeError(MinerUError):
+    """Unsupported file type (-30002)."""
+
+
+class FlashPageLimitError(MinerUError):
+    """File exceeds 50 page limit (-30003)."""
+
+
+class FlashParamError(MinerUError):
+    """Flash request parameter error (-30004)."""
+
+
+class NoAuthClientError(MinerUError):
+    """Standard API method called on a flash-only client."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            "-1",
+            "This operation requires an authenticated client; "
+            "pass token= to MinerU() or set MINERU_TOKEN env var.",
+        )
+
+
 _CODE_TO_EXCEPTION: dict[str, type[MinerUError]] = {
     "A0202": AuthError,
     "A0211": AuthError,
@@ -61,6 +90,10 @@ _CODE_TO_EXCEPTION: dict[str, type[MinerUError]] = {
     "-60013": MinerUError,
     "-60018": QuotaExceededError,
     "-60019": QuotaExceededError,
+    "-30001": FlashFileTooLargeError,
+    "-30002": FlashUnsupportedTypeError,
+    "-30003": FlashPageLimitError,
+    "-30004": FlashParamError,
 }
 
 

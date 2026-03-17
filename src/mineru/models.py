@@ -51,6 +51,7 @@ class ExtractResult:
     task_id: str
     state: str  # "done" | "failed" | "pending" | "running" | "converting"
     filename: str | None = None
+    err_code: str = ""
     error: str | None = None
     zip_url: str | None = None
 
@@ -86,7 +87,7 @@ class ExtractResult:
     def save_docx(self, path: str) -> Path:
         """Save docx file."""
         if self.docx is None:
-            raise ValueError("No docx content — did you pass extra_formats=['docx']?")
+            raise ValueError("No docx content available")
         p = Path(path)
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_bytes(self.docx)
@@ -95,7 +96,7 @@ class ExtractResult:
     def save_html(self, path: str) -> Path:
         """Save html file."""
         if self.html is None:
-            raise ValueError("No html content — did you pass extra_formats=['html']?")
+            raise ValueError("No html content available")
         p = Path(path)
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(self.html, encoding="utf-8")
@@ -104,7 +105,7 @@ class ExtractResult:
     def save_latex(self, path: str) -> Path:
         """Save latex file."""
         if self.latex is None:
-            raise ValueError("No latex content — did you pass extra_formats=['latex']?")
+            raise ValueError("No latex content available")
         p = Path(path)
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(self.latex, encoding="utf-8")
