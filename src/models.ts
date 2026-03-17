@@ -26,6 +26,7 @@ export interface ExtractResult {
   taskId: string;
   state: string;
   filename: string | null;
+  errCode: string;
   error: string | null;
   zipUrl: string | null;
 
@@ -51,6 +52,7 @@ export function createEmptyResult(
     taskId,
     state,
     filename: null,
+    errCode: "",
     error: null,
     zipUrl: null,
     progress: null,
@@ -93,7 +95,7 @@ export async function saveDocx(
 ): Promise<void> {
   if (result.docx == null) {
     throw new Error(
-      "No docx content — did you pass extraFormats: ['docx']?",
+      "No docx content available",
     );
   }
   await ensureDir(path);
@@ -106,7 +108,7 @@ export async function saveHtml(
 ): Promise<void> {
   if (result.html == null) {
     throw new Error(
-      "No html content — did you pass extraFormats: ['html']?",
+      "No html content available",
     );
   }
   await ensureDir(path);
@@ -119,7 +121,7 @@ export async function saveLatex(
 ): Promise<void> {
   if (result.latex == null) {
     throw new Error(
-      "No latex content — did you pass extraFormats: ['latex']?",
+      "No latex content available",
     );
   }
   await ensureDir(path);

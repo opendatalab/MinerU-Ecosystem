@@ -2,7 +2,8 @@ import { readFile } from "node:fs/promises";
 import { basename, extname } from "node:path";
 
 import { ApiClient } from "./api.js";
-import { AuthError, TimeoutError } from "./errors.js";
+import { NoAuthClientError, TimeoutError } from "./errors.js";
+import { FlashApiClient } from "./flash-api.js";
 import type { ExtractResult, Progress } from "./models.js";
 import { createEmptyResult } from "./models.js";
 import { parseZip } from "./zip.js";
@@ -68,6 +69,15 @@ export interface BatchOptions {
   timeout?: number;
 }
 
+export interface FlashExtractOptions {
+  /** Document language code. Default: `"ch"`. */
+  language?: string;
+  /** Page range, e.g. `"1-10"`. */
+  pageRange?: string;
+  /** Max seconds to wait. Default: 300. */
+  timeout?: number;
+}
+
 function buildApiOptions(
   modelVersion: string,
   opts: ExtractOptions | BatchOptions,
@@ -94,6 +104,8 @@ function parseTaskResult(data: Record<string, unknown>): ExtractResult {
     (data["state"] as string) ?? "unknown",
   );
   result.filename = (data["file_name"] as string) ?? null;
+  const errCodeRaw = data["err_code"];
+  result.errCode = errCodeRaw == null ? "" : String(errCodeRaw);
   result.error = (data["err_msg"] as string) || null;
   result.zipUrl = (data["full_zip_url"] as string) ?? null;
 
@@ -115,6 +127,10 @@ function sleep(ms: number): Promise<void> {
 /**
  * MinerU API client. Turn documents into Markdown with one method call.
  *
+ * When no token is provided and `MINERU_TOKEN` is not set, a flash-only
+ * client is created. Only {@link flashExtract} is available; calling
+ * standard methods throws {@link NoAuthClientError}.
+ *
  * @example
  * ```ts
  * import { MinerU } from "mineru";
@@ -124,24 +140,34 @@ function sleep(ms: number): Promise<void> {
  * ```
  */
 export class MinerU {
-  private readonly api: ApiClient;
+  private readonly api: ApiClient | null;
+  private readonly flashApi: FlashApiClient;
 
   /**
    * @param token - API token. If omitted, reads `MINERU_TOKEN` env var.
+   *   If neither is available, creates a flash-only client.
    * @param baseUrl - API base URL. Override for private deployments.
+   * @param flashBaseUrl - Flash API base URL. Override for testing.
    */
   constructor(
     token?: string,
     baseUrl = "https://mineru.net/api/v4",
+    flashBaseUrl?: string,
   ) {
     const resolved = token ?? process.env["MINERU_TOKEN"];
-    if (!resolved) {
-      throw new AuthError(
-        "NO_TOKEN",
-        "No token provided. Pass token or set MINERU_TOKEN env var.",
-      );
+    if (resolved) {
+      this.api = new ApiClient(resolved, baseUrl);
+    } else {
+      this.api = null; // flash-only mode
     }
-    this.api = new ApiClient(resolved, baseUrl);
+    this.flashApi = new FlashApiClient(flashBaseUrl);
+  }
+
+  private requireAuth(): ApiClient {
+    if (this.api === null) {
+      throw new NoAuthClientError();
+    }
+    return this.api;
   }
 
   // ══════════════════════════════════════════════════════════════════
@@ -161,6 +187,7 @@ export class MinerU {
     source: string,
     options: ExtractOptions = {},
   ): Promise<ExtractResult> {
+    this.requireAuth();
     const { timeout = 300, ...opts } = options;
     const modelVersion = resolveModel(opts.model, source);
     const apiOpts = buildApiOptions(modelVersion, opts);
@@ -189,6 +216,7 @@ export class MinerU {
     sources: string[],
     options: BatchOptions = {},
   ): AsyncGenerator<ExtractResult> {
+    this.requireAuth();
     const { timeout = 600, ...opts } = options;
     const firstSource = sources[0] ?? "";
     const modelVersion = resolveModel(opts.model, firstSource);
@@ -244,6 +272,7 @@ export class MinerU {
     source: string,
     options: Omit<ExtractOptions, "timeout"> = {},
   ): Promise<string> {
+    this.requireAuth();
     const modelVersion = resolveModel(options.model, source);
     const apiOpts = buildApiOptions(modelVersion, options);
 
@@ -262,6 +291,7 @@ export class MinerU {
     sources: string[],
     options: Omit<BatchOptions, "timeout"> = {},
   ): Promise<string> {
+    this.requireAuth();
     const firstSource = sources[0] ?? "";
     const modelVersion = resolveModel(options.model, firstSource);
     const apiOpts = buildApiOptions(modelVersion, options);
@@ -290,7 +320,8 @@ export class MinerU {
    * the result zip is downloaded and parsed automatically.
    */
   async getTask(taskId: string): Promise<ExtractResult> {
-    const body = await this.api.get(`/extract/task/${taskId}`);
+    const api = this.requireAuth();
+    const body = await api.get(`/extract/task/${taskId}`);
     const result = parseTaskResult(body.data);
     if (result.state === "done" && result.zipUrl) {
       return this.downloadAndParse(result);
@@ -303,7 +334,8 @@ export class MinerU {
    * populated; in-progress tasks have `markdown === null`.
    */
   async getBatch(batchId: string): Promise<ExtractResult[]> {
-    const body = await this.api.get(`/extract-results/batch/${batchId}`);
+    const api = this.requireAuth();
+    const body = await api.get(`/extract-results/batch/${batchId}`);
     const items = (body.data["extract_result"] as Record<string, unknown>[]) ?? [];
     const results: ExtractResult[] = [];
     for (const item of items) {
@@ -324,7 +356,7 @@ export class MinerU {
     url: string,
     opts: Record<string, unknown>,
   ): Promise<string> {
-    const body = await this.api.post("/extract/task", { url, ...opts });
+    const body = await this.requireAuth().post("/extract/task", { url, ...opts });
     return body.data["task_id"] as string;
   }
 
@@ -333,7 +365,7 @@ export class MinerU {
     opts: Record<string, unknown>,
   ): Promise<string> {
     const files = urls.map((u) => ({ url: u }));
-    const body = await this.api.post("/extract/task/batch", {
+    const body = await this.requireAuth().post("/extract/task/batch", {
       files,
       ...opts,
     });
@@ -344,8 +376,9 @@ export class MinerU {
     filePaths: string[],
     opts: Record<string, unknown>,
   ): Promise<string> {
+    const api = this.requireAuth();
     const filesMeta = filePaths.map((p) => ({ name: basename(p) }));
-    const body = await this.api.post("/file-urls/batch", {
+    const body = await api.post("/file-urls/batch", {
       files: filesMeta,
       ...opts,
     });
@@ -354,7 +387,7 @@ export class MinerU {
 
     for (let i = 0; i < filePaths.length; i++) {
       const data = await readFile(filePaths[i]!);
-      await this.api.putFile(uploadUrls[i]!, new Uint8Array(data));
+      await api.putFile(uploadUrls[i]!, new Uint8Array(data));
     }
 
     return batchId;
@@ -363,7 +396,7 @@ export class MinerU {
   private async downloadAndParse(
     result: ExtractResult,
   ): Promise<ExtractResult> {
-    const zipBytes = await this.api.download(result.zipUrl!);
+    const zipBytes = await this.requireAuth().download(result.zipUrl!);
     const parsed = parseZip(zipBytes, result.taskId, result.filename);
     parsed.zipUrl = result.zipUrl;
     return parsed;
@@ -436,5 +469,117 @@ export class MinerU {
       await sleep(Math.min(interval, Math.max(0, deadline - Date.now())));
       interval = Math.min(interval * 2, 30_000);
     }
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  //  Flash (agent) mode
+  // ══════════════════════════════════════════════════════════════════
+
+  /**
+   * Parse a document using the flash (agent) API.
+   * No token required. Only outputs Markdown.
+   *
+   * @example
+   * ```ts
+   * const client = new MinerU(); // no token needed for flash mode
+   * const result = await client.flashExtract("report.pdf");
+   * console.log(result.markdown);
+   * ```
+   */
+  async flashExtract(
+    source: string,
+    options: FlashExtractOptions = {},
+  ): Promise<ExtractResult> {
+    const { language = "ch", pageRange, timeout = 300 } = options;
+
+    let taskId: string;
+    if (isUrl(source)) {
+      taskId = await this.flashSubmitUrl(source, language, pageRange);
+    } else {
+      taskId = await this.flashSubmitFile(source, language, pageRange);
+    }
+
+    return this.flashWait(taskId, timeout);
+  }
+
+  // ── Flash internal helpers ──
+
+  private async flashSubmitUrl(
+    url: string,
+    language: string,
+    pageRange?: string,
+  ): Promise<string> {
+    const payload: Record<string, unknown> = { url, language };
+    if (pageRange != null) payload["page_range"] = pageRange;
+    const body = await this.flashApi.post("/parse/url", payload);
+    return body.data["task_id"] as string;
+  }
+
+  private async flashSubmitFile(
+    filePath: string,
+    language: string,
+    pageRange?: string,
+  ): Promise<string> {
+    const fileName = basename(filePath);
+    const payload: Record<string, unknown> = { file_name: fileName, language };
+    if (pageRange != null) payload["page_range"] = pageRange;
+    const body = await this.flashApi.post("/parse/file", payload);
+    const taskId = body.data["task_id"] as string;
+    const fileUrl = body.data["file_url"] as string;
+
+    const data = await readFile(filePath);
+    await this.flashApi.putFile(fileUrl, new Uint8Array(data));
+    return taskId;
+  }
+
+  private async flashWait(
+    taskId: string,
+    timeout: number,
+  ): Promise<ExtractResult> {
+    const deadline = Date.now() + timeout * 1000;
+    let interval = 2000;
+    for (;;) {
+      const result = await this.flashGetTask(taskId);
+      if (result.state === "done" || result.state === "failed") return result;
+      if (Date.now() > deadline) throw new TimeoutError(timeout, taskId);
+      await sleep(Math.min(interval, Math.max(0, deadline - Date.now())));
+      interval = Math.min(interval * 2, 30_000);
+    }
+  }
+
+  private async flashGetTask(taskId: string): Promise<ExtractResult> {
+    const body = await this.flashApi.get(`/parse/${taskId}`);
+    return this.parseFlashTask(body.data);
+  }
+
+  private async parseFlashTask(
+    data: Record<string, unknown>,
+  ): Promise<ExtractResult> {
+    const result = createEmptyResult(
+      (data["task_id"] as string) ?? "",
+      (data["state"] as string) ?? "unknown",
+    );
+    const errCodeRaw = data["err_code"];
+    result.errCode = errCodeRaw == null ? "" : String(errCodeRaw);
+    result.error = (data["err_msg"] as string) || null;
+
+    const ep = data["extract_progress"] as
+      | Record<string, unknown>
+      | undefined;
+    if (ep) {
+      result.progress = {
+        extractedPages: (ep["extracted_pages"] as number) ?? 0,
+        totalPages: (ep["total_pages"] as number) ?? 0,
+        startTime: (ep["start_time"] as string) ?? "",
+      };
+    }
+
+    if (result.state === "done" && data["markdown_url"]) {
+      result.markdown = await this.flashApi.downloadText(
+        data["markdown_url"] as string,
+      );
+    }
+
+    return result;
   }
 }

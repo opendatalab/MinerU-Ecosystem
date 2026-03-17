@@ -1,5 +1,5 @@
 export { MinerU } from "./client.js";
-export type { ExtractOptions, BatchOptions } from "./client.js";
+export type { ExtractOptions, BatchOptions, FlashExtractOptions } from "./client.js";
 
 export type { ExtractResult, Image, Progress } from "./models.js";
 export {
@@ -22,4 +22,9 @@ export {
   ExtractFailedError,
   TimeoutError,
   QuotaExceededError,
+  FlashFileTooLargeError,
+  FlashUnsupportedTypeError,
+  FlashPageLimitError,
+  FlashParamError,
+  NoAuthClientError,
 } from "./errors.js";

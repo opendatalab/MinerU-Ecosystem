@@ -72,6 +72,46 @@ export class QuotaExceededError extends MinerUError {
   }
 }
 
+// Flash API specific errors
+
+export class FlashFileTooLargeError extends MinerUError {
+  constructor(code: string | number, message: string, traceId = "") {
+    super(code, message, traceId);
+    this.name = "FlashFileTooLargeError";
+  }
+}
+
+export class FlashUnsupportedTypeError extends MinerUError {
+  constructor(code: string | number, message: string, traceId = "") {
+    super(code, message, traceId);
+    this.name = "FlashUnsupportedTypeError";
+  }
+}
+
+export class FlashPageLimitError extends MinerUError {
+  constructor(code: string | number, message: string, traceId = "") {
+    super(code, message, traceId);
+    this.name = "FlashPageLimitError";
+  }
+}
+
+export class FlashParamError extends MinerUError {
+  constructor(code: string | number, message: string, traceId = "") {
+    super(code, message, traceId);
+    this.name = "FlashParamError";
+  }
+}
+
+export class NoAuthClientError extends MinerUError {
+  constructor() {
+    super(
+      "-1",
+      "This operation requires an authenticated client; pass token to MinerU() or set MINERU_TOKEN env var.",
+    );
+    this.name = "NoAuthClientError";
+  }
+}
+
 const CODE_TO_ERROR: Record<string, typeof MinerUError> = {
   A0202: AuthError,
   A0211: AuthError,
@@ -84,6 +124,10 @@ const CODE_TO_ERROR: Record<string, typeof MinerUError> = {
   "-60013": MinerUError,
   "-60018": QuotaExceededError,
   "-60019": QuotaExceededError,
+  "-30001": FlashFileTooLargeError,
+  "-30002": FlashUnsupportedTypeError,
+  "-30003": FlashPageLimitError,
+  "-30004": FlashParamError,
 };
 
 export function raiseForCode(
