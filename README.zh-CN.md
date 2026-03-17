@@ -138,6 +138,31 @@ const result = await client.extract("./paper.pdf", {
 });
 ```
 
+### Flash 模式（无需 token）
+
+Flash 模式使用轻量级 API，速度优先。无需 API token，仅输出 Markdown —— 不支持模型选择和额外格式导出。
+
+```typescript
+const client = new MinerU();  // 无需 token
+const result = await client.flashExtract("https://example.com/report.pdf");
+console.log(result.markdown);
+```
+
+带参数：
+
+```typescript
+const result = await client.flashExtract("./report.pdf", {
+  language: "en",       // 文档语言（默认: "ch"）
+  pageRange: "1-10",    // 页码范围
+  timeout: 300,         // 最大等待秒数（默认: 300）
+});
+await saveMarkdown(result, "./output/report.md");
+```
+
+Flash 模式限制：最多 50 页，最大 10 MB。
+
+`new MinerU("token")` 创建的客户端同时支持 `extract()` 和 `flashExtract()`。`new MinerU()` 无 token 创建的客户端仅支持 `flashExtract()`，调用标准方法会抛出 `NoAuthClientError`。
+
 ### CommonJS（require）
 
 ```javascript
@@ -165,6 +190,7 @@ main();
 | `submitBatch(sources, opts?)` | `string[]` | `Promise<string>`（batch_id） | 否 | 异步批量提交 |
 | `getTask(taskId)` | `string` | `Promise<ExtractResult>` | 否 | 查询任务状态 |
 | `getBatch(batchId)` | `string` | `Promise<ExtractResult[]>` | 否 | 查询批量状态 |
+| `flashExtract(source, opts?)` | `string` | `Promise<ExtractResult>` | 是（await） | Flash 模式（无需 token） |
 
 ### ExtractResult
 

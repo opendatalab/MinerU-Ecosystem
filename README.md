@@ -138,6 +138,31 @@ const result = await client.extract("./paper.pdf", {
 });
 ```
 
+### Flash mode (no token required)
+
+Flash mode uses a lightweight API optimised for speed. No API token needed, only outputs Markdown — no model selection, no extra formats.
+
+```typescript
+const client = new MinerU();  // no token needed
+const result = await client.flashExtract("https://example.com/report.pdf");
+console.log(result.markdown);
+```
+
+With options:
+
+```typescript
+const result = await client.flashExtract("./report.pdf", {
+  language: "en",       // document language (default: "ch")
+  pageRange: "1-10",    // page range
+  timeout: 300,         // max seconds to wait (default: 300)
+});
+await saveMarkdown(result, "./output/report.md");
+```
+
+Flash mode limitations: max 50 pages, max 10 MB file size.
+
+When you create `new MinerU("token")`, both `extract()` and `flashExtract()` are available. When you create `new MinerU()` without a token, only `flashExtract()` works — calling standard methods throws `NoAuthClientError`.
+
 ### CommonJS (require)
 
 ```javascript
@@ -165,6 +190,7 @@ main();
 | `submitBatch(sources, opts?)` | `string[]` | `Promise<string>` (batch_id) | No | Async batch submit |
 | `getTask(taskId)` | `string` | `Promise<ExtractResult>` | No | Query task state |
 | `getBatch(batchId)` | `string` | `Promise<ExtractResult[]>` | No | Query batch state |
+| `flashExtract(source, opts?)` | `string` | `Promise<ExtractResult>` | Yes (await) | Flash mode (no token) |
 
 ### ExtractResult
 
