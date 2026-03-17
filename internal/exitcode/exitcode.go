@@ -105,6 +105,42 @@ func Wrap(err error) *ErrorInfo {
 		}
 	}
 
+	var flashFileTooLargeErr *mineru.FlashFileTooLargeError
+	if errors.As(err, &flashFileTooLargeErr) {
+		return &ErrorInfo{
+			Code:    FileError,
+			Message: err.Error(),
+			Hint:    "File exceeds flash mode limit (10MB). Use standard 'extract' command or split the file.",
+		}
+	}
+
+	var flashUnsupportedErr *mineru.FlashUnsupportedTypeError
+	if errors.As(err, &flashUnsupportedErr) {
+		return &ErrorInfo{
+			Code:    FileError,
+			Message: err.Error(),
+			Hint:    "Flash mode supports PDF, images, Doc/Docx, PPT/PPTx, and HTML only.",
+		}
+	}
+
+	var flashPageLimitErr *mineru.FlashPageLimitError
+	if errors.As(err, &flashPageLimitErr) {
+		return &ErrorInfo{
+			Code:    FileError,
+			Message: err.Error(),
+			Hint:    "File exceeds flash mode page limit (50 pages). Use standard 'extract' command or specify --pages.",
+		}
+	}
+
+	var flashParamErr *mineru.FlashParamError
+	if errors.As(err, &flashParamErr) {
+		return &ErrorInfo{
+			Code:    UsageError,
+			Message: err.Error(),
+			Hint:    "Check your command arguments and try again.",
+		}
+	}
+
 	// Generic API error
 	var apiErr *mineru.APIError
 	if errors.As(err, &apiErr) {
