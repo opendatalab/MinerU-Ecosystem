@@ -186,6 +186,15 @@ Flash mode limitations: max 50 pages, max 10 MB file size.
 
 `mineru.New("token")` creates a client that supports both `Extract()` and `FlashExtract()`. `mineru.NewFlash()` creates a flash-only client — calling standard methods returns `ErrNoAuthClient`.
 
+### Source tracking
+
+Every API request includes a `source` header to identify the calling application. The default is `open-api-sdk-go`. Override it if you're building your own service on top of the SDK:
+
+```go
+client, _ := mineru.New("token")
+client.SetSource("my-backend-service")
+```
+
 ## API Reference
 
 ### Methods

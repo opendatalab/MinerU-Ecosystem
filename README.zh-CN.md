@@ -188,6 +188,15 @@ Flash 模式限制：最多 50 页，最大 10 MB。
 
 `mineru.New("token")` 创建的客户端同时支持 `Extract()` 和 `FlashExtract()`。`mineru.NewFlash()` 创建的仅 flash 客户端，调用标准方法会返回 `ErrNoAuthClient`。
 
+### 来源标识
+
+每个 API 请求会自动携带 `source` header 标识调用来源，默认值为 `open-api-sdk-go`。如果你基于 SDK 构建自己的服务，可以覆盖它：
+
+```go
+client, _ := mineru.New("token")
+client.SetSource("my-backend-service")
+```
+
 ## API 速查
 
 ### 方法
