@@ -53,6 +53,7 @@ func runFlashExtract(cmd *cobra.Command, args []string) error {
 	}
 
 	client := mineru.NewFlash(clientOpts...)
+	client.SetSource(config.ResolveSource())
 
 	var opts []mineru.FlashExtractOption
 	if flashLanguage != "ch" {

@@ -101,6 +101,7 @@ func runExtract(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return handleSDKError(err)
 	}
+	client.SetSource(config.ResolveSource())
 
 	opts := buildExtractOpts()
 

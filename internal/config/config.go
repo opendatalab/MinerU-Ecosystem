@@ -18,6 +18,7 @@ const configFileName = "config.yaml"
 type Config struct {
 	Token   string `yaml:"token,omitempty"`
 	BaseURL string `yaml:"base_url,omitempty"`
+	Source  string `yaml:"source,omitempty"`
 }
 
 // configPath returns the path to the config file.
@@ -136,4 +137,31 @@ func SetToken(token string) error {
 	}
 	cfg.Token = token
 	return Save(cfg)
+}
+
+// SetSource saves the source to the config file.
+func SetSource(source string) error {
+	cfg, err := Load()
+	if err != nil {
+		return err
+	}
+	cfg.Source = source
+	return Save(cfg)
+}
+
+const defaultSource = "open-api-cli"
+
+// ResolveSource resolves the source identifier in priority order:
+// 1. MINERU_SOURCE env var
+// 2. ~/.mineru/config.yaml source field
+// 3. default "open-api-cli"
+func ResolveSource() string {
+	if s := os.Getenv("MINERU_SOURCE"); strings.TrimSpace(s) != "" {
+		return s
+	}
+	cfg, err := Load()
+	if err == nil && strings.TrimSpace(cfg.Source) != "" {
+		return cfg.Source
+	}
+	return defaultSource
 }
