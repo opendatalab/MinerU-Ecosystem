@@ -56,7 +56,9 @@ func Wrap(err error) *ErrorInfo {
 		return &ErrorInfo{
 			Code:    FileError,
 			Message: err.Error(),
-			Hint:    "Document has too many pages. Try using --pages to specify a smaller range.",
+			Hint: "Document exceeds page limit. Use --pages to split into chunks and merge the results:\n" +
+				"  mineru-open-api extract doc.pdf --pages 1-200   -o part1.md\n" +
+				"  mineru-open-api extract doc.pdf --pages 201-400 -o part2.md",
 		}
 	}
 
@@ -128,7 +130,11 @@ func Wrap(err error) *ErrorInfo {
 		return &ErrorInfo{
 			Code:    FileError,
 			Message: err.Error(),
-			Hint:    "File exceeds flash mode page limit (50 pages). Use standard 'extract' command or specify --pages.",
+			Hint: "Document exceeds flash mode limit (50 pages). Use --pages to split:\n" +
+				"  mineru-open-api flash-extract doc.pdf --pages 1-50\n" +
+				"  mineru-open-api flash-extract doc.pdf --pages 51-100\n" +
+				"Or use 'extract' for a higher page limit (requires token):\n" +
+				"  mineru-open-api extract doc.pdf",
 		}
 	}
 

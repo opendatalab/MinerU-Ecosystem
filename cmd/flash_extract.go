@@ -78,8 +78,8 @@ func runFlashExtract(cmd *cobra.Command, args []string) error {
 		return handleSDKError(err)
 	}
 
-	if result.State == "failed" {
-		return fmt.Errorf("extraction failed: %s", result.Error)
+	if err := result.Err(); err != nil {
+		return handleSDKError(err)
 	}
 
 	return flashOutputResult(result, source)

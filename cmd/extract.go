@@ -136,8 +136,8 @@ func runSingleExtract(client *mineru.Client, source string, formats []string, op
 		return handleSDKError(err)
 	}
 
-	if result.State == "failed" {
-		return fmt.Errorf("extraction failed: %s", result.Error)
+	if err := result.Err(); err != nil {
+		return handleSDKError(err)
 	}
 
 	return outputResult(result, source, formats)
@@ -235,7 +235,15 @@ func runBatchExtract(client *mineru.Client, sources, formats []string, opts []mi
 					succeeded++
 				}
 			} else {
-				output.Status("[%d/%d] Error: %s - %s", i+1, total, filepath.Base(src), r.Error)
+				if taskErr := r.Err(); taskErr != nil {
+					info := exitcode.Wrap(taskErr)
+					output.Status("[%d/%d] Error: %s - %s", i+1, total, filepath.Base(src), info.Message)
+					if info.Hint != "" {
+						output.Status("  Hint: %s", info.Hint)
+					}
+				} else {
+					output.Status("[%d/%d] Error: %s - %s", i+1, total, filepath.Base(src), r.Error)
+				}
 				failed++
 			}
 		}
