@@ -14,7 +14,8 @@ _TIMEOUT = httpx.Timeout(30.0, read=120.0)
 class ApiClient:
     """Thin wrapper that handles auth headers, base URL, and error mapping."""
 
-    def __init__(self, token: str, base_url: str) -> None:
+    def __init__(self, token: str, base_url: str, source: str = "") -> None:
+        self._source = source
         self._client = httpx.Client(
             base_url=base_url,
             headers={
@@ -24,13 +25,22 @@ class ApiClient:
             timeout=_TIMEOUT,
         )
 
+    @property
+    def source(self) -> str:
+        return self._source
+
+    @source.setter
+    def source(self, value: str) -> None:
+        self._source = value
+
     def close(self) -> None:
         self._client.close()
 
     # ── requests ──
 
     def post(self, path: str, json: dict[str, Any]) -> dict[str, Any]:
-        resp = self._client.post(path, json=json)
+        headers = {"source": self._source} if self._source else {}
+        resp = self._client.post(path, json=json, headers=headers)
         return self._handle(resp)
 
     def get(self, path: str) -> dict[str, Any]:

@@ -17,18 +17,28 @@ _TIMEOUT = httpx.Timeout(30.0, read=120.0)
 class FlashApiClient:
     """No-auth HTTP client for the Flash API."""
 
-    def __init__(self, base_url: str = DEFAULT_FLASH_BASE_URL) -> None:
+    def __init__(self, base_url: str = DEFAULT_FLASH_BASE_URL, source: str = "") -> None:
+        self._source = source
         self._client = httpx.Client(
             base_url=base_url,
             headers={"Content-Type": "application/json"},
             timeout=_TIMEOUT,
         )
 
+    @property
+    def source(self) -> str:
+        return self._source
+
+    @source.setter
+    def source(self, value: str) -> None:
+        self._source = value
+
     def close(self) -> None:
         self._client.close()
 
     def post(self, path: str, json: dict[str, Any]) -> dict[str, Any]:
-        resp = self._client.post(path, json=json)
+        headers = {"source": self._source} if self._source else {}
+        resp = self._client.post(path, json=json, headers=headers)
         return self._handle(resp)
 
     def get(self, path: str) -> dict[str, Any]:

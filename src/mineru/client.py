@@ -13,6 +13,8 @@ from ._zip import parse_zip
 from .exceptions import NoAuthClientError, TimeoutError
 from .models import ExtractResult, Progress
 
+_DEFAULT_SOURCE = "open-api-sdk-python"
+
 _MODEL_MAP = {
     "pipeline": "pipeline",
     "vlm": "vlm",
@@ -123,18 +125,27 @@ class MinerU:
     ) -> None:
         resolved_token = token or os.environ.get("MINERU_TOKEN")
         if resolved_token:
-            self._api: ApiClient | None = ApiClient(resolved_token, base_url)
+            self._api: ApiClient | None = ApiClient(resolved_token, base_url, source=_DEFAULT_SOURCE)
         else:
             self._api = None  # flash-only mode
 
         flash_url = flash_base_url or DEFAULT_FLASH_BASE_URL
-        self._flash_api = FlashApiClient(flash_url)
+        self._flash_api = FlashApiClient(flash_url, source=_DEFAULT_SOURCE)
 
     def close(self) -> None:
         """Release the underlying HTTP clients."""
         if self._api is not None:
             self._api.close()
         self._flash_api.close()
+
+    def set_source(self, source: str) -> None:
+        """Override the source identifier sent with API requests.
+
+        Used to track which application or integration is making the call.
+        """
+        if self._api is not None:
+            self._api.source = source
+        self._flash_api.source = source
 
     def __enter__(self) -> MinerU:
         return self
