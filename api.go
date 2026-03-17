@@ -112,6 +112,8 @@ func (a *apiClient) do(req *http.Request) (json.RawMessage, error) {
 // codeToString normalises the JSON "code" field which can be a number or a string.
 func codeToString(v any) string {
 	switch c := v.(type) {
+	case nil:
+		return ""
 	case float64:
 		return fmt.Sprintf("%d", int(c))
 	case string:

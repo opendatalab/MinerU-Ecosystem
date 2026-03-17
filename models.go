@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Image represents an image extracted from the document.
@@ -52,7 +53,8 @@ type ExtractResult struct {
 	TaskID   string
 	State    string // "done" | "failed" | "pending" | "running" | "converting"
 	Filename string
-	Error    string
+	ErrCode  string // task-level error code from API (populated when State == "failed")
+	Error    string // task-level error message from API (populated when State == "failed")
 	ZipURL   string
 
 	Progress *Progress
@@ -66,6 +68,25 @@ type ExtractResult struct {
 	LaTeX string
 
 	zipBytes []byte
+}
+
+// Err returns a typed error when State is "failed", nil otherwise.
+// Use errors.As to check for specific error types such as PageLimitError.
+func (r *ExtractResult) Err() error {
+	if r.State != "failed" {
+		return nil
+	}
+	err := errorForCode(r.ErrCode, r.Error, "")
+	// When the API does not return err_code (standard mode task failures),
+	// fall back to message-based detection.
+	if r.ErrCode == "" {
+		msg := strings.ToLower(r.Error)
+		if strings.Contains(msg, "pages") && strings.Contains(msg, "limit") {
+			base := APIError{Code: "-60006", Message: r.Error}
+			return &PageLimitError{base}
+		}
+	}
+	return err
 }
 
 // SaveMarkdown writes the markdown file to path. When withImages is true,

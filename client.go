@@ -439,6 +439,7 @@ func parseTaskData(data json.RawMessage) (*ExtractResult, error) {
 		State           string           `json:"state"`
 		FileName        string           `json:"file_name"`
 		ErrMsg          string           `json:"err_msg"`
+		ErrCode         any              `json:"err_code"`
 		FullZipURL      string           `json:"full_zip_url"`
 		ExtractProgress *json.RawMessage `json:"extract_progress"`
 	}
@@ -450,9 +451,8 @@ func parseTaskData(data json.RawMessage) (*ExtractResult, error) {
 		State:    d.State,
 		Filename: d.FileName,
 		ZipURL:   d.FullZipURL,
-	}
-	if d.ErrMsg != "" {
-		r.Error = d.ErrMsg
+		ErrCode:  codeToString(d.ErrCode),
+		Error:    d.ErrMsg,
 	}
 	if d.ExtractProgress != nil {
 		var p Progress

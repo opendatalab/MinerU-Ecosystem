@@ -178,11 +178,13 @@ func (c *Client) parseFlashTaskData(ctx context.Context, data json.RawMessage) (
 	}
 
 	r := &ExtractResult{
-		TaskID: d.TaskID,
-		State:  d.State,
+		TaskID:  d.TaskID,
+		State:   d.State,
+		ErrCode: codeToString(d.ErrCode),
+		Error:   d.ErrMsg,
 	}
-	if d.ErrMsg != "" {
-		r.Error = d.ErrMsg
+	if d.State == "failed" {
+		return r, nil
 	}
 	if d.ExtractProgress != nil {
 		r.Progress = &Progress{
