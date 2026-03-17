@@ -43,6 +43,7 @@ release:
       -f Dockerfile.ci .
 
     # 从构建镜像里提取二进制
+    - docker rm -f extract 2>/dev/null || true
     - docker create --name extract ${BINARY_NAME}:build
     - docker cp extract:/output/ ./output/
     - docker rm extract
