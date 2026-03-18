@@ -25,8 +25,16 @@ var (
 
 var crawlCmd = &cobra.Command{
 	Use:   "crawl <url> [...]",
-	Short: "Crawl web pages and convert to Markdown",
-	Long:  `Fetch web pages and convert their content to Markdown (or other text formats).`,
+	Short: "Full-featured web page extraction (Auth Required)",
+	Long: `Fetch web content and convert it to high-quality Markdown or HTML.
+Full Feature Extract provides the most comprehensive way to crawl web pages.
+
+Capabilities & Limits:
+  - Auth Required (API Token)
+  - Supports: Any public web URL
+  - Content: Clean Markdown or HTML extraction with layout preservation
+
+For quick, No Auth document extraction, use 'flash-extract' command.`,
 	Example: `  mineru-open-api crawl https://opendatalab.com              # markdown to stdout
   mineru-open-api crawl https://opendatalab.com -f html       # html to stdout
   mineru-open-api crawl https://opendatalab.com -o ./out/      # save to file
