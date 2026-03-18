@@ -232,6 +232,91 @@ mineru-open-api status <task-id> --wait --timeout 600 # Custom timeout
 mineru-open-api version    # Show version, commit, build date, Go version, OS/arch
 ```
 
+## Supported `--language` values
+
+The `--language` flag accepts the following values (default: `ch`). Used by both `flash-extract` and `extract`.
+
+| Value | Language (EN) | 语言 (ZH) |
+|-------|--------------|-----------|
+| `ch` | Chinese (Simplified) | 中文简体 |
+| `chinese_cht` | Chinese (Traditional) | 中文繁体 |
+| `en` | English | 英文 |
+| `fr` | French | 法文 |
+| `german` | German | 德文 |
+| `japan` | Japanese | 日文 |
+| `korean` | Korean | 韩文 |
+| `it` | Italian | 意大利文 |
+| `es` | Spanish | 西班牙文 |
+| `pt` | Portuguese | 葡萄牙文 |
+| `ru` | Russian | 俄罗斯文 |
+| `ar` | Arabic | 阿拉伯文 |
+| `hi` | Hindi | 印地文 |
+| `th` | Thai | 泰文 |
+| `vi` | Vietnamese | 越南文 |
+| `el` | Greek | 希腊语 |
+| `nl` | Dutch | 荷兰文 |
+| `sv` | Swedish | 瑞典文 |
+| `da` | Danish | 丹麦文 |
+| `no` | Norwegian | 挪威文 |
+| `pl` | Polish | 波兰文 |
+| `ro` | Romanian | 罗马尼亚文 |
+| `hu` | Hungarian | 匈牙利文 |
+| `cs` | Czech | 捷克文 |
+| `sk` | Slovak | 斯洛伐克文 |
+| `sl` | Slovenian | 斯洛文尼亚文 |
+| `hr` | Croatian | 克罗地亚文 |
+| `bs` | Bosnian | 波斯尼亚文 |
+| `rs_latin` | Serbian (Latin) | 塞尔维亚文（latin) |
+| `rs_cyrillic` | Serbian (Cyrillic) | 塞尔维亚文（cyrillic) |
+| `bg` | Bulgarian | 保加利亚文 |
+| `uk` | Ukrainian | 乌克兰文 |
+| `be` | Belarusian | 白俄罗斯文 |
+| `lt` | Lithuanian | 立陶宛文 |
+| `lv` | Latvian | 拉脱维亚文 |
+| `et` | Estonian | 爱沙尼亚文 |
+| `sq` | Albanian | 阿尔巴尼亚文 |
+| `is` | Icelandic | 冰岛文 |
+| `ga` | Irish | 爱尔兰文 |
+| `cy` | Welsh | 威尔士文 |
+| `mt` | Maltese | 马耳他文 |
+| `tr` | Turkish | 土耳其文 |
+| `az` | Azerbaijani | 阿塞拜疆文 |
+| `uz` | Uzbek | 乌兹别克文 |
+| `mn` | Mongolian | 蒙古文 |
+| `fa` | Persian | 波斯文 |
+| `ur` | Urdu | 乌尔都文 |
+| `ug` | Uyghur | 维吾尔 |
+| `ku` | Kurdish | 库尔德文 |
+| `ms` | Malay | 马来文 |
+| `id` | Indonesian | 印尼文 |
+| `tl` | Tagalog | 塔加洛文 |
+| `sw` | Swahili | 西瓦希里文 |
+| `af` | Afrikaans | 南非荷兰文 |
+| `mi` | Maori | 毛利文 |
+| `oc` | Occitan | 欧西坦文 |
+| `la` | Latin | 拉丁文 |
+| `te` | Telugu | 泰卢固文 |
+| `ta` | Tamil | 泰米尔文 |
+| `mr` | Marathi | 马拉地文 |
+| `ne` | Nepali | 尼泊尔文 |
+| `sa` | Sanskrit | 沙特阿拉伯文 |
+| `bh` | Bihari | 比尔哈文 |
+| `mai` | Maithili | 迈蒂利文 |
+| `bho` | Bhojpuri | 孟加拉文 |
+| `ang` | Angika | 昂加文 |
+| `mah` | Magahi | 摩揭陀文 |
+| `sck` | Nagpuri | 那格浦尔文 |
+| `new` | Newari | 尼瓦尔文 |
+| `gom` | Goan Konkani | 果阿孔卡尼文 |
+| `abq` | Abaza | 阿巴扎文 |
+| `ava` | Avar | 阿瓦尔文 |
+| `ady` | Adyghe | 阿迪赫文 |
+| `dar` | Dargwa | 达尔瓦文 |
+| `inh` | Ingush | 因古什文 |
+| `lbe` | Lak | 拉克文 |
+| `lez` | Lezghian | 莱兹甘文 |
+| `tab` | Tabassaran | 塔巴萨兰文 |
+
 ## Global flags
 
 These flags apply to all commands:
