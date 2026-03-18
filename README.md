@@ -1,215 +1,125 @@
-# mineru-open-sdk
+# MinerU Open API SDK (Python)
+
+[![PyPI version](https://badge.fury.io/py/mineru-open-sdk.svg)](https://badge.fury.io/py/mineru-open-sdk)
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/OpenDataLab/mineru-open-sdk-python/blob/main/LICENSE)
 
 [中文文档](./README.zh-CN.md)
 
-Python SDK for the [MinerU](https://mineru.net) document extraction API. One line to turn documents into Markdown.
+**MinerU Open API SDK** is a completely free Python library for the [MinerU](https://mineru.net) document extraction service. Turn any document (PDF, Images, Word, PPT, Excel) or Web Page into high-quality Markdown with just one line of code.
 
-## Install
+---
+
+## 🚀 Key Features
+
+- **Completely Free**: No hidden costs for document extraction.
+- **Flash Mode (No Auth)**: Extract text instantly without an API token.
+- **Full Feature Mode**: Comprehensive extraction with layout preservation, images, and formula support.
+- **Async & Batch**: Built-in support for processing hundreds of documents efficiently.
+
+---
+
+## 📦 Install
 
 ```bash
 pip install mineru-open-sdk
 ```
 
-## Quick Start
+---
 
-```bash
-export MINERU_TOKEN="your-api-token"   # get it from https://mineru.net
-```
+## 🛠️ Quick Start
 
+### 1. Flash Extract (Fast, No Auth, Markdown-only)
+Ideal for quick previews. No token required.
 ```python
 from mineru import MinerU
 
-md = MinerU().extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf").markdown
-```
-
-That's it. `extract()` submits the task, polls until done, downloads the result zip, and parses out the markdown — all in one blocking call.
-
-## Usage
-
-### Parse a single document
-
-```python
-from mineru import MinerU
-
+# No token needed for Flash Mode
 client = MinerU()
+result = client.flash_extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
+
+print(result.markdown)
+```
+
+### 2. Full Feature Extract (Auth Required)
+Supports large files, rich assets (images/tables), and multiple formats.
+```python
+from mineru import MinerU
+
+# Get your free token from https://mineru.net
+client = MinerU("your-api-token")
 result = client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
+
 print(result.markdown)
-print(result.content_list)  # structured JSON
-print(result.images)        # list of extracted images
+print(result.images) # Access extracted images
 ```
 
-### Local files
+---
 
-Local files are uploaded automatically:
+## 📊 Mode Comparison
 
-```python
-result = client.extract("./report.pdf")
-```
+| Feature | Flash Extract | Full Feature Extract |
+| :--- | :--- | :--- |
+| **Auth** | **No Auth Required** | **Auth Required (Token)** |
+| **Speed** | Blazing Fast | Standard |
+| **File Limit** | Max 10 MB | Max 200 MB |
+| **Page Limit** | Max 20 Pages | Max 600 Pages |
+| **Formats** | PDF, Images, Docx, PPTx, Excel | PDF, Images, Doc/x, Ppt/x, Html |
+| **Content** | Markdown only (Placeholders) | Full assets (Images, Tables, Formulas) |
+| **Output** | Markdown | MD, Docx, LaTeX, HTML, JSON |
 
-### Extra format export
+---
 
-Request additional formats alongside the default markdown + JSON:
+## 📖 Detailed Usage
 
-```python
-result = client.extract(
-    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-    extra_formats=["docx", "html", "latex"],
-)
-
-result.save_markdown("./output/report.md")  # markdown + images/ dir
-result.save_docx("./output/report.docx")
-result.save_html("./output/report.html")
-result.save_latex("./output/report.tex")
-result.save_all("./output/full/")           # extract the full zip
-```
-
-### Crawl a web page
-
-`crawl()` is a shorthand for `extract(url, model="html")`:
-
-```python
-result = client.crawl("https://news.example.com/article/123")
-print(result.markdown)
-```
-
-### Batch extraction
-
-`extract_batch()` submits all tasks at once and yields results as each completes — first done, first yielded:
-
-```python
-for result in client.extract_batch([
-    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-]):
-    print(f"{result.filename}: {result.markdown[:200]}")
-```
-
-Batch crawling works the same way:
-
-```python
-for result in client.crawl_batch(["https://a.com/1", "https://a.com/2"]):
-    print(result.markdown[:200])
-```
-
-### Async submit + query
-
-For background services or when you need to decouple submission from polling. `submit()` returns a plain `task_id` string — store it however you like:
-
-```python
-task_id = client.submit("https://cdn-mineru.openxlab.org.cn/demo/example.pdf", model="vlm")
-print(task_id)  # "a90e6ab6-44f3-4554-..."
-
-# Later (same process, different script, whatever):
-result = client.get_task(task_id)
-if result.state == "done":
-    print(result.markdown[:500])
-else:
-    print(f"State: {result.state}, progress: {result.progress}")
-```
-
-Batch version:
-
-```python
-batch_id = client.submit_batch(["a.pdf", "b.pdf", "c.pdf"])
-
-results = client.get_batch(batch_id)
-for r in results:
-    print(f"{r.filename}: {r.state}")
-```
-
-### Full options
-
+### Full Feature Extraction Options
 ```python
 result = client.extract(
     "./paper.pdf",
-    model="vlm",             # "pipeline" | "vlm" | "html" (auto-inferred if omitted)
-    ocr=True,                # enable OCR for scanned documents
-    formula=True,            # formula recognition (default: True)
-    table=True,              # table recognition (default: True)
-    language="en",           # document language (default: "ch")
-    pages="1-20",            # page range, e.g. "1-10,15" or "2--2"
-    extra_formats=["docx"],  # also export as docx / html / latex
-    timeout=600,             # max seconds to wait (default: 300)
+    model="vlm",             # "vlm" | "pipeline" | "html"
+    ocr=True,                # Enable OCR for scanned documents
+    formula=True,            # Formula recognition
+    table=True,              # Table recognition
+    language="en",           # "ch" | "en" | etc.
+    pages="1-20",            # Page range
+    extra_formats=["docx"],  # Export as docx, html, or latex
+    timeout=600,
 )
+
+result.save_all("./output/") # Save markdown and all assets
 ```
 
-### Flash mode (no token required)
-
-Flash mode uses a lightweight API optimised for speed. No API token needed, only outputs Markdown — no model selection, no extra formats.
-
+### Batch Processing
 ```python
-client = MinerU()  # no token needed
-result = client.flash_extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
+# Yields results as they complete
+for result in client.extract_batch(["a.pdf", "b.pdf", "c.pdf"]):
+    print(f"{result.filename}: Done")
+```
+
+### Web Crawling
+```python
+result = client.crawl("https://www.baidu.com")
 print(result.markdown)
 ```
 
-With options:
+---
+
+## 🤖 Integration for AI Agents
+
+The SDK is designed to be easily integrated into LLM workflows. For status updates, you can check `result.state` and `result.progress`.
 
 ```python
-result = client.flash_extract(
-    "./report.pdf",
-    language="en",       # document language (default: "ch")
-    page_range="1-10",   # page range
-    timeout=300,         # max seconds to wait (default: 300)
-)
-result.save_markdown("./output/report.md")
+task_id = client.submit("large-report.pdf")
+# ... later ...
+result = client.get_task(task_id)
+if result.state == "done":
+    do_something(result.markdown)
 ```
 
-Flash mode limitations: max 50 pages, max 10 MB file size.
+---
 
-When you create `MinerU("token")`, both `extract()` and `flash_extract()` are available. When you create `MinerU()` without a token, only `flash_extract()` works — calling standard methods raises `NoAuthClientError`.
+## 📄 License
+This project is licensed under the Apache-2.0 License.
 
-### Source tracking
-
-Every API request includes a `source` header to identify the calling application. The default is `open-api-sdk-python`. Override it if you're building your own service on top of the SDK:
-
-```python
-client = MinerU("token")
-client.set_source("my-backend-service")
-```
-
-## API Reference
-
-### Methods
-
-| Method | Input | Output | Blocking | Use case |
-|--------|-------|--------|----------|----------|
-| `extract(source)` | `str` | `ExtractResult` | Yes | Single document |
-| `extract_batch(sources)` | `list[str]` | `Iterator[ExtractResult]` | Yes (yields) | Batch documents |
-| `crawl(url)` | `str` | `ExtractResult` | Yes | Single web page |
-| `crawl_batch(urls)` | `list[str]` | `Iterator[ExtractResult]` | Yes (yields) | Batch web pages |
-| `submit(source)` | `str` | `str` (task_id) | No | Async submit |
-| `submit_batch(sources)` | `list[str]` | `str` (batch_id) | No | Async batch submit |
-| `get_task(task_id)` | `str` | `ExtractResult` | No | Query task state |
-| `get_batch(batch_id)` | `str` | `list[ExtractResult]` | No | Query batch state |
-| `flash_extract(source)` | `str` | `ExtractResult` | Yes | Flash mode (no token) |
-
-### ExtractResult
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `markdown` | `str \| None` | Extracted markdown text |
-| `content_list` | `list[dict] \| None` | Structured JSON content |
-| `images` | `list[Image]` | Extracted images |
-| `docx` | `bytes \| None` | Docx bytes (requires `extra_formats`) |
-| `html` | `str \| None` | HTML text (requires `extra_formats`) |
-| `latex` | `str \| None` | LaTeX text (requires `extra_formats`) |
-| `state` | `str` | `"done"` / `"failed"` / `"pending"` / `"running"` |
-| `error` | `str \| None` | Error message when `state == "failed"` |
-| `progress` | `Progress \| None` | Page progress when `state == "running"` |
-
-Save methods: `save_markdown(path)`, `save_docx(path)`, `save_html(path)`, `save_latex(path)`, `save_all(dir)`.
-
-### Model versions
-
-| `model=` | Description |
-|----------|-------------|
-| `None` (default) | Auto-infer: `.html` → `"html"`, everything else → `"vlm"` |
-| `"vlm"` | Vision-language model (recommended) |
-| `"pipeline"` | Classic layout analysis |
-| `"html"` | Web page extraction |
-
-## License
-
-Apache-2.0
+## 🔗 Links
+- [Official Website](https://mineru.net)
+- [API Documentation](https://mineru.net/docs)

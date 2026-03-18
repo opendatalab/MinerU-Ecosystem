@@ -1,215 +1,125 @@
-# mineru-open-sdk
+# MinerU Open API SDK (Python)
 
-[English](./README.md)
+[![PyPI version](https://badge.fury.io/py/mineru-open-sdk.svg)](https://badge.fury.io/py/mineru-open-sdk)
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/OpenDataLab/mineru-open-sdk-python/blob/main/LICENSE)
 
-[MinerU](https://mineru.net) 文档解析 API 的 Python SDK。一行代码把文档变成 Markdown。
+[English README](./README.md)
 
-## 安装
+**MinerU Open API SDK** 是一个完全免费的 Python 库，用于连接 [MinerU](https://mineru.net) 文档提取服务。只需一行代码，即可将任何文档（PDF、图片、Word、PPT、Excel）或网页转换为高质量的 Markdown。
+
+---
+
+## 🚀 核心特性
+
+- **完全免费**：文档提取服务没有任何隐藏费用。
+- **极速模式 (No Auth)**：无需 API Token 即可立即提取。
+- **全功能模式**：提供完整的版式保留、图片、表格及公式支持。
+- **异步与批量**：原生支持高效处理成百上千份文档。
+
+---
+
+## 📦 安装指南
 
 ```bash
 pip install mineru-open-sdk
 ```
 
-## 快速开始
+---
 
-```bash
-export MINERU_TOKEN="your-api-token"   # 在 https://mineru.net 获取
-```
+## 🛠️ 快速上手
 
+### 1. 极速模式 (Flash Extract - 免登录，只支持Markdown)
+适合快速预览。无需配置 Token。
 ```python
 from mineru import MinerU
 
-md = MinerU().extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf").markdown
-```
-
-`extract()` 内部完成提交任务、轮询状态、下载结果、解析 zip 的全流程，调用者只看到"传入 URL，拿到 Markdown"。
-
-## 使用示例
-
-### 解析单个文档
-
-```python
-from mineru import MinerU
-
+# 极速模式无需传入 Token
 client = MinerU()
-result = client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
+result = client.flash_extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
+
 print(result.markdown)
-print(result.content_list)  # 结构化 JSON
-print(result.images)        # 提取的图片列表
 ```
 
-### 本地文件
-
-自动上传：
-
+### 2. 全功能模式 (Full Feature Extract - 需登录)
+支持超大文件、丰富的资产（图片/表格）及多种输出格式。
 ```python
-result = client.extract("./report.pdf")
+from mineru import MinerU
+
+# 从 https://mineru.net 获取免费 Token
+client = MinerU("your-api-token")
+result = client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
+
+print(result.markdown)
+print(result.images) # 获取提取出的图片列表
 ```
 
-### 额外格式导出
+---
 
-在默认的 Markdown + JSON 之外，还可以导出其他格式：
+## 📊 模式对比
 
+| 特性 | 极速模式 (Flash) | 全功能模式 (Full Feature) |
+| :--- | :--- | :--- |
+| **身份认证** | **免登录 (No Auth)** | **需登录 (Token)** |
+| **处理速度** | 极速 | 标准 |
+| **文件大小上限** | 最大 10 MB | 最大 200 MB |
+| **文件页数上限** | 最大 20 页 | 最大 600 页 |
+| **支持格式** | PDF, 图片, Docx, PPTx, Excel | PDF, 图片, Doc/x, Ppt/x, Html |
+| **内容完整度** | 仅文本 (图片、表格、公式显示占位符) | 完整资源 (图片、表格、公式全部保留) |
+| **输出格式** | Markdown | MD, Docx, LaTeX, HTML, JSON |
+
+---
+
+## 📖 详细用法
+
+### 全功能提取选项
 ```python
 result = client.extract(
-    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-    extra_formats=["docx", "html", "latex"],
+    "./论文.pdf",
+    model="vlm",             # "vlm" | "pipeline" | "html"
+    ocr=True,                # 启用 OCR 识别扫描件
+    formula=True,            # 公式识别
+    table=True,              # 表格识别
+    language="en",           # "ch" | "en" | 等
+    pages="1-20",            # 页码范围
+    extra_formats=["docx"],  # 额外导出为 docx, html, 或 latex
+    timeout=600,
 )
 
-result.save_markdown("./output/report.md")  # markdown + images/ 目录
-result.save_docx("./output/report.docx")
-result.save_html("./output/report.html")
-result.save_latex("./output/report.tex")
-result.save_all("./output/full/")           # 解压完整 zip
+result.save_all("./output/") # 保存 Markdown 和所有相关资源
 ```
 
-### 网页抓取
-
-`crawl()` 等价于 `extract(url, model="html")`：
-
+### 批量处理
 ```python
-result = client.crawl("https://news.example.com/article/123")
+# 边处理边返回结果
+for result in client.extract_batch(["a.pdf", "b.pdf", "c.pdf"]):
+    print(f"{result.filename}: 已完成")
+```
+
+### 网页爬取 (Crawl)
+```python
+result = client.crawl("https://www.baidu.com")
 print(result.markdown)
 ```
 
-### 批量解析
+---
 
-`extract_batch()` 一次性提交所有任务，先完成的先 yield：
+## 🤖 AI Agent 自动化集成
 
-```python
-for result in client.extract_batch([
-    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-]):
-    print(f"{result.filename}: {result.markdown[:200]}")
-```
-
-批量网页抓取同理：
+本 SDK 设计时充分考虑了 LLM 工作流集成。您可以通过 `result.state` 和 `result.progress` 轻松监控任务状态。
 
 ```python
-for result in client.crawl_batch(["https://a.com/1", "https://a.com/2"]):
-    print(result.markdown[:200])
-```
-
-### 异步提交 + 查询
-
-适用于后台服务或需要将提交和查询解耦的场景。`submit()` 返回纯字符串 `task_id`，存取方式由你决定：
-
-```python
-task_id = client.submit("https://cdn-mineru.openxlab.org.cn/demo/example.pdf", model="vlm")
-print(task_id)  # "a90e6ab6-44f3-4554-..."
-
-# 随时查询（同一进程、另一个脚本、都行）：
+task_id = client.submit("大报告.pdf")
+# ... 稍后 ...
 result = client.get_task(task_id)
 if result.state == "done":
-    print(result.markdown[:500])
-else:
-    print(f"状态: {result.state}, 进度: {result.progress}")
+    do_something(result.markdown)
 ```
 
-批量版本：
+---
 
-```python
-batch_id = client.submit_batch(["a.pdf", "b.pdf", "c.pdf"])
+## 📄 开源协议
+本项目采用 Apache-2.0 协议。
 
-results = client.get_batch(batch_id)
-for r in results:
-    print(f"{r.filename}: {r.state}")
-```
-
-### 完整参数
-
-```python
-result = client.extract(
-    "./paper.pdf",
-    model="vlm",             # "pipeline" | "vlm" | "html"（不传则自动推断）
-    ocr=True,                # 扫描件启用 OCR
-    formula=True,            # 公式识别（默认开启）
-    table=True,              # 表格识别（默认开启）
-    language="en",           # 文档语言（默认 "ch"）
-    pages="1-20",            # 页码范围，如 "1-10,15" 或 "2--2"
-    extra_formats=["docx"],  # 额外导出 docx / html / latex
-    timeout=600,             # 最大等待秒数（默认 300）
-)
-```
-
-### Flash 模式（无需 token）
-
-Flash 模式使用轻量级 API，速度优先。无需 API token，仅输出 Markdown —— 不支持模型选择和额外格式导出。
-
-```python
-client = MinerU()  # 无需 token
-result = client.flash_extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
-print(result.markdown)
-```
-
-带参数：
-
-```python
-result = client.flash_extract(
-    "./report.pdf",
-    language="en",       # 文档语言（默认 "ch"）
-    page_range="1-10",   # 页码范围
-    timeout=300,         # 最大等待秒数（默认 300）
-)
-result.save_markdown("./output/report.md")
-```
-
-Flash 模式限制：最多 50 页，最大 10 MB。
-
-`MinerU("token")` 创建的客户端同时支持 `extract()` 和 `flash_extract()`。`MinerU()` 无 token 创建的客户端仅支持 `flash_extract()`，调用标准方法会抛出 `NoAuthClientError`。
-
-### 来源标识
-
-每个 API 请求会自动携带 `source` header 标识调用来源，默认值为 `open-api-sdk-python`。如果你基于 SDK 构建自己的服务，可以覆盖它：
-
-```python
-client = MinerU("token")
-client.set_source("my-backend-service")
-```
-
-## API 速查
-
-### 方法
-
-| 方法 | 输入 | 输出 | 阻塞 | 场景 |
-|------|------|------|------|------|
-| `extract(source)` | `str` | `ExtractResult` | 是 | 单个文档 |
-| `extract_batch(sources)` | `list[str]` | `Iterator[ExtractResult]` | 是（yield） | 批量文档 |
-| `crawl(url)` | `str` | `ExtractResult` | 是 | 单个网页 |
-| `crawl_batch(urls)` | `list[str]` | `Iterator[ExtractResult]` | 是（yield） | 批量网页 |
-| `submit(source)` | `str` | `str`（task_id） | 否 | 异步提交 |
-| `submit_batch(sources)` | `list[str]` | `str`（batch_id） | 否 | 异步批量提交 |
-| `get_task(task_id)` | `str` | `ExtractResult` | 否 | 查询状态 |
-| `get_batch(batch_id)` | `str` | `list[ExtractResult]` | 否 | 查询批量状态 |
-| `flash_extract(source)` | `str` | `ExtractResult` | 是 | Flash 模式（无需 token） |
-
-### ExtractResult 字段
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `markdown` | `str \| None` | Markdown 正文 |
-| `content_list` | `list[dict] \| None` | 结构化 JSON 内容 |
-| `images` | `list[Image]` | 提取的图片 |
-| `docx` | `bytes \| None` | docx 二进制（需 `extra_formats`） |
-| `html` | `str \| None` | HTML 文本（需 `extra_formats`） |
-| `latex` | `str \| None` | LaTeX 文本（需 `extra_formats`） |
-| `state` | `str` | `"done"` / `"failed"` / `"pending"` / `"running"` |
-| `error` | `str \| None` | 失败原因（`state == "failed"` 时） |
-| `progress` | `Progress \| None` | 页级进度（`state == "running"` 时） |
-
-保存方法：`save_markdown(path)`, `save_docx(path)`, `save_html(path)`, `save_latex(path)`, `save_all(dir)`
-
-### model 参数
-
-| `model=` | 说明 |
-|----------|------|
-| `None`（默认） | 自动推断：`.html` → `"html"`，其余 → `"vlm"` |
-| `"vlm"` | VLM 视觉语言模型（推荐） |
-| `"pipeline"` | 传统版面分析 |
-| `"html"` | 网页解析 |
-
-## License
-
-Apache-2.0
+## 🔗 相关链接
+- [官方网站](https://mineru.net)
+- [API 文档](https://mineru.net/docs)
