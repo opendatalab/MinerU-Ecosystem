@@ -27,7 +27,7 @@ var flashExtractCmd = &cobra.Command{
 	Long: `Parse PDFs, images, or other documents using the lightweight flash API. No API token required.`,
 	Example: `  mineru-open-api flash-extract report.pdf                     # markdown to stdout
   mineru-open-api flash-extract report.pdf -o ./out/           # save to file
-  mineru-open-api flash-extract https://example.com/doc.pdf    # URL mode
+  mineru-open-api flash-extract https://cdn-mineru.openxlab.org.cn/demo/example.pdf    # URL mode
   mineru-open-api flash-extract report.pdf --language en       # specify language
   mineru-open-api flash-extract report.pdf --pages 1-10        # page range`,
 	Args: cobra.ExactArgs(1),
