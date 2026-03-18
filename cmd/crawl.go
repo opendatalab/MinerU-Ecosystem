@@ -77,13 +77,7 @@ func runCrawl(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no API token found. Run 'mineru-open-api auth' to configure your token")
 	}
 
-	cfg, _ := config.Load()
-	var clientOpts []mineru.ClientOption
-	if baseURL := config.GetBaseURL(cmd, cfg); baseURL != "" {
-		clientOpts = append(clientOpts, mineru.WithBaseURL(baseURL))
-	}
-
-	client, err := mineru.New(tokenSrc.Token, clientOpts...)
+	client, err := newClient(cmd, tokenSrc.Token)
 	if err != nil {
 		return handleSDKError(err)
 	}
