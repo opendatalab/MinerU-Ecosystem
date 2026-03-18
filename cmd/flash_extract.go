@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/OpenDataLab/mineru-open-cli/internal/config"
 	"github.com/OpenDataLab/mineru-open-cli/internal/output"
 	mineru "github.com/OpenDataLab/mineru-open-sdk"
 	"github.com/spf13/cobra"
@@ -46,14 +45,7 @@ func init() {
 func runFlashExtract(cmd *cobra.Command, args []string) error {
 	source := args[0]
 
-	var clientOpts []mineru.ClientOption
-	cfg, _ := config.Load()
-	if baseURL := config.GetBaseURL(cmd, cfg); baseURL != "" {
-		clientOpts = append(clientOpts, mineru.WithBaseURL(baseURL))
-	}
-
-	client := mineru.NewFlash(clientOpts...)
-	client.SetSource(config.ResolveSource())
+	client := newFlashClient(cmd)
 
 	var opts []mineru.FlashExtractOption
 	if flashLanguage != "ch" {
