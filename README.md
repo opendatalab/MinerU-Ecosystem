@@ -22,7 +22,7 @@
 ## 📦 Install
 
 ```bash
-go get github.com/OpenDataLab/mineru-open-sdk-go@latest
+go get github.com/opendatalab/MinerU-Ecosystem/sdk/go@latest
 ```
 
 ---
@@ -32,7 +32,7 @@ go get github.com/OpenDataLab/mineru-open-sdk-go@latest
 ### 1. Flash Extract (Fast, No Auth, Markdown-only)
 Ideal for quick previews. No token required.
 ```go
-import "github.com/OpenDataLab/mineru-open-sdk-go"
+import "github.com/opendatalab/MinerU-Ecosystem/sdk/go"
 
 // No token needed for Flash Mode
 client := mineru.NewFlash()
@@ -44,7 +44,7 @@ fmt.Println(result.Markdown)
 ### 2. Full Feature Extract (Auth Required)
 Supports large files, rich assets (images/tables), and multiple formats.
 ```go
-import "github.com/OpenDataLab/mineru-open-sdk-go"
+import "github.com/opendatalab/MinerU-Ecosystem/sdk/go"
 
 // Get your free token from https://mineru.net
 client, _ := mineru.New("your-api-token")

@@ -22,7 +22,7 @@
 ## 📦 安装指南
 
 ```bash
-go get github.com/OpenDataLab/mineru-open-sdk-go@latest
+go get github.com/opendatalab/MinerU-Ecosystem/sdk/go@latest
 ```
 
 ---
@@ -32,7 +32,7 @@ go get github.com/OpenDataLab/mineru-open-sdk-go@latest
 ### 1. 极速模式 (Flash Extract - 免登录，Markdown 唯一)
 适合快速预览。无需配置 Token。
 ```go
-import "github.com/OpenDataLab/mineru-open-sdk-go"
+import "github.com/opendatalab/MinerU-Ecosystem/sdk/go"
 
 // 极速模式无需传入 Token
 client := mineru.NewFlash()
@@ -44,7 +44,7 @@ fmt.Println(result.Markdown)
 ### 2. 全功能模式 (Full Feature Extract - 需登录)
 支持超大文件、丰富的资产（图片/表格）及多种输出格式。
 ```go
-import "github.com/OpenDataLab/mineru-open-sdk-go"
+import "github.com/opendatalab/MinerU-Ecosystem/sdk/go"
 
 // 从 https://mineru.net 获取免费 Token
 client, _ := mineru.New("your-api-token")
