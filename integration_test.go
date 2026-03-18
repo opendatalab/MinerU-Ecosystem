@@ -79,6 +79,16 @@ func TestVersion(t *testing.T) {
 	}
 }
 
+func TestUpdateCheck(t *testing.T) {
+	r := run(t, "update", "--check")
+	if r.exitCode != 0 {
+		t.Fatalf("exit code = %d, stderr: %s", r.exitCode, r.stderr)
+	}
+	if !strings.Contains(r.stderr, "Already up to date") && !strings.Contains(r.stderr, "New version available") {
+		t.Errorf("unexpected update check output: %s", r.stderr)
+	}
+}
+
 func TestHelpOutput(t *testing.T) {
 	r := run(t, "--help")
 	if r.exitCode != 0 {
