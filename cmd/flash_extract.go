@@ -72,7 +72,7 @@ func runFlashExtract(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	output.Status("Parsing %s (flash mode)", filepath.Base(source))
+	output.Status("Thinking... %s (flash)", filepath.Base(source))
 
 	result, err := client.FlashExtract(ctx, source, opts...)
 	if err != nil {

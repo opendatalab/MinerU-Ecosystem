@@ -125,7 +125,7 @@ func runSingleExtract(client *mineru.Client, source string, formats []string, op
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	output.Status("Uploading %s", filepath.Base(source))
+	output.Status("Thinking... %s", filepath.Base(source))
 
 	batchID, err := client.Submit(ctx, source, opts...)
 	if err != nil {
