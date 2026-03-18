@@ -32,7 +32,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	result, err := client.Extract(context.Background(), "https://example.com/report.pdf")
+	result, err := client.Extract(context.Background(), "https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,7 +48,7 @@ func main() {
 
 ```go
 client, _ := mineru.New("your-token")
-result, _ := client.Extract(ctx, "https://example.com/paper.pdf")
+result, _ := client.Extract(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 fmt.Println(result.Markdown)
 fmt.Println(result.ContentList)  // 结构化 JSON
 fmt.Println(len(result.Images))  // 提取的图片列表
@@ -67,7 +67,7 @@ result, _ := client.Extract(ctx, "./report.pdf")
 在默认的 Markdown + JSON 之外，还可以导出其他格式：
 
 ```go
-result, _ := client.Extract(ctx, "https://example.com/report.pdf",
+result, _ := client.Extract(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
     mineru.WithExtraFormats("docx", "html", "latex"),
 )
 
@@ -93,9 +93,9 @@ fmt.Println(result.Markdown)
 
 ```go
 ch, _ := client.ExtractBatch(ctx, []string{
-    "https://example.com/ch1.pdf",
-    "https://example.com/ch2.pdf",
-    "https://example.com/ch3.pdf",
+    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
+    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
+    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
 })
 for result := range ch {
     fmt.Printf("%s: %s\n", result.Filename, result.Markdown[:200])
@@ -116,7 +116,7 @@ for result := range ch {
 适用于后台服务或需要将提交和查询解耦的场景。`Submit` 返回纯字符串 task ID：
 
 ```go
-taskID, _ := client.Submit(ctx, "https://example.com/big-report.pdf", mineru.WithModel("vlm"))
+taskID, _ := client.Submit(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf", mineru.WithModel("vlm"))
 fmt.Println(taskID) // "a90e6ab6-44f3-4554-..."
 
 // 随时查询：
@@ -169,7 +169,7 @@ Flash 模式使用轻量级 API，速度优先。无需 API token，仅输出 Ma
 
 ```go
 client := mineru.NewFlash()
-result, _ := client.FlashExtract(ctx, "https://example.com/report.pdf")
+result, _ := client.FlashExtract(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 fmt.Println(result.Markdown)
 ```
 

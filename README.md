@@ -32,7 +32,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	result, err := client.Extract(context.Background(), "https://example.com/report.pdf")
+	result, err := client.Extract(context.Background(), "https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,7 +46,7 @@ func main() {
 
 ```go
 client, _ := mineru.New("your-token")
-result, _ := client.Extract(ctx, "https://example.com/paper.pdf")
+result, _ := client.Extract(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 fmt.Println(result.Markdown)
 fmt.Println(result.ContentList)  // structured JSON
 fmt.Println(len(result.Images))  // extracted images
@@ -65,7 +65,7 @@ result, _ := client.Extract(ctx, "./report.pdf")
 Request additional formats alongside the default markdown + JSON:
 
 ```go
-result, _ := client.Extract(ctx, "https://example.com/report.pdf",
+result, _ := client.Extract(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
     mineru.WithExtraFormats("docx", "html", "latex"),
 )
 
@@ -91,9 +91,9 @@ fmt.Println(result.Markdown)
 
 ```go
 ch, _ := client.ExtractBatch(ctx, []string{
-    "https://example.com/ch1.pdf",
-    "https://example.com/ch2.pdf",
-    "https://example.com/ch3.pdf",
+    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
+    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
+    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
 })
 for result := range ch {
     fmt.Printf("%s: %s\n", result.Filename, result.Markdown[:200])
@@ -114,7 +114,7 @@ for result := range ch {
 For background services or when you need to decouple submission from polling. `Submit` returns a plain task ID string:
 
 ```go
-taskID, _ := client.Submit(ctx, "https://example.com/big-report.pdf", mineru.WithModel("vlm"))
+taskID, _ := client.Submit(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf", mineru.WithModel("vlm"))
 fmt.Println(taskID) // "a90e6ab6-44f3-4554-..."
 
 // Later:
@@ -167,7 +167,7 @@ Flash mode uses a lightweight API optimised for speed. No API token needed, only
 
 ```go
 client := mineru.NewFlash()
-result, _ := client.FlashExtract(ctx, "https://example.com/report.pdf")
+result, _ := client.FlashExtract(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 fmt.Println(result.Markdown)
 ```
 

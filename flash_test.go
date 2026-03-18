@@ -31,7 +31,7 @@ func TestNewFlash_NoTokenRequired(t *testing.T) {
 
 func TestNewFlash_ExtractReturnsError(t *testing.T) {
 	c := mineru.NewFlash()
-	_, err := c.Extract(context.Background(), "https://example.com/doc.pdf")
+	_, err := c.Extract(context.Background(), "https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 	if err == nil {
 		t.Fatal("expected error when calling Extract on flash-only client")
 	}
@@ -55,7 +55,7 @@ func TestNewFlash_CrawlReturnsError(t *testing.T) {
 
 func TestNewFlash_SubmitReturnsError(t *testing.T) {
 	c := mineru.NewFlash()
-	_, err := c.Submit(context.Background(), "https://example.com/doc.pdf")
+	_, err := c.Submit(context.Background(), "https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 	if err == nil {
 		t.Fatal("expected error when calling Submit on flash-only client")
 	}

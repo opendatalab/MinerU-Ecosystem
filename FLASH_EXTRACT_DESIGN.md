@@ -177,7 +177,7 @@ Usage:
 Examples:
   mineru-open-api-cli flash-extract report.pdf                     # markdown to stdout
   mineru-open-api-cli flash-extract report.pdf -o ./out/           # save to file
-  mineru-open-api-cli flash-extract https://example.com/doc.pdf    # URL mode
+  mineru-open-api-cli flash-extract https://cdn-mineru.openxlab.org.cn/demo/example.pdf    # URL mode
   mineru-open-api-cli flash-extract report.pdf --language en       # specify language
   mineru-open-api-cli flash-extract report.pdf --pages 1-10        # page range
 

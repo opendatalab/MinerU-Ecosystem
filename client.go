@@ -3,7 +3,7 @@
 // One call to turn documents into Markdown:
 //
 //	client, _ := mineru.New("your-token")
-//	result, _ := client.Extract(ctx, "https://example.com/report.pdf")
+//	result, _ := client.Extract(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 //	fmt.Println(result.Markdown)
 package mineru
 
@@ -77,7 +77,7 @@ func (c *Client) SetSource(source string) {
 
 // Extract parses a single document. Blocks until the result is ready.
 //
-//	result, err := client.Extract(ctx, "https://example.com/doc.pdf")
+//	result, err := client.Extract(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 //	result, err := client.Extract(ctx, "./local.pdf", mineru.WithModel("vlm"))
 func (c *Client) Extract(ctx context.Context, source string, opts ...ExtractOption) (*ExtractResult, error) {
 	cfg := applyOpts(opts)
