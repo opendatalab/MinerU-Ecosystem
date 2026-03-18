@@ -4,7 +4,7 @@ package exitcode
 import (
 	"errors"
 
-	mineru "github.com/OpenDataLab/mineru-open-sdk"
+	mineru "github.com/opendatalab/MinerU-Ecosystem/sdk/go"
 )
 
 // Exit codes
