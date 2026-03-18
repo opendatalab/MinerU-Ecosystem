@@ -1,236 +1,130 @@
-# mineru
+# MinerU Open API SDK (JS/TS)
 
-[English](./README.md)
+[![npm version](https://badge.fury.io/js/mineru.svg)](https://badge.fury.io/js/mineru)
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/OpenDataLab/mineru-open-sdk-js/blob/main/LICENSE)
 
-[MinerU](https://mineru.net) 文档解析 API 的 TypeScript/JavaScript SDK。一行代码将文档转为 Markdown。
+[English README](./README.md)
 
-## 安装
+**MinerU Open API SDK** 是一个完全免费的 TypeScript/JavaScript 库，用于连接 [MinerU](https://mineru.net) 文档提取服务。只需一行代码，即可将任何文档（PDF、图片、Word、PPT、Excel）或网页转换为高质量的 Markdown。
+
+支持 Node.js (18+)、Bun、Deno 以及浏览器环境。
+
+---
+
+## 🚀 核心特性
+
+- **完全免费**：文档提取服务没有任何隐藏费用。
+- **极速模式 (No Auth)**：无需 API Token 即可立即提取。
+- **全功能模式**：提供完整的版式保留、图片、表格及公式支持。
+- **异步与批量**：原生支持异步生成器（Async Generators），高效处理多份文档。
+
+---
+
+## 📦 安装指南
 
 ```bash
 npm install mineru
 ```
 
-## 快速开始
+---
 
-```bash
-export MINERU_TOKEN="your-api-token"   # 从 https://mineru.net 获取
-```
+## 🛠️ 快速上手
 
+### 1. 极速模式 (Flash Extract - 免登录，Markdown 唯一)
+适合快速预览。无需配置 Token。
 ```typescript
 import { MinerU } from "mineru";
 
-const md = (await new MinerU().extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")).markdown;
-```
-
-就这么简单。`extract()` 提交任务、轮询等待、下载结果 ZIP 并解析出 Markdown —— 一次异步调用搞定。
-
-## 使用方法
-
-### 解析单个文档
-
-```typescript
-import { MinerU } from "mineru";
-
+// 极速模式无需传入 Token
 const client = new MinerU();
-const result = await client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf");
+const result = await client.flashExtract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf");
+
 console.log(result.markdown);
-console.log(result.contentList);  // 结构化 JSON
-console.log(result.images);       // 提取的图片列表
 ```
 
-### 本地文件
-
-本地文件会自动上传：
-
+### 2. 全功能模式 (Full Feature Extract - 需登录)
+支持超大文件、丰富的资产（图片/表格）及多种输出格式。
 ```typescript
-const result = await client.extract("./report.pdf");
+import { MinerU } from "mineru";
+
+// 从 https://mineru.net 获取免费 Token
+const client = new MinerU("your-api-token");
+const result = await client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf");
+
+console.log(result.markdown);
+console.log(result.images); // 获取提取出的图片列表
 ```
 
-### 导出额外格式
+---
 
-在默认的 Markdown + JSON 之外，还可以请求其他格式：
+## 📊 模式对比
 
+| 特性 | 极速模式 (Flash) | 全功能模式 (Full Feature) |
+| :--- | :--- | :--- |
+| **身份认证** | **免登录 (No Auth)** | **需登录 (Token)** |
+| **处理速度** | 极速 | 标准 |
+| **文件大小上限** | 最大 10 MB | 最大 200 MB |
+| **文件页数上限** | 最大 20 页 | 最大 600 页 |
+| **支持格式** | PDF, 图片, Docx, PPTx, Excel | PDF, 图片, Doc/x, Ppt/x, Html |
+| **内容完整度** | 仅文本 (图片、表格、公式显示占位符) | 完整资源 (图片、表格、公式全部保留) |
+| **输出格式** | Markdown | MD, Docx, LaTeX, HTML, JSON |
+
+---
+
+## 📖 详细用法
+
+### 全功能提取选项
 ```typescript
-import { saveMarkdown, saveDocx, saveHtml, saveLatex, saveAll } from "mineru";
+import { saveAll } from "mineru";
 
-const result = await client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf", {
-  extraFormats: ["docx", "html", "latex"],
+const result = await client.extract("./论文.pdf", {
+  model: "vlm",              // "vlm" | "pipeline" | "html"
+  ocr: true,                 // 启用 OCR 识别扫描件
+  formula: true,             // 公式识别
+  table: true,               // 表格识别
+  language: "en",            // "ch" | "en" | 等
+  pages: "1-20",             // 页码范围
+  extraFormats: ["docx"],    // 额外导出为 docx, html, 或 latex
+  timeout: 600,
 });
 
-await saveMarkdown(result, "./output/report.md");  // markdown + images/ 目录
-await saveDocx(result, "./output/report.docx");
-await saveHtml(result, "./output/report.html");
-await saveLatex(result, "./output/report.tex");
-await saveAll(result, "./output/full/");            // 解压完整 ZIP
+await saveAll(result, "./output/"); // 保存 Markdown 和所有相关资源
 ```
 
-### 抓取网页
-
-`crawl()` 是 `extract(url, { model: "html" })` 的简写：
-
+### 批量处理
 ```typescript
-const result = await client.crawl("https://news.example.com/article/123");
+// 边处理边返回结果
+for await (const result of client.extractBatch(["a.pdf", "b.pdf"])) {
+  console.log(`${result.filename}: 已完成`);
+}
+```
+
+### 网页爬取 (Crawl)
+```typescript
+const result = await client.crawl("https://www.baidu.com");
 console.log(result.markdown);
 ```
 
-### 批量解析
+---
 
-`extractBatch()` 一次性提交所有任务，先完成的先返回：
+## 🤖 AI Agent 自动化集成
 
-```typescript
-for await (const result of client.extractBatch([
-  "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-  "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-  "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-])) {
-  console.log(`${result.filename}: ${result.markdown?.slice(0, 200)}`);
-}
-```
-
-批量抓取网页也一样：
+本 SDK 设计时充分考虑了 AI 工作流集成。您可以通过 `result.state` 和 `result.progress` 轻松监控任务状态。
 
 ```typescript
-for await (const result of client.crawlBatch(["https://a.com/1", "https://a.com/2"])) {
-  console.log(result.markdown?.slice(0, 200));
-}
-```
-
-### 异步提交 + 查询
-
-适用于后台服务或需要将提交和轮询解耦的场景。`submit()` 返回一个任务 ID 字符串，随你怎么存：
-
-```typescript
-const taskId = await client.submit("https://cdn-mineru.openxlab.org.cn/demo/example.pdf", { model: "vlm" });
-console.log(taskId);  // "a90e6ab6-44f3-4554-..."
-
-// 稍后（同一进程、不同脚本，都行）：
+const taskId = await client.submit("大报告.pdf");
+// ... 稍后 ...
 const result = await client.getTask(taskId);
 if (result.state === "done") {
-  console.log(result.markdown?.slice(0, 500));
-} else {
-  console.log(`状态: ${result.state}, 进度: ${result.progress}`);
+  processMarkdown(result.markdown);
 }
 ```
 
-批量版本：
+---
 
-```typescript
-const batchId = await client.submitBatch(["a.pdf", "b.pdf", "c.pdf"]);
+## 📄 开源协议
+本项目采用 Apache-2.0 协议。
 
-const results = await client.getBatch(batchId);
-for (const r of results) {
-  console.log(`${r.filename}: ${r.state}`);
-}
-```
-
-### 完整参数
-
-```typescript
-const result = await client.extract("./paper.pdf", {
-  model: "vlm",              // "pipeline" | "vlm" | "html"（不传则自动推断）
-  ocr: true,                 // 对扫描件启用 OCR
-  formula: true,             // 公式识别（默认: true）
-  table: true,               // 表格识别（默认: true）
-  language: "en",            // 文档语言（默认: "ch"）
-  pages: "1-20",             // 页码范围，如 "1-10,15" 或 "2--2"
-  extraFormats: ["docx"],    // 同时导出 docx / html / latex
-  timeout: 600,              // 最大等待秒数（默认: 300）
-});
-```
-
-### Flash 模式（无需 token）
-
-Flash 模式使用轻量级 API，速度优先。无需 API token，仅输出 Markdown —— 不支持模型选择和额外格式导出。
-
-```typescript
-const client = new MinerU();  // 无需 token
-const result = await client.flashExtract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf");
-console.log(result.markdown);
-```
-
-带参数：
-
-```typescript
-const result = await client.flashExtract("./report.pdf", {
-  language: "en",       // 文档语言（默认: "ch"）
-  pageRange: "1-10",    // 页码范围
-  timeout: 300,         // 最大等待秒数（默认: 300）
-});
-await saveMarkdown(result, "./output/report.md");
-```
-
-Flash 模式限制：最多 50 页，最大 10 MB。
-
-`new MinerU("token")` 创建的客户端同时支持 `extract()` 和 `flashExtract()`。`new MinerU()` 无 token 创建的客户端仅支持 `flashExtract()`，调用标准方法会抛出 `NoAuthClientError`。
-
-### 来源标识
-
-每个 API 请求会自动携带 `source` header 标识调用来源，默认值为 `open-api-sdk-js`。如果你基于 SDK 构建自己的服务，可以覆盖它：
-
-```typescript
-const client = new MinerU("token");
-client.setSource("my-backend-service");
-```
-
-### CommonJS（require）
-
-```javascript
-const { MinerU } = require("mineru");
-
-async function main() {
-  const client = new MinerU();
-  const result = await client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf");
-  console.log(result.markdown);
-}
-main();
-```
-
-## API 参考
-
-### 方法
-
-| 方法 | 输入 | 输出 | 是否阻塞 | 用途 |
-|------|------|------|----------|------|
-| `extract(source, opts?)` | `string` | `Promise<ExtractResult>` | 是（await） | 单个文档 |
-| `extractBatch(sources, opts?)` | `string[]` | `AsyncGenerator<ExtractResult>` | 是（for await） | 批量文档 |
-| `crawl(url, opts?)` | `string` | `Promise<ExtractResult>` | 是（await） | 单个网页 |
-| `crawlBatch(urls, opts?)` | `string[]` | `AsyncGenerator<ExtractResult>` | 是（for await） | 批量网页 |
-| `submit(source, opts?)` | `string` | `Promise<string>`（task_id） | 否 | 异步提交 |
-| `submitBatch(sources, opts?)` | `string[]` | `Promise<string>`（batch_id） | 否 | 异步批量提交 |
-| `getTask(taskId)` | `string` | `Promise<ExtractResult>` | 否 | 查询任务状态 |
-| `getBatch(batchId)` | `string` | `Promise<ExtractResult[]>` | 否 | 查询批量状态 |
-| `flashExtract(source, opts?)` | `string` | `Promise<ExtractResult>` | 是（await） | Flash 模式（无需 token） |
-
-### ExtractResult
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `markdown` | `string \| null` | 提取的 Markdown 文本 |
-| `contentList` | `object[] \| null` | 结构化 JSON 内容 |
-| `images` | `Image[]` | 提取的图片 |
-| `docx` | `Uint8Array \| null` | Docx 字节（需要 `extraFormats`） |
-| `html` | `string \| null` | HTML 文本（需要 `extraFormats`） |
-| `latex` | `string \| null` | LaTeX 文本（需要 `extraFormats`） |
-| `state` | `string` | `"done"` / `"failed"` / `"pending"` / `"running"` |
-| `error` | `string \| null` | `state === "failed"` 时的错误信息 |
-| `progress` | `Progress \| null` | `state === "running"` 时的页面进度 |
-
-保存方法：`saveMarkdown(result, path)`、`saveDocx(result, path)`、`saveHtml(result, path)`、`saveLatex(result, path)`、`saveAll(result, dir)`。
-
-### 模型版本
-
-| `model` | 说明 |
-|---------|------|
-| `undefined`（默认） | 自动推断：`.html` → `"html"`，其他 → `"vlm"` |
-| `"vlm"` | 视觉语言模型（推荐） |
-| `"pipeline"` | 经典版面分析 |
-| `"html"` | 网页提取 |
-
-## 环境要求
-
-- Node.js >= 18（使用原生 `fetch`）
-- 同样支持 Bun 和 Deno
-
-## 许可证
-
-Apache-2.0
+## 🔗 相关链接
+- [官方网站](https://mineru.net)
+- [API 文档](https://mineru.net/docs)
