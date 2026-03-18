@@ -31,6 +31,11 @@ if (-not (Test-Path $InstallDir)) {
 
 try {
     Invoke-WebRequest -Uri $URL -OutFile $DestPath -UseBasicParsing
+    
+    # Remove Mark of the Web to prevent SmartScreen/Execution blocks
+    if (Get-Command Unblock-File -ErrorAction SilentlyContinue) {
+        Unblock-File -Path $DestPath -ErrorAction SilentlyContinue
+    }
 } catch {
     Write-Error "Download failed: $_"
     exit 1
@@ -44,13 +49,22 @@ if (-not (Test-Path $DestPath) -or (Get-Item $DestPath).Length -eq 0) {
 # Add to PATH if not already there
 $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
 if ($UserPath -notlike "*$InstallDir*") {
-    [Environment]::SetEnvironmentVariable("Path", "$UserPath;$InstallDir", "User")
+    $NewPath = if ([string]::IsNullOrWhiteSpace($UserPath)) { $InstallDir } else { "$UserPath;$InstallDir" }
+    [Environment]::SetEnvironmentVariable("Path", $NewPath, "User")
     $env:Path = "$env:Path;$InstallDir"
     Write-Host "Added $InstallDir to user PATH"
 }
 
 Write-Host ""
 Write-Host "Installed successfully!"
+Write-Host "=========================================================="
+Write-Host " IMPORTANT: If the command 'mineru-open-api' is not found,"
+Write-Host " please RESTART YOUR TERMINAL for the PATH to take effect."
+Write-Host "=========================================================="
 & $DestPath version
 Write-Host ""
-Write-Host "Run 'mineru-open-api auth' to configure your API token."
+Write-Host "====================[ AGENT GUIDANCE ]===================="
+Write-Host "Executable Path: $DestPath"
+Write-Host "Note: To use the CLI immediately in automation scripts or Code Agents,"
+Write-Host "please invoke it using the absolute path above."
+Write-Host "=========================================================="

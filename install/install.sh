@@ -65,9 +65,17 @@ download_and_install() {
 
     echo ""
     echo "Installed successfully!"
+    echo "=========================================================="
+    echo " IMPORTANT: If the command 'mineru-open-api' is not found,"
+    echo " please restart your terminal or ensure ${INSTALL_DIR} is in your PATH."
+    echo "=========================================================="
     "${INSTALL_DIR}/mineru-open-api" version
     echo ""
-    echo "Run 'mineru-open-api auth' to configure your API token."
+    echo "====================[ AGENT GUIDANCE ]===================="
+    echo "Executable Path: ${INSTALL_DIR}/mineru-open-api"
+    echo "Note: To use the CLI immediately in automation scripts or Code Agents,"
+    echo "please invoke it using the absolute path above."
+    echo "=========================================================="
 }
 
 detect_platform
