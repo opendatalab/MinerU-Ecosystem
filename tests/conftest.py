@@ -11,7 +11,7 @@ TEST_PDF_URL = "https://bitcoin.org/bitcoin.pdf"
 
 TEST_MODEL = "pipeline"
 
-TEST_HTML_URL = "https://www.example.com"
+TEST_HTML_URL = "https://opendatalab.com"
 
 TEST_TIMEOUT = 600
 

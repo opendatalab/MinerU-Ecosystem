@@ -28,7 +28,7 @@ class TestCrawlBatch:
     """Batch crawl web pages."""
 
     def test_yields_results(self, client):
-        urls = ["https://www.example.com", "https://www.example.org"]
+        urls = ["https://opendatalab.com", "https://www.example.org"]
         results = list(client.crawl_batch(urls, timeout=TEST_TIMEOUT))
 
         assert len(results) == 2

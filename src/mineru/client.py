@@ -300,7 +300,7 @@ class MinerU:
 
         Example::
 
-            result = MinerU().crawl("https://example.com/article")
+            result = MinerU().crawl("https://opendatalab.com")
             print(result.markdown)
 
         Args:
