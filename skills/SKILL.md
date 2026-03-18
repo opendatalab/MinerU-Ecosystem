@@ -1,5 +1,5 @@
 ---
-name: mineru-open-api-skills
+name: MinerU Document Extractor
 description: MinerU document extraction CLI that converts PDFs, images, and web pages into Markdown, HTML, LaTeX, or DOCX via the MinerU API. Supports token-free flash extraction for quick start, full extraction with table/formula recognition, web crawling, batch processing, and piped workflows.
 read_when:
   - Extracting text from PDF documents
