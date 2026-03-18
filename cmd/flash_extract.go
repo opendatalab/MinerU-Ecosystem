@@ -22,9 +22,17 @@ var (
 
 var flashExtractCmd = &cobra.Command{
 	Use:   "flash-extract <file-or-url>",
-	Short: "Extract documents to Markdown using flash mode (no auth required)",
-	// TODO(docs): 补充 flash 模式 vs 标准模式的差异说明（多端统一文案待定）
-	Long: `Parse PDFs, images, or other documents using the lightweight flash API. No API token required.`,
+	Short: "Fast, No Auth document-to-markdown extraction",
+	Long: `Flash Extract provides a fast, No Auth way to extract text from documents.
+Ideal for quick previews and simple Markdown extraction.
+
+Capabilities & Limits:
+  - No API Token Required
+  - Supports: PDF, Images (png, jpg, webp, etc.), Docx, PPTx, Excel (xls, xlsx)
+  - File Limits: Max 10MB and 20 pages per document
+  - Content: Markdown only (Images, Tables, and Formulas are replaced with placeholders)
+
+For full layout retention and all assets (images/tables/formulas), use 'extract' command.`,
 	Example: `  mineru-open-api flash-extract report.pdf                     # markdown to stdout
   mineru-open-api flash-extract report.pdf -o ./out/           # save to file
   mineru-open-api flash-extract https://cdn-mineru.openxlab.org.cn/demo/example.pdf    # URL mode
