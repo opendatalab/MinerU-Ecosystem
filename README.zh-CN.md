@@ -23,7 +23,7 @@
 ## 📦 安装指南
 
 ```bash
-npm install mineru
+npm install mineru-open-sdk
 ```
 
 ---
@@ -33,7 +33,7 @@ npm install mineru
 ### 1. 极速模式 (Flash Extract - 免登录，Markdown 唯一)
 适合快速预览。无需配置 Token。
 ```typescript
-import { MinerU } from "mineru";
+import { MinerU } from "mineru-open-sdk";
 
 // 极速模式无需传入 Token
 const client = new MinerU();
@@ -45,7 +45,7 @@ console.log(result.markdown);
 ### 2. 全功能模式 (Full Feature Extract - 需登录)
 支持超大文件、丰富的资产（图片/表格）及多种输出格式。
 ```typescript
-import { MinerU } from "mineru";
+import { MinerU } from "mineru-open-sdk";
 
 // 从 https://mineru.net 获取免费 Token
 const client = new MinerU("your-api-token");
@@ -75,7 +75,7 @@ console.log(result.images); // 获取提取出的图片列表
 
 ### 全功能提取选项
 ```typescript
-import { saveAll } from "mineru";
+import { saveAll } from "mineru-open-sdk";
 
 const result = await client.extract("./论文.pdf", {
   model: "vlm",              // "vlm" | "pipeline" | "html"

@@ -23,7 +23,7 @@ Works in Node.js (18+), Bun, Deno, and the Browser.
 ## 📦 Install
 
 ```bash
-npm install mineru
+npm install mineru-open-sdk
 ```
 
 ---
@@ -33,7 +33,7 @@ npm install mineru
 ### 1. Flash Extract (Fast, No Auth, Markdown-only)
 Ideal for quick previews. No token required.
 ```typescript
-import { MinerU } from "mineru";
+import { MinerU } from "mineru-open-sdk";
 
 // No token needed for Flash Mode
 const client = new MinerU();
@@ -45,7 +45,7 @@ console.log(result.markdown);
 ### 2. Full Feature Extract (Auth Required)
 Supports large files, rich assets (images/tables), and multiple formats.
 ```typescript
-import { MinerU } from "mineru";
+import { MinerU } from "mineru-open-sdk";
 
 // Get your free token from https://mineru.net
 const client = new MinerU("your-api-token");
@@ -75,7 +75,7 @@ console.log(result.images); // Access extracted images
 
 ### Full Feature Extraction Options
 ```typescript
-import { saveAll } from "mineru";
+import { saveAll } from "mineru-open-sdk";
 
 const result = await client.extract("./paper.pdf", {
   model: "vlm",              // "vlm" | "pipeline" | "html"

@@ -1,5 +1,5 @@
 {
-  "name": "mineru",
+  "name": "mineru-open-sdk",
   "version": "0.1.0",
   "description": "MinerU API SDK — one line to turn documents into Markdown",
   "license": "Apache-2.0",
