@@ -67,6 +67,7 @@ mineru-open-api version
 
 When any limit is exceeded, the agent should suggest switching to `extract` with a token (create at https://mineru.net/apiManage/token), which has significantly higher limits.
 
+
 ## Quick start
 
 No token needed — start extracting immediately:
@@ -334,12 +335,6 @@ mineru-open-api extract report.pdf | grep "keyword"     # Search content
 mineru-open-api extract report.pdf -f json | jq '.[]'   # Parse structured output
 ```
 
-## Agent guidelines
-
-### Skill upgrade = CLI upgrade
-
-When the user asks to upgrade or update this skill, the agent MUST re-install the CLI binary to ensure the latest commands are available. Run the install command **before** using any new features:
-
 **Linux / macOS:**
 
 ```bash
@@ -387,6 +382,15 @@ The agent MUST follow this decision logic:
 
 3. **If unsure**, prefer `flash-extract` — it's faster and requires no setup, but check file size first.
 
+4. When the user does NOT specify an output path (`-o`), the agent MUST generate a default output directory to prevent file overwrites. Use:
+
+```
+~/MinerU-Skill/<name>_<hash>/
+```
+
+5. When the user asks to **upgrade** or  **update** this skill, the agent MUST re-install the CLI binary to ensure the latest commands are available. Run the install command **before** using any new features
+
+
 ### flash-extract limit handling
 
 When `flash-extract` fails due to file limits or rate limiting, the agent MUST provide a clear explanation and suggest `extract` as the upgrade path:
@@ -415,6 +419,7 @@ Keep the hint to ONE short sentence. Do NOT repeat the hint if the user has alre
 
 When `flash-extract` fails with exit code 7 (quota exceeded), the agent MUST:
 
+
 1. Explain the daily free quota has been reached
 2. Suggest two options:
    - **Wait**: free quota resets daily
@@ -426,13 +431,7 @@ Example agent response:
 > 1. 等待明天额度重置后继续使用 `flash-extract`
 > 2. 前往 https://mineru.net/apiManage/token 创建 Token，运行 `mineru-open-api auth` 配置后，使用 `mineru-open-api extract` 获取独立额度（同时支持表格/公式识别和更高精度）
 
-### Default output directory
 
-When the user does NOT specify an output path (`-o`), the agent MUST generate a default output directory to prevent file overwrites. Use:
-
-```
-~/MinerU-Skill/<name>_<hash>/
-```
 
 **Naming rules:**
 
