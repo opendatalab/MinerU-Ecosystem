@@ -1,238 +1,128 @@
-# mineru-open-sdk
+# MinerU Open API SDK (Go)
+
+[![Go Reference](https://pkg.go.dev/badge/github.com/OpenDataLab/mineru-open-sdk-go.svg)](https://pkg.go.dev/github.com/OpenDataLab/mineru-open-sdk-go)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/OpenDataLab/mineru-open-sdk-go/blob/main/LICENSE)
 
 [中文文档](./README.zh-CN.md)
 
-Go SDK for the [MinerU](https://mineru.net) document extraction API. One call to turn documents into Markdown.
+**MinerU Open API SDK** is a completely free, zero-dependency Go library for the [MinerU](https://mineru.net) document extraction service. Turn any document (PDF, Images, Word, PPT, Excel) or Web Page into high-quality Markdown with just one call.
 
-## Install
+---
+
+## 🚀 Key Features
+
+- **Completely Free**: No hidden costs for document extraction.
+- **Zero Dependencies**: Uses only the Go standard library.
+- **Flash Mode (No Auth)**: Extract text instantly without an API token.
+- **Full Feature Mode**: Comprehensive extraction with layout preservation, images, and formula support.
+- **Concurrency**: Native Go channel support for efficient batch processing.
+
+---
+
+## 📦 Install
 
 ```bash
-go get github.com/OpenDataLab/mineru-open-sdk@latest
+go get github.com/OpenDataLab/mineru-open-sdk-go@latest
 ```
 
-## Quick Start
+---
 
-```bash
-export MINERU_TOKEN="your-api-token"   # get it from https://mineru.net
-```
+## 🛠️ Quick Start
 
+### 1. Flash Extract (Fast, No Auth, Markdown-only)
+Ideal for quick previews. No token required.
 ```go
-package main
+import "github.com/OpenDataLab/mineru-open-sdk-go"
 
-import (
-	"context"
-	"fmt"
-	"log"
-
-	mineru "github.com/OpenDataLab/mineru-open-sdk"
-)
-
-func main() {
-	client, err := mineru.New("")
-	if err != nil {
-		log.Fatal(err)
-	}
-	result, err := client.Extract(context.Background(), "https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(result.Markdown)
-}
-```
-
-## Usage
-
-### Parse a single document
-
-```go
-client, _ := mineru.New("your-token")
-result, _ := client.Extract(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
-fmt.Println(result.Markdown)
-fmt.Println(result.ContentList)  // structured JSON
-fmt.Println(len(result.Images))  // extracted images
-```
-
-### Local files
-
-Local files are uploaded automatically:
-
-```go
-result, _ := client.Extract(ctx, "./report.pdf")
-```
-
-### Extra format export
-
-Request additional formats alongside the default markdown + JSON:
-
-```go
-result, _ := client.Extract(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-    mineru.WithExtraFormats("docx", "html", "latex"),
-)
-
-result.SaveMarkdown("./output/report.md", true)  // markdown + images/ dir
-result.SaveDocx("./output/report.docx")
-result.SaveHTML("./output/report.html")
-result.SaveLaTeX("./output/report.tex")
-result.SaveAll("./output/full/")                  // extract the full zip
-```
-
-### Crawl a web page
-
-`Crawl` is a shorthand for `Extract` with model="html":
-
-```go
-result, _ := client.Crawl(ctx, "https://news.example.com/article/123")
-fmt.Println(result.Markdown)
-```
-
-### Batch extraction
-
-`ExtractBatch` submits all tasks at once and streams results on a channel — first done, first received:
-
-```go
-ch, _ := client.ExtractBatch(ctx, []string{
-    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-})
-for result := range ch {
-    fmt.Printf("%s: %s\n", result.Filename, result.Markdown[:200])
-}
-```
-
-Batch crawling works the same way:
-
-```go
-ch, _ := client.CrawlBatch(ctx, []string{"https://a.com/1", "https://a.com/2"})
-for result := range ch {
-    fmt.Println(result.Markdown[:200])
-}
-```
-
-### Async submit + query
-
-For background services or when you need to decouple submission from polling. `Submit` returns a plain task ID string:
-
-```go
-taskID, _ := client.Submit(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf", mineru.WithModel("vlm"))
-fmt.Println(taskID) // "a90e6ab6-44f3-4554-..."
-
-// Later:
-result, _ := client.GetTask(ctx, taskID)
-if result.State == "done" {
-    fmt.Println(result.Markdown[:500])
-} else {
-    fmt.Printf("State: %s, progress: %s\n", result.State, result.Progress)
-}
-```
-
-Batch version:
-
-```go
-batchID, _ := client.SubmitBatch(ctx, []string{"a.pdf", "b.pdf", "c.pdf"})
-
-results, _ := client.GetBatch(ctx, batchID)
-for _, r := range results {
-    fmt.Printf("%s: %s\n", r.Filename, r.State)
-}
-```
-
-### Full options
-
-```go
-result, err := client.Extract(ctx, "./paper.pdf",
-    mineru.WithModel("vlm"),             // "pipeline" | "vlm" | "html"
-    mineru.WithOCR(true),                // enable OCR for scanned documents
-    mineru.WithFormula(true),            // formula recognition (default: true)
-    mineru.WithTable(true),              // table recognition (default: true)
-    mineru.WithLanguage("en"),           // document language (default: "ch")
-    mineru.WithPages("1-20"),            // page range
-    mineru.WithExtraFormats("docx"),     // also export as docx / html / latex
-    mineru.WithPollTimeout(10*time.Minute),  // max poll wait time (default: 5m)
-)
-```
-
-### Client options
-
-```go
-client, _ := mineru.New("token",
-    mineru.WithBaseURL("https://private.example.com/api/v4"),  // private deployment
-    mineru.WithHTTPClient(customClient),                        // custom http.Client
-)
-```
-
-### Flash mode (no token required)
-
-Flash mode uses a lightweight API optimised for speed. No API token needed, only outputs Markdown — no model selection, no extra formats.
-
-```go
+// No token needed for Flash Mode
 client := mineru.NewFlash()
 result, _ := client.FlashExtract(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
+
 fmt.Println(result.Markdown)
 ```
 
-With options:
-
+### 2. Full Feature Extract (Auth Required)
+Supports large files, rich assets (images/tables), and multiple formats.
 ```go
-result, _ := client.FlashExtract(ctx, "./report.pdf",
-    mineru.WithFlashLanguage("en"),   // document language (default: "ch")
-    mineru.WithFlashPages("1-10"),    // page range
-    mineru.WithFlashTimeout(10*time.Minute),  // max poll wait (default: 5m)
+import "github.com/OpenDataLab/mineru-open-sdk-go"
+
+// Get your free token from https://mineru.net
+client, _ := mineru.New("your-api-token")
+result, _ := client.Extract(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
+
+fmt.Println(result.Markdown)
+fmt.Println(len(result.Images)) // Access extracted images
+```
+
+---
+
+## 📊 Mode Comparison
+
+| Feature | Flash Extract | Full Feature Extract |
+| :--- | :--- | :--- |
+| **Auth** | **No Auth Required** | **Auth Required (Token)** |
+| **Speed** | Blazing Fast | Standard |
+| **File Limit** | Max 10 MB | Max 200 MB |
+| **Page Limit** | Max 20 Pages | Max 600 Pages |
+| **Formats** | PDF, Images, Docx, PPTx, Excel | PDF, Images, Doc/x, Ppt/x, Html |
+| **Content** | Markdown only (Placeholders) | Full assets (Images, Tables, Formulas) |
+| **Output** | Markdown | MD, Docx, LaTeX, HTML, JSON |
+
+---
+
+## 📖 Detailed Usage
+
+### Full Feature Extraction Options
+```go
+result, _ := client.Extract(ctx, "./paper.pdf",
+    mineru.WithModel("vlm"),             // "vlm" | "pipeline" | "html"
+    mineru.WithOCR(true),                // Enable OCR for scanned documents
+    mineru.WithFormula(true),            // Formula recognition
+    mineru.WithTable(true),              // Table recognition
+    mineru.WithLanguage("en"),           // "ch" | "en" | etc.
+    mineru.WithPages("1-20"),            // Page range
+    mineru.WithExtraFormats("docx"),     // Export as docx, html, or latex
+    mineru.WithPollTimeout(10*time.Minute),
 )
-result.SaveMarkdown("./output/report.md", false)
+
+result.SaveAll("./output/") // Save markdown and all assets
 ```
 
-Flash mode limitations: max 50 pages, max 10 MB file size.
+### Batch Processing
+```go
+// Returns a channel that streams results as they complete
+ch, _ := client.ExtractBatch(ctx, []string{"a.pdf", "b.pdf"})
+for result := range ch {
+    fmt.Printf("%s: Done\n", result.Filename)
+}
+```
 
-`mineru.New("token")` creates a client that supports both `Extract()` and `FlashExtract()`. `mineru.NewFlash()` creates a flash-only client — calling standard methods returns `ErrNoAuthClient`.
+### Web Crawling
+```go
+result, _ := client.Crawl(ctx, "https://www.baidu.com")
+fmt.Println(result.Markdown)
+```
 
-### Source tracking
+---
 
-Every API request includes a `source` header to identify the calling application. The default is `open-api-sdk-go`. Override it if you're building your own service on top of the SDK:
+## 🤖 Integration for AI Agents
+
+Perfect for Go-based AI backend services. Status and progress can be monitored via `result.State` and `result.Progress`.
 
 ```go
-client, _ := mineru.New("token")
-client.SetSource("my-backend-service")
+taskID, _ := client.Submit(ctx, "report.pdf")
+// ... later ...
+result, _ := client.GetTask(ctx, taskID)
+if result.State == "done" {
+    processMarkdown(result.Markdown)
+}
 ```
 
-## API Reference
+---
 
-### Methods
+## 📄 License
+This project is licensed under the MIT License.
 
-| Method | Input | Output | Blocking | Use case |
-|--------|-------|--------|----------|----------|
-| `Extract(ctx, source)` | `string` | `*ExtractResult` | Yes | Single document |
-| `ExtractBatch(ctx, sources)` | `[]string` | `<-chan *ExtractResult` | No (channel) | Batch documents |
-| `Crawl(ctx, url)` | `string` | `*ExtractResult` | Yes | Single web page |
-| `CrawlBatch(ctx, urls)` | `[]string` | `<-chan *ExtractResult` | No (channel) | Batch web pages |
-| `Submit(ctx, source)` | `string` | `string` (task_id) | No | Async submit |
-| `SubmitBatch(ctx, sources)` | `[]string` | `string` (batch_id) | No | Async batch submit |
-| `GetTask(ctx, taskID)` | `string` | `*ExtractResult` | No | Query task state |
-| `GetBatch(ctx, batchID)` | `string` | `[]*ExtractResult` | No | Query batch state |
-| `FlashExtract(ctx, source)` | `string` | `*ExtractResult` | Yes | Flash mode (no token) |
-
-All methods accept variadic `ExtractOption` arguments (except `GetTask` and `GetBatch`).
-
-### ExtractResult
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `Markdown` | `string` | Extracted markdown text |
-| `ContentList` | `[]map[string]any` | Structured JSON content |
-| `Images` | `[]Image` | Extracted images |
-| `Docx` | `[]byte` | Docx bytes (requires `WithExtraFormats`) |
-| `HTML` | `string` | HTML text (requires `WithExtraFormats`) |
-| `LaTeX` | `string` | LaTeX text (requires `WithExtraFormats`) |
-| `State` | `string` | `"done"` / `"failed"` / `"pending"` / `"running"` |
-| `Error` | `string` | Error message when `State == "failed"` |
-| `Progress` | `*Progress` | Page progress when `State == "running"` |
-
-Save methods: `SaveMarkdown(path, withImages)`, `SaveDocx(path)`, `SaveHTML(path)`, `SaveLaTeX(path)`, `SaveAll(dir)`.
-
-### Zero dependencies
-
-This SDK uses only the Go standard library — no external packages required.
-
-## License
-
-MIT
+## 🔗 Links
+- [Official Website](https://mineru.net)
+- [API Documentation](https://mineru.net/docs)

@@ -1,249 +1,128 @@
-# mineru-open-sdk
+# MinerU Open API SDK (Go)
 
-[English](./README.md)
+[![Go Reference](https://pkg.go.dev/badge/github.com/OpenDataLab/mineru-open-sdk-go.svg)](https://pkg.go.dev/github.com/OpenDataLab/mineru-open-sdk-go)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/OpenDataLab/mineru-open-sdk-go/blob/main/LICENSE)
 
-[MinerU](https://mineru.net) 文档解析 API 的 Go SDK。一次调用把文档变成 Markdown。
+[English README](./README.md)
 
-## 安装
+**MinerU Open API SDK** 是一个完全免费、零依赖的 Go 语言库，用于连接 [MinerU](https://mineru.net) 文档提取服务。只需一次调用，即可将任何文档（PDF、图片、Word、PPT、Excel）或网页转换为高质量的 Markdown。
+
+---
+
+## 🚀 核心特性
+
+- **完全免费**：文档提取服务没有任何隐藏费用。
+- **零依赖**：仅使用 Go 标准库，不引入任何外部依赖。
+- **极速模式 (No Auth)**：无需 API Token 即可立即提取。
+- **全功能模式**：提供完整的版式保留、图片、表格及公式支持。
+- **并发支持**：原生支持 Go Channel，高效处理批量文档。
+
+---
+
+## 📦 安装指南
 
 ```bash
-go get github.com/OpenDataLab/mineru-open-sdk@latest
+go get github.com/OpenDataLab/mineru-open-sdk-go@latest
 ```
 
-## 快速开始
+---
 
-```bash
-export MINERU_TOKEN="your-api-token"   # 在 https://mineru.net 获取
-```
+## 🛠️ 快速上手
 
+### 1. 极速模式 (Flash Extract - 免登录，Markdown 唯一)
+适合快速预览。无需配置 Token。
 ```go
-package main
+import "github.com/OpenDataLab/mineru-open-sdk-go"
 
-import (
-	"context"
-	"fmt"
-	"log"
-
-	mineru "github.com/OpenDataLab/mineru-open-sdk"
-)
-
-func main() {
-	client, err := mineru.New("")
-	if err != nil {
-		log.Fatal(err)
-	}
-	result, err := client.Extract(context.Background(), "https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(result.Markdown)
-}
-```
-
-`Extract()` 内部完成提交任务、轮询状态、下载结果、解析 zip 的全流程，调用者只看到"传入 URL，拿到 Markdown"。
-
-## 使用示例
-
-### 解析单个文档
-
-```go
-client, _ := mineru.New("your-token")
-result, _ := client.Extract(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
-fmt.Println(result.Markdown)
-fmt.Println(result.ContentList)  // 结构化 JSON
-fmt.Println(len(result.Images))  // 提取的图片列表
-```
-
-### 本地文件
-
-自动上传：
-
-```go
-result, _ := client.Extract(ctx, "./report.pdf")
-```
-
-### 额外格式导出
-
-在默认的 Markdown + JSON 之外，还可以导出其他格式：
-
-```go
-result, _ := client.Extract(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-    mineru.WithExtraFormats("docx", "html", "latex"),
-)
-
-result.SaveMarkdown("./output/report.md", true)  // markdown + images/ 目录
-result.SaveDocx("./output/report.docx")
-result.SaveHTML("./output/report.html")
-result.SaveLaTeX("./output/report.tex")
-result.SaveAll("./output/full/")                  // 解压完整 zip
-```
-
-### 网页抓取
-
-`Crawl` 等价于 `Extract` + `WithModel("html")`：
-
-```go
-result, _ := client.Crawl(ctx, "https://news.example.com/article/123")
-fmt.Println(result.Markdown)
-```
-
-### 批量解析
-
-`ExtractBatch` 一次性提交所有任务，通过 channel 流式返回结果——先完成的先收到：
-
-```go
-ch, _ := client.ExtractBatch(ctx, []string{
-    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-})
-for result := range ch {
-    fmt.Printf("%s: %s\n", result.Filename, result.Markdown[:200])
-}
-```
-
-批量网页抓取同理：
-
-```go
-ch, _ := client.CrawlBatch(ctx, []string{"https://a.com/1", "https://a.com/2"})
-for result := range ch {
-    fmt.Println(result.Markdown[:200])
-}
-```
-
-### 异步提交 + 查询
-
-适用于后台服务或需要将提交和查询解耦的场景。`Submit` 返回纯字符串 task ID：
-
-```go
-taskID, _ := client.Submit(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf", mineru.WithModel("vlm"))
-fmt.Println(taskID) // "a90e6ab6-44f3-4554-..."
-
-// 随时查询：
-result, _ := client.GetTask(ctx, taskID)
-if result.State == "done" {
-    fmt.Println(result.Markdown[:500])
-} else {
-    fmt.Printf("状态: %s, 进度: %s\n", result.State, result.Progress)
-}
-```
-
-批量版本：
-
-```go
-batchID, _ := client.SubmitBatch(ctx, []string{"a.pdf", "b.pdf", "c.pdf"})
-
-results, _ := client.GetBatch(ctx, batchID)
-for _, r := range results {
-    fmt.Printf("%s: %s\n", r.Filename, r.State)
-}
-```
-
-### 完整参数
-
-```go
-result, err := client.Extract(ctx, "./paper.pdf",
-    mineru.WithModel("vlm"),             // "pipeline" | "vlm" | "html"（不传则自动推断）
-    mineru.WithOCR(true),                // 扫描件启用 OCR
-    mineru.WithFormula(true),            // 公式识别（默认开启）
-    mineru.WithTable(true),              // 表格识别（默认开启）
-    mineru.WithLanguage("en"),           // 文档语言（默认 "ch"）
-    mineru.WithPages("1-20"),            // 页码范围
-    mineru.WithExtraFormats("docx"),     // 额外导出 docx / html / latex
-    mineru.WithPollTimeout(10*time.Minute),  // 轮询最大等待时间（默认 5 分钟）
-)
-```
-
-### 客户端选项
-
-```go
-client, _ := mineru.New("token",
-    mineru.WithBaseURL("https://private.example.com/api/v4"),  // 私有化部署
-    mineru.WithHTTPClient(customClient),                        // 自定义 http.Client
-)
-```
-
-### Flash 模式（无需 token）
-
-Flash 模式使用轻量级 API，速度优先。无需 API token，仅输出 Markdown —— 不支持模型选择和额外格式导出。
-
-```go
+// 极速模式无需传入 Token
 client := mineru.NewFlash()
 result, _ := client.FlashExtract(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
+
 fmt.Println(result.Markdown)
 ```
 
-带参数：
-
+### 2. 全功能模式 (Full Feature Extract - 需登录)
+支持超大文件、丰富的资产（图片/表格）及多种输出格式。
 ```go
-result, _ := client.FlashExtract(ctx, "./report.pdf",
-    mineru.WithFlashLanguage("en"),   // 文档语言（默认 "ch"）
-    mineru.WithFlashPages("1-10"),    // 页码范围
-    mineru.WithFlashTimeout(10*time.Minute),  // 轮询最大等待（默认 5 分钟）
+import "github.com/OpenDataLab/mineru-open-sdk-go"
+
+// 从 https://mineru.net 获取免费 Token
+client, _ := mineru.New("your-api-token")
+result, _ := client.Extract(ctx, "https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
+
+fmt.Println(result.Markdown)
+fmt.Println(len(result.Images)) // 获取提取出的图片数量
+```
+
+---
+
+## 📊 模式对比
+
+| 特性 | 极速模式 (Flash) | 全功能模式 (Full Feature) |
+| :--- | :--- | :--- |
+| **身份认证** | **免登录 (No Auth)** | **需登录 (Token)** |
+| **处理速度** | 极速 | 标准 |
+| **文件大小上限** | 最大 10 MB | 最大 200 MB |
+| **文件页数上限** | 最大 20 页 | 最大 600 页 |
+| **支持格式** | PDF, 图片, Docx, PPTx, Excel | PDF, 图片, Doc/x, Ppt/x, Html |
+| **内容完整度** | 仅文本 (图片、表格、公式显示占位符) | 完整资源 (图片、表格、公式全部保留) |
+| **输出格式** | Markdown | MD, Docx, LaTeX, HTML, JSON |
+
+---
+
+## 📖 详细用法
+
+### 全功能提取选项
+```go
+result, _ := client.Extract(ctx, "./论文.pdf",
+    mineru.WithModel("vlm"),             // "vlm" | "pipeline" | "html"
+    mineru.WithOCR(true),                // 启用 OCR 识别扫描件
+    mineru.WithFormula(true),            // 公式识别
+    mineru.WithTable(true),              // 表格识别
+    mineru.WithLanguage("en"),           // "ch" | "en" | 等
+    mineru.WithPages("1-20"),            // 页码范围
+    mineru.WithExtraFormats("docx"),     // 额外导出为 docx, html, 或 latex
+    mineru.WithPollTimeout(10*time.Minute),
 )
-result.SaveMarkdown("./output/report.md", false)
+
+result.SaveAll("./output/") // 保存 Markdown 和所有相关资源
 ```
 
-Flash 模式限制：最多 50 页，最大 10 MB。
+### 批量处理
+```go
+// 返回一个 Channel，边处理边返回结果
+ch, _ := client.ExtractBatch(ctx, []string{"a.pdf", "b.pdf"})
+for result := range ch {
+    fmt.Printf("%s: 已完成\n", result.Filename)
+}
+```
 
-`mineru.New("token")` 创建的客户端同时支持 `Extract()` 和 `FlashExtract()`。`mineru.NewFlash()` 创建的仅 flash 客户端，调用标准方法会返回 `ErrNoAuthClient`。
+### 网页爬取 (Crawl)
+```go
+result, _ := client.Crawl(ctx, "https://www.baidu.com")
+fmt.Println(result.Markdown)
+```
 
-### 来源标识
+---
 
-每个 API 请求会自动携带 `source` header 标识调用来源，默认值为 `open-api-sdk-go`。如果你基于 SDK 构建自己的服务，可以覆盖它：
+## 🤖 AI Agent 自动化集成
+
+非常适合基于 Go 的 AI 后端服务集成。您可以通过 `result.State` 和 `result.Progress` 轻松监控任务状态。
 
 ```go
-client, _ := mineru.New("token")
-client.SetSource("my-backend-service")
+taskID, _ := client.Submit(ctx, "报告.pdf")
+// ... 稍后 ...
+result, _ := client.GetTask(ctx, taskID)
+if result.State == "done" {
+    processMarkdown(result.Markdown)
+}
 ```
 
-## API 速查
+---
 
-### 方法
+## 📄 开源协议
+本项目采用 MIT 协议。
 
-| 方法 | 输入 | 输出 | 阻塞 | 场景 |
-|------|------|------|------|------|
-| `Extract(ctx, source)` | `string` | `*ExtractResult` | 是 | 单个文档 |
-| `ExtractBatch(ctx, sources)` | `[]string` | `<-chan *ExtractResult` | 否（channel） | 批量文档 |
-| `Crawl(ctx, url)` | `string` | `*ExtractResult` | 是 | 单个网页 |
-| `CrawlBatch(ctx, urls)` | `[]string` | `<-chan *ExtractResult` | 否（channel） | 批量网页 |
-| `Submit(ctx, source)` | `string` | `string`（task_id） | 否 | 异步提交 |
-| `SubmitBatch(ctx, sources)` | `[]string` | `string`（batch_id） | 否 | 异步批量提交 |
-| `GetTask(ctx, taskID)` | `string` | `*ExtractResult` | 否 | 查询状态 |
-| `GetBatch(ctx, batchID)` | `string` | `[]*ExtractResult` | 否 | 查询批量状态 |
-| `FlashExtract(ctx, source)` | `string` | `*ExtractResult` | 是 | Flash 模式（无需 token） |
-
-所有方法都接受可变参数 `ExtractOption`（`GetTask` 和 `GetBatch` 除外）。
-
-### ExtractResult 字段
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `Markdown` | `string` | Markdown 正文 |
-| `ContentList` | `[]map[string]any` | 结构化 JSON 内容 |
-| `Images` | `[]Image` | 提取的图片 |
-| `Docx` | `[]byte` | docx 二进制（需 `WithExtraFormats`） |
-| `HTML` | `string` | HTML 文本（需 `WithExtraFormats`） |
-| `LaTeX` | `string` | LaTeX 文本（需 `WithExtraFormats`） |
-| `State` | `string` | `"done"` / `"failed"` / `"pending"` / `"running"` |
-| `Error` | `string` | 失败原因（`State == "failed"` 时） |
-| `Progress` | `*Progress` | 页级进度（`State == "running"` 时） |
-
-保存方法：`SaveMarkdown(path, withImages)`, `SaveDocx(path)`, `SaveHTML(path)`, `SaveLaTeX(path)`, `SaveAll(dir)`
-
-### model 参数
-
-| `WithModel(...)` | 说明 |
-|-------------------|------|
-| 不传（默认） | 自动推断：`.html` → `"html"`，其余 → `"vlm"` |
-| `"vlm"` | VLM 视觉语言模型（推荐） |
-| `"pipeline"` | 传统版面分析 |
-| `"html"` | 网页解析 |
-
-### 零依赖
-
-本 SDK 仅使用 Go 标准库，无任何外部依赖。
-
-## License
-
-MIT
+## 🔗 相关链接
+- [官方网站](https://mineru.net)
+- [API 文档](https://mineru.net/docs)
