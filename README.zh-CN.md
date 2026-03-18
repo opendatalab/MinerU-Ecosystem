@@ -1,7 +1,7 @@
 # MinerU Open API SDK (Go)
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/OpenDataLab/mineru-open-sdk-go.svg)](https://pkg.go.dev/github.com/OpenDataLab/mineru-open-sdk-go)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/OpenDataLab/mineru-open-sdk-go/blob/main/LICENSE)
+[![Go Reference](https://pkg.go.dev/badge/github.com/opendatalab/MinerU-Ecosystem/sdk/go-go.svg)](https://pkg.go.dev/github.com/opendatalab/MinerU-Ecosystem/sdk/go-go)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/opendatalab/MinerU-Ecosystem/sdk/go-go/blob/main/LICENSE)
 
 [English README](./README.md)
 

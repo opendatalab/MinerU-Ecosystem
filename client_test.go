@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	mineru "github.com/OpenDataLab/mineru-open-sdk"
+	mineru "github.com/opendatalab/MinerU-Ecosystem/sdk/go"
 )
 
 // Test constants — mirrors the Python SDK test suite.

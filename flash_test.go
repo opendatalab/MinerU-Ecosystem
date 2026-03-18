@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	mineru "github.com/OpenDataLab/mineru-open-sdk"
+	mineru "github.com/opendatalab/MinerU-Ecosystem/sdk/go"
 )
 
 const (
