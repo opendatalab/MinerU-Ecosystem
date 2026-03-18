@@ -19,7 +19,7 @@ export MINERU_TOKEN="your-api-token"   # get it from https://mineru.net
 ```typescript
 import { MinerU } from "mineru";
 
-const md = (await new MinerU().extract("https://example.com/report.pdf")).markdown;
+const md = (await new MinerU().extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")).markdown;
 ```
 
 That's it. `extract()` submits the task, polls until done, downloads the result zip, and parses out the markdown — all in one async call.
@@ -32,7 +32,7 @@ That's it. `extract()` submits the task, polls until done, downloads the result 
 import { MinerU } from "mineru";
 
 const client = new MinerU();
-const result = await client.extract("https://example.com/paper.pdf");
+const result = await client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf");
 console.log(result.markdown);
 console.log(result.contentList);  // structured JSON
 console.log(result.images);       // list of extracted images
@@ -53,7 +53,7 @@ Request additional formats alongside the default markdown + JSON:
 ```typescript
 import { saveMarkdown, saveDocx, saveHtml, saveLatex, saveAll } from "mineru";
 
-const result = await client.extract("https://example.com/report.pdf", {
+const result = await client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf", {
   extraFormats: ["docx", "html", "latex"],
 });
 
@@ -79,9 +79,9 @@ console.log(result.markdown);
 
 ```typescript
 for await (const result of client.extractBatch([
-  "https://example.com/ch1.pdf",
-  "https://example.com/ch2.pdf",
-  "https://example.com/ch3.pdf",
+  "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
+  "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
+  "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
 ])) {
   console.log(`${result.filename}: ${result.markdown?.slice(0, 200)}`);
 }
@@ -100,7 +100,7 @@ for await (const result of client.crawlBatch(["https://a.com/1", "https://a.com/
 For background services or when you need to decouple submission from polling. `submit()` returns a plain task ID string — store it however you like:
 
 ```typescript
-const taskId = await client.submit("https://example.com/big-report.pdf", { model: "vlm" });
+const taskId = await client.submit("https://cdn-mineru.openxlab.org.cn/demo/example.pdf", { model: "vlm" });
 console.log(taskId);  // "a90e6ab6-44f3-4554-..."
 
 // Later (same process, different script, whatever):
@@ -144,7 +144,7 @@ Flash mode uses a lightweight API optimised for speed. No API token needed, only
 
 ```typescript
 const client = new MinerU();  // no token needed
-const result = await client.flashExtract("https://example.com/report.pdf");
+const result = await client.flashExtract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf");
 console.log(result.markdown);
 ```
 
@@ -179,7 +179,7 @@ const { MinerU } = require("mineru");
 
 async function main() {
   const client = new MinerU();
-  const result = await client.extract("https://example.com/doc.pdf");
+  const result = await client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf");
   console.log(result.markdown);
 }
 main();

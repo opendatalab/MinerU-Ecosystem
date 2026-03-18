@@ -138,7 +138,7 @@ function sleep(ms: number): Promise<void> {
  * import { MinerU } from "mineru";
  *
  * const client = new MinerU(); // reads MINERU_TOKEN env var
- * const md = (await client.extract("https://example.com/doc.pdf")).markdown;
+ * const md = (await client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")).markdown;
  * ```
  */
 export class MinerU {
@@ -192,7 +192,7 @@ export class MinerU {
    *
    * @example
    * ```ts
-   * const result = await new MinerU().extract("https://example.com/doc.pdf");
+   * const result = await new MinerU().extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf");
    * console.log(result.markdown);
    * ```
    */

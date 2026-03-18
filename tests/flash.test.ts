@@ -47,7 +47,7 @@ describe("flash-only client (unit)", () => {
   it("extract throws NoAuthClientError", () => {
     withoutToken(() => {
       const c = new MinerU();
-      expect(() => c.extract("https://example.com/doc.pdf")).rejects.toThrow(
+      expect(() => c.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")).rejects.toThrow(
         NoAuthClientError,
       );
     });
@@ -65,7 +65,7 @@ describe("flash-only client (unit)", () => {
   it("submit throws NoAuthClientError", () => {
     withoutToken(() => {
       const c = new MinerU();
-      expect(() => c.submit("https://example.com/doc.pdf")).rejects.toThrow(
+      expect(() => c.submit("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")).rejects.toThrow(
         NoAuthClientError,
       );
     });

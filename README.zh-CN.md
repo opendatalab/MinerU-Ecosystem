@@ -19,7 +19,7 @@ export MINERU_TOKEN="your-api-token"   # 从 https://mineru.net 获取
 ```typescript
 import { MinerU } from "mineru";
 
-const md = (await new MinerU().extract("https://example.com/report.pdf")).markdown;
+const md = (await new MinerU().extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")).markdown;
 ```
 
 就这么简单。`extract()` 提交任务、轮询等待、下载结果 ZIP 并解析出 Markdown —— 一次异步调用搞定。
@@ -32,7 +32,7 @@ const md = (await new MinerU().extract("https://example.com/report.pdf")).markdo
 import { MinerU } from "mineru";
 
 const client = new MinerU();
-const result = await client.extract("https://example.com/paper.pdf");
+const result = await client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf");
 console.log(result.markdown);
 console.log(result.contentList);  // 结构化 JSON
 console.log(result.images);       // 提取的图片列表
@@ -53,7 +53,7 @@ const result = await client.extract("./report.pdf");
 ```typescript
 import { saveMarkdown, saveDocx, saveHtml, saveLatex, saveAll } from "mineru";
 
-const result = await client.extract("https://example.com/report.pdf", {
+const result = await client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf", {
   extraFormats: ["docx", "html", "latex"],
 });
 
@@ -79,9 +79,9 @@ console.log(result.markdown);
 
 ```typescript
 for await (const result of client.extractBatch([
-  "https://example.com/ch1.pdf",
-  "https://example.com/ch2.pdf",
-  "https://example.com/ch3.pdf",
+  "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
+  "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
+  "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
 ])) {
   console.log(`${result.filename}: ${result.markdown?.slice(0, 200)}`);
 }
@@ -100,7 +100,7 @@ for await (const result of client.crawlBatch(["https://a.com/1", "https://a.com/
 适用于后台服务或需要将提交和轮询解耦的场景。`submit()` 返回一个任务 ID 字符串，随你怎么存：
 
 ```typescript
-const taskId = await client.submit("https://example.com/big-report.pdf", { model: "vlm" });
+const taskId = await client.submit("https://cdn-mineru.openxlab.org.cn/demo/example.pdf", { model: "vlm" });
 console.log(taskId);  // "a90e6ab6-44f3-4554-..."
 
 // 稍后（同一进程、不同脚本，都行）：
@@ -144,7 +144,7 @@ Flash 模式使用轻量级 API，速度优先。无需 API token，仅输出 Ma
 
 ```typescript
 const client = new MinerU();  // 无需 token
-const result = await client.flashExtract("https://example.com/report.pdf");
+const result = await client.flashExtract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf");
 console.log(result.markdown);
 ```
 
@@ -179,7 +179,7 @@ const { MinerU } = require("mineru");
 
 async function main() {
   const client = new MinerU();
-  const result = await client.extract("https://example.com/doc.pdf");
+  const result = await client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf");
   console.log(result.markdown);
 }
 main();
