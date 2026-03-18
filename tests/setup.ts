@@ -8,7 +8,7 @@ import { MinerU, type ExtractResult } from "../src/index.js";
 
 export const TEST_PDF_URL = "https://bitcoin.org/bitcoin.pdf";
 export const TEST_MODEL = "pipeline";
-export const TEST_HTML_URL = "https://www.example.com";
+export const TEST_HTML_URL = "https://opendatalab.com";
 export const TEST_TIMEOUT = 600;
 
 let _client: MinerU | null = null;

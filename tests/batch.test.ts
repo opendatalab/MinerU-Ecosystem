@@ -38,7 +38,7 @@ describe("extractBatch", () => {
 
 describe("crawlBatch", () => {
   it("yields results", async () => {
-    const urls = ["https://www.example.com", "https://www.example.org"];
+    const urls = ["https://opendatalab.com", "https://www.example.org"];
     const results = [];
     for await (const r of getClient().crawlBatch(urls, {
       timeout: TEST_TIMEOUT,
