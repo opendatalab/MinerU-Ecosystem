@@ -19,7 +19,7 @@ export MINERU_TOKEN="your-api-token"   # 在 https://mineru.net 获取
 ```python
 from mineru import MinerU
 
-md = MinerU().extract("https://example.com/report.pdf").markdown
+md = MinerU().extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf").markdown
 ```
 
 `extract()` 内部完成提交任务、轮询状态、下载结果、解析 zip 的全流程，调用者只看到"传入 URL，拿到 Markdown"。
@@ -32,7 +32,7 @@ md = MinerU().extract("https://example.com/report.pdf").markdown
 from mineru import MinerU
 
 client = MinerU()
-result = client.extract("https://example.com/paper.pdf")
+result = client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 print(result.markdown)
 print(result.content_list)  # 结构化 JSON
 print(result.images)        # 提取的图片列表
@@ -52,7 +52,7 @@ result = client.extract("./report.pdf")
 
 ```python
 result = client.extract(
-    "https://example.com/report.pdf",
+    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
     extra_formats=["docx", "html", "latex"],
 )
 
@@ -78,9 +78,9 @@ print(result.markdown)
 
 ```python
 for result in client.extract_batch([
-    "https://example.com/ch1.pdf",
-    "https://example.com/ch2.pdf",
-    "https://example.com/ch3.pdf",
+    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
+    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
+    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
 ]):
     print(f"{result.filename}: {result.markdown[:200]}")
 ```
@@ -97,7 +97,7 @@ for result in client.crawl_batch(["https://a.com/1", "https://a.com/2"]):
 适用于后台服务或需要将提交和查询解耦的场景。`submit()` 返回纯字符串 `task_id`，存取方式由你决定：
 
 ```python
-task_id = client.submit("https://example.com/big-report.pdf", model="vlm")
+task_id = client.submit("https://cdn-mineru.openxlab.org.cn/demo/example.pdf", model="vlm")
 print(task_id)  # "a90e6ab6-44f3-4554-..."
 
 # 随时查询（同一进程、另一个脚本、都行）：
@@ -140,7 +140,7 @@ Flash 模式使用轻量级 API，速度优先。无需 API token，仅输出 Ma
 
 ```python
 client = MinerU()  # 无需 token
-result = client.flash_extract("https://example.com/report.pdf")
+result = client.flash_extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 print(result.markdown)
 ```
 

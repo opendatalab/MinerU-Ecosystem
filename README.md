@@ -19,7 +19,7 @@ export MINERU_TOKEN="your-api-token"   # get it from https://mineru.net
 ```python
 from mineru import MinerU
 
-md = MinerU().extract("https://example.com/report.pdf").markdown
+md = MinerU().extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf").markdown
 ```
 
 That's it. `extract()` submits the task, polls until done, downloads the result zip, and parses out the markdown — all in one blocking call.
@@ -32,7 +32,7 @@ That's it. `extract()` submits the task, polls until done, downloads the result 
 from mineru import MinerU
 
 client = MinerU()
-result = client.extract("https://example.com/paper.pdf")
+result = client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 print(result.markdown)
 print(result.content_list)  # structured JSON
 print(result.images)        # list of extracted images
@@ -52,7 +52,7 @@ Request additional formats alongside the default markdown + JSON:
 
 ```python
 result = client.extract(
-    "https://example.com/report.pdf",
+    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
     extra_formats=["docx", "html", "latex"],
 )
 
@@ -78,9 +78,9 @@ print(result.markdown)
 
 ```python
 for result in client.extract_batch([
-    "https://example.com/ch1.pdf",
-    "https://example.com/ch2.pdf",
-    "https://example.com/ch3.pdf",
+    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
+    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
+    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
 ]):
     print(f"{result.filename}: {result.markdown[:200]}")
 ```
@@ -97,7 +97,7 @@ for result in client.crawl_batch(["https://a.com/1", "https://a.com/2"]):
 For background services or when you need to decouple submission from polling. `submit()` returns a plain `task_id` string — store it however you like:
 
 ```python
-task_id = client.submit("https://example.com/big-report.pdf", model="vlm")
+task_id = client.submit("https://cdn-mineru.openxlab.org.cn/demo/example.pdf", model="vlm")
 print(task_id)  # "a90e6ab6-44f3-4554-..."
 
 # Later (same process, different script, whatever):
@@ -140,7 +140,7 @@ Flash mode uses a lightweight API optimised for speed. No API token needed, only
 
 ```python
 client = MinerU()  # no token needed
-result = client.flash_extract("https://example.com/report.pdf")
+result = client.flash_extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 print(result.markdown)
 ```
 

@@ -103,7 +103,7 @@ class MinerU:
         from mineru import MinerU
 
         client = MinerU()  # reads MINERU_TOKEN env var
-        md = client.extract("https://example.com/doc.pdf").markdown
+        md = client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf").markdown
 
     When no token is provided and ``MINERU_TOKEN`` is not set, a flash-only
     client is created. Only :meth:`flash_extract` is available; calling
@@ -184,7 +184,7 @@ class MinerU:
 
         Example::
 
-            result = MinerU().extract("https://example.com/doc.pdf")
+            result = MinerU().extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
             print(result.markdown)
 
             # Local file with options
@@ -361,7 +361,7 @@ class MinerU:
 
         Example::
 
-            batch_id = MinerU().submit("https://example.com/doc.pdf")
+            batch_id = MinerU().submit("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
             # or local file:
             batch_id = MinerU().submit("./report.pdf")
 
