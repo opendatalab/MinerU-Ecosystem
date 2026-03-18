@@ -107,14 +107,18 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
+]
+
+[package.dev-dependencies]
+dev = [
     { name = "pytest" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "httpx", specifier = ">=0.27" },
-    { name = "pytest", specifier = ">=9.0.2" },
-]
+requires-dist = [{ name = "httpx", specifier = ">=0.27" }]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=9.0.2" }]
 
 [[package]]
 name = "packaging"
