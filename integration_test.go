@@ -4,6 +4,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -163,7 +164,19 @@ func requireToken(t *testing.T) string {
 	t.Helper()
 	token := os.Getenv("MINERU_TOKEN")
 	if token == "" {
-		t.Skip("MINERU_TOKEN not set, skipping API test")
+		// Try to load from .env JSON file
+		data, err := os.ReadFile(".env")
+		if err == nil {
+			var config struct {
+				Token string `json:"MINERU_TOKEN"`
+			}
+			if err := json.Unmarshal(data, &config); err == nil && config.Token != "" {
+				token = config.Token
+			}
+		}
+	}
+	if token == "" {
+		t.Skip("MINERU_TOKEN not set in env or .env file, skipping API test")
 	}
 	return token
 }
