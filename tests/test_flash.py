@@ -32,7 +32,7 @@ class TestFlashOnlyClient:
         try:
             c = MinerU()
             with pytest.raises(NoAuthClientError):
-                c.extract("https://example.com/doc.pdf")
+                c.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
         finally:
             if old is not None:
                 os.environ["MINERU_TOKEN"] = old
@@ -52,7 +52,7 @@ class TestFlashOnlyClient:
         try:
             c = MinerU()
             with pytest.raises(NoAuthClientError):
-                c.submit("https://example.com/doc.pdf")
+                c.submit("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
         finally:
             if old is not None:
                 os.environ["MINERU_TOKEN"] = old
