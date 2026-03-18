@@ -23,7 +23,7 @@ var rootCmd = &cobra.Command{
   # Full Feature (Auth Required)
   mineru-open-api extract report.pdf                  # print markdown to stdout
   mineru-open-api extract report.pdf -o ./out/        # save all assets to directory
-  mineru-open-api crawl https://example.com/article   # web page to stdout
+  mineru-open-api crawl https://opendatalab.com   # web page to stdout
 
 Authenticate for Full Feature:
 

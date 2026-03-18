@@ -166,12 +166,12 @@ Usage:
 
 Examples:
   # 内容到 stdout
-  mineru-open-api crawl https://example.com/article
-  mineru-open-api crawl https://example.com/article -f html
+  mineru-open-api crawl https://opendatalab.com
+  mineru-open-api crawl https://opendatalab.com -f html
 
   # 内容保存到文件
-  mineru-open-api crawl https://example.com/article -o output.md
-  mineru-open-api crawl https://example.com/article -o ./out/ -f md,html
+  mineru-open-api crawl https://opendatalab.com -o output.md
+  mineru-open-api crawl https://opendatalab.com -o ./out/ -f md,html
 
   # 批量抓取（必须 -o）
   mineru-open-api crawl https://a.com/1 https://a.com/2 -o ./pages/

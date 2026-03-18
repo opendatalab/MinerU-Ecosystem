@@ -27,9 +27,9 @@ var crawlCmd = &cobra.Command{
 	Use:   "crawl <url> [...]",
 	Short: "Crawl web pages and convert to Markdown",
 	Long:  `Fetch web pages and convert their content to Markdown (or other text formats).`,
-	Example: `  mineru-open-api crawl https://example.com/article              # markdown to stdout
-  mineru-open-api crawl https://example.com/article -f html       # html to stdout
-  mineru-open-api crawl https://example.com/article -o ./out/      # save to file
+	Example: `  mineru-open-api crawl https://opendatalab.com              # markdown to stdout
+  mineru-open-api crawl https://opendatalab.com -f html       # html to stdout
+  mineru-open-api crawl https://opendatalab.com -o ./out/      # save to file
   mineru-open-api crawl url1 url2 -o ./pages/                      # batch
   mineru-open-api crawl --list urls.txt -o ./pages/                # batch from file list`,
 	RunE: runCrawl,
