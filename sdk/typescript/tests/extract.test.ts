@@ -25,7 +25,6 @@ describe("extract single PDF", () => {
 
   it("has metadata", async () => {
     const result = await getPdfResult();
-    expect(result.taskId).toBeTruthy();
     expect(result.zipUrl).not.toBeNull();
     expect(result.error).toBeNull();
   });

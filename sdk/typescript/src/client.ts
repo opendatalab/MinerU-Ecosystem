@@ -55,6 +55,8 @@ export interface ExtractOptions {
   language?: string;
   pages?: string;
   extraFormats?: string[];
+  /** Per-file overrides keyed by path or URL. */
+  fileParams?: Record<string, FileParam>;
   /** Max total seconds to wait for task completion (polling). */
   timeout?: number;
 }
@@ -66,6 +68,8 @@ export interface BatchOptions {
   table?: boolean;
   language?: string;
   extraFormats?: string[];
+  /** Per-file overrides keyed by path or URL. */
+  fileParams?: Record<string, FileParam>;
   /** Max total seconds to wait for all tasks (polling). */
   timeout?: number;
 }
@@ -77,24 +81,51 @@ export interface FlashExtractOptions {
   timeout?: number;
 }
 
+/** Per-file parameter overrides for batch methods. */
+export interface FileParam {
+  /** Override page_ranges for this file (e.g. "1-10,15"). */
+  pages?: string;
+  /** Override is_ocr for this file. */
+  ocr?: boolean;
+  /** Set data_id for this file. */
+  dataId?: string;
+}
+
+/** Only includes fields the user explicitly set. Never assumes API defaults. */
 function buildApiOptions(
   modelVersion: string,
   opts: ExtractOptions | BatchOptions,
 ): Record<string, unknown> {
   const o: Record<string, unknown> = { model_version: modelVersion };
-  if (opts.ocr) o["is_ocr"] = true;
-  if (opts.formula === false) o["enable_formula"] = false;
-  if (opts.table === false) o["enable_table"] = false;
-  if (opts.language != null && opts.language !== "ch") {
-    o["language"] = opts.language;
-  }
-  if ("pages" in opts && opts.pages != null) {
-    o["page_ranges"] = opts.pages;
-  }
+  if (opts.formula !== undefined) o["enable_formula"] = opts.formula;
+  if (opts.table !== undefined) o["enable_table"] = opts.table;
+  if (opts.language !== undefined) o["language"] = opts.language;
   if (opts.extraFormats?.length) {
     o["extra_formats"] = opts.extraFormats;
   }
   return o;
+}
+
+/** Adds per-file fields (is_ocr, page_ranges, data_id) to a file entry. */
+function applyFileFields(
+  entry: Record<string, unknown>,
+  key: string,
+  ocr: boolean | undefined,
+  pages: string | undefined,
+  fileParams: Record<string, FileParam> | undefined,
+): void {
+  const fp = fileParams?.[key];
+
+  // OCR: per-file overrides global
+  const effectiveOcr = fp?.ocr !== undefined ? fp.ocr : ocr;
+  if (effectiveOcr !== undefined) entry["is_ocr"] = effectiveOcr;
+
+  // Pages: per-file overrides global
+  const effectivePages = fp?.pages || pages;
+  if (effectivePages) entry["page_ranges"] = effectivePages;
+
+  // DataID: per-file only
+  if (fp?.dataId) entry["data_id"] = fp.dataId;
 }
 
 function parseTaskResult(data: Record<string, unknown>): ExtractResult {
@@ -177,11 +208,12 @@ export class MinerU {
     const modelVersion = resolveModel(opts.model, source);
     const apiOpts = buildApiOptions(modelVersion, opts);
 
+    let batchId: string;
     if (isUrl(source)) {
-      const taskId = await this.submitUrl(source, apiOpts);
-      return this.waitSingle(taskId, timeout);
+      batchId = await this.submitUrlsBatch([source], apiOpts, opts.ocr, opts.pages, opts.fileParams);
+    } else {
+      batchId = await this.uploadAndSubmit([source], apiOpts, opts.ocr, opts.pages, opts.fileParams);
     }
-    const batchId = await this.uploadAndSubmit([source], apiOpts);
     const results = await this.waitBatch(batchId, timeout);
     return results[0]!;
   }
@@ -201,10 +233,10 @@ export class MinerU {
 
     const batchIds: string[] = [];
     if (urls.length > 0) {
-      batchIds.push(await this.submitUrlsBatch(urls, apiOpts));
+      batchIds.push(await this.submitUrlsBatch(urls, apiOpts, opts.ocr, undefined, opts.fileParams));
     }
     if (files.length > 0) {
-      batchIds.push(await this.uploadAndSubmit(files, apiOpts));
+      batchIds.push(await this.uploadAndSubmit(files, apiOpts, opts.ocr, undefined, opts.fileParams));
     }
 
     yield* this.yieldBatch(batchIds, sources.length, timeout);
@@ -237,9 +269,9 @@ export class MinerU {
     const apiOpts = buildApiOptions(modelVersion, options);
 
     if (isUrl(source)) {
-      return this.submitUrl(source, apiOpts);
+      return this.submitUrlsBatch([source], apiOpts, options.ocr, options.pages, options.fileParams);
     }
-    return this.uploadAndSubmit([source], apiOpts);
+    return this.uploadAndSubmit([source], apiOpts, options.ocr, options.pages, options.fileParams);
   }
 
   async submitBatch(
@@ -265,9 +297,9 @@ export class MinerU {
     }
 
     if (urls.length > 0) {
-      return this.submitUrlsBatch(urls, apiOpts);
+      return this.submitUrlsBatch(urls, apiOpts, options.ocr, undefined, options.fileParams);
     }
-    return this.uploadAndSubmit(files, apiOpts);
+    return this.uploadAndSubmit(files, apiOpts, options.ocr, undefined, options.fileParams);
   }
 
   async getTask(taskId: string): Promise<ExtractResult> {
@@ -299,19 +331,18 @@ export class MinerU {
   //  Internal helpers
   // ══════════════════════════════════════════════════════════════════
 
-  private async submitUrl(
-    url: string,
-    opts: Record<string, unknown>,
-  ): Promise<string> {
-    const body = await this.requireAuth().post("/extract/task", { url, ...opts });
-    return body.data["task_id"] as string;
-  }
-
   private async submitUrlsBatch(
     urls: string[],
     opts: Record<string, unknown>,
+    ocr: boolean | undefined,
+    pages: string | undefined,
+    fileParams: Record<string, FileParam> | undefined,
   ): Promise<string> {
-    const files = urls.map((u) => ({ url: u }));
+    const files = urls.map((u) => {
+      const entry: Record<string, unknown> = { url: u };
+      applyFileFields(entry, u, ocr, pages, fileParams);
+      return entry;
+    });
     const body = await this.requireAuth().post("/extract/task/batch", {
       files,
       ...opts,
@@ -322,9 +353,16 @@ export class MinerU {
   private async uploadAndSubmit(
     filePaths: string[],
     opts: Record<string, unknown>,
+    ocr: boolean | undefined,
+    pages: string | undefined,
+    fileParams: Record<string, FileParam> | undefined,
   ): Promise<string> {
     const api = this.requireAuth();
-    const filesMeta = filePaths.map((p) => ({ name: basename(p) }));
+    const filesMeta = filePaths.map((p) => {
+      const entry: Record<string, unknown> = { name: basename(p) };
+      applyFileFields(entry, p, ocr, pages, fileParams);
+      return entry;
+    });
     const body = await api.post("/file-urls/batch", {
       files: filesMeta,
       ...opts,
@@ -347,25 +385,6 @@ export class MinerU {
     const parsed = parseZip(zipBytes, result.taskId, result.filename);
     parsed.zipUrl = result.zipUrl;
     return parsed;
-  }
-
-  private async waitSingle(
-    taskId: string,
-    timeout: number,
-  ): Promise<ExtractResult> {
-    const deadline = Date.now() + timeout * 1000;
-    let interval = 2000;
-    for (;;) {
-      const result = await this.getTask(taskId);
-      if (result.state === "done" || result.state === "failed") {
-        return result;
-      }
-      if (Date.now() > deadline) {
-        throw new TimeoutError(timeout, taskId);
-      }
-      await sleep(Math.min(interval, Math.max(0, deadline - Date.now())));
-      interval = Math.min(interval * 2, 30_000);
-    }
   }
 
   private async waitBatch(
