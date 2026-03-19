@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from tempfile import TemporaryDirectory
 from typing import Iterator
+from urllib.parse import urlparse
 
 from langchain_core.document_loaders import BaseLoader
 from langchain_core.documents import Document
@@ -15,6 +16,14 @@ from langchain_mineru.utils.pdf import (
 )
 
 _SOURCE_TAG = "langchain-mineru"
+
+
+def _filename_from_source(src: str) -> str | None:
+    """Derive a display filename from a source path or URL."""
+    if is_url(src):
+        name = PurePosixPath(urlparse(src).path).name
+        return name if name else None
+    return Path(src).name
 
 
 def _parse_page_range(page_range: str) -> set[int]:
@@ -189,7 +198,7 @@ class MinerULoader(BaseLoader):
             "language": self.language,
             "pages": self.pages,
             "split_pages": self.split_pages,
-            "filename": getattr(result, "filename", None),
+            "filename": _filename_from_source(original_source),
         }
 
         if page is not None:
