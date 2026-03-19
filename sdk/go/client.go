@@ -84,14 +84,13 @@ func (c *Client) Extract(ctx context.Context, source string, opts ...ExtractOpti
 	modelVersion := resolveModel(cfg.model, source)
 	payload := buildPayload(cfg, modelVersion)
 
+	var batchID string
+	var err error
 	if isURL(source) {
-		taskID, err := c.submitURL(ctx, source, payload)
-		if err != nil {
-			return nil, err
-		}
-		return c.waitSingle(ctx, taskID, cfg.timeout)
+		batchID, err = c.submitURLsBatch(ctx, []string{source}, cfg, payload)
+	} else {
+		batchID, err = c.uploadAndSubmit(ctx, []string{source}, cfg, payload)
 	}
-	batchID, err := c.uploadAndSubmit(ctx, []string{source}, payload)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +105,7 @@ func (c *Client) Extract(ctx context.Context, source string, opts ...ExtractOpti
 // channel as each task completes. The channel is closed when all tasks finish
 // or the context is cancelled.
 //
-//	ch, err := client.ExtractBatch(ctx, urls, mineru.WithModel("pipeline"))
+//	ch, err := client.ExtractBatch(ctx, []string{"url1", "url2"}, mineru.WithModel("pipeline"))
 //	for r := range ch {
 //	    fmt.Println(r.Filename, r.Markdown[:200])
 //	}
@@ -133,14 +132,14 @@ func (c *Client) ExtractBatch(ctx context.Context, sources []string, opts ...Ext
 
 	var batchIDs []string
 	if len(urls) > 0 {
-		bid, err := c.submitURLsBatch(ctx, urls, payload)
+		bid, err := c.submitURLsBatch(ctx, urls, cfg, payload)
 		if err != nil {
 			return nil, err
 		}
 		batchIDs = append(batchIDs, bid)
 	}
 	if len(files) > 0 {
-		bid, err := c.uploadAndSubmit(ctx, files, payload)
+		bid, err := c.uploadAndSubmit(ctx, files, cfg, payload)
 		if err != nil {
 			return nil, err
 		}
@@ -177,9 +176,9 @@ func (c *Client) Submit(ctx context.Context, source string, opts ...ExtractOptio
 	payload := buildPayload(cfg, modelVersion)
 
 	if isURL(source) {
-		return c.submitURLsBatch(ctx, []string{source}, payload)
+		return c.submitURLsBatch(ctx, []string{source}, cfg, payload)
 	}
-	return c.uploadAndSubmit(ctx, []string{source}, payload)
+	return c.uploadAndSubmit(ctx, []string{source}, cfg, payload)
 }
 
 // SubmitBatch submits multiple tasks without waiting. Returns a batch ID.
@@ -201,12 +200,12 @@ func (c *Client) SubmitBatch(ctx context.Context, sources []string, opts ...Extr
 		}
 	}
 	if len(urls) > 0 && len(files) == 0 {
-		return c.submitURLsBatch(ctx, urls, payload)
+		return c.submitURLsBatch(ctx, urls, cfg, payload)
 	}
 	if len(files) > 0 && len(urls) == 0 {
-		return c.uploadAndSubmit(ctx, files, payload)
+		return c.uploadAndSubmit(ctx, files, cfg, payload)
 	}
-	return c.uploadAndSubmit(ctx, sources, payload)
+	return c.uploadAndSubmit(ctx, sources, cfg, payload)
 }
 
 // GetTask queries a single task's current state. When state is "done", the
@@ -260,25 +259,11 @@ func (c *Client) GetBatch(ctx context.Context, batchID string) ([]*ExtractResult
 //  Internal helpers
 // ═══════════════════════════════════════════════════════════════════
 
-func (c *Client) submitURL(ctx context.Context, srcURL string, payload map[string]any) (string, error) {
-	payload["url"] = srcURL
-	data, err := c.api.post(ctx, "/extract/task", payload)
-	if err != nil {
-		return "", err
-	}
-	var resp struct {
-		TaskID string `json:"task_id"`
-	}
-	if err := json.Unmarshal(data, &resp); err != nil {
-		return "", err
-	}
-	return resp.TaskID, nil
-}
-
-func (c *Client) submitURLsBatch(ctx context.Context, urls []string, payload map[string]any) (string, error) {
-	files := make([]map[string]string, len(urls))
+func (c *Client) submitURLsBatch(ctx context.Context, urls []string, cfg extractConfig, payload map[string]any) (string, error) {
+	files := make([]map[string]any, len(urls))
 	for i, u := range urls {
-		files[i] = map[string]string{"url": u}
+		files[i] = map[string]any{"url": u}
+		applyFileFields(files[i], u, cfg)
 	}
 	payload["files"] = files
 	data, err := c.api.post(ctx, "/extract/task/batch", payload)
@@ -294,10 +279,11 @@ func (c *Client) submitURLsBatch(ctx context.Context, urls []string, payload map
 	return resp.BatchID, nil
 }
 
-func (c *Client) uploadAndSubmit(ctx context.Context, filePaths []string, payload map[string]any) (string, error) {
-	filesMeta := make([]map[string]string, len(filePaths))
+func (c *Client) uploadAndSubmit(ctx context.Context, filePaths []string, cfg extractConfig, payload map[string]any) (string, error) {
+	filesMeta := make([]map[string]any, len(filePaths))
 	for i, p := range filePaths {
-		filesMeta[i] = map[string]string{"name": filepath.Base(p)}
+		filesMeta[i] = map[string]any{"name": filepath.Base(p)}
+		applyFileFields(filesMeta[i], p, cfg)
 	}
 	payload["files"] = filesMeta
 
@@ -336,35 +322,6 @@ func (c *Client) downloadAndParse(ctx context.Context, r *ExtractResult) (*Extra
 	}
 	parsed.ZipURL = r.ZipURL
 	return parsed, nil
-}
-
-func (c *Client) waitSingle(ctx context.Context, taskID string, timeout time.Duration) (*ExtractResult, error) {
-	pollCtx, pollCancel := context.WithTimeout(ctx, timeout)
-	defer pollCancel()
-
-	interval := pollIntervalMin
-	for {
-		reqCtx, reqCancel := context.WithTimeout(pollCtx, requestTimeout)
-		r, err := c.GetTask(reqCtx, taskID)
-		reqCancel()
-		if err != nil {
-			if pollCtx.Err() != nil {
-				return nil, newTimeoutError(timeout, taskID)
-			}
-			return nil, err
-		}
-		if r.State == "done" || r.State == "failed" {
-			return r, nil
-		}
-		select {
-		case <-pollCtx.Done():
-			return nil, newTimeoutError(timeout, taskID)
-		case <-time.After(interval):
-		}
-		if interval < pollIntervalMax {
-			interval *= 2
-		}
-	}
 }
 
 func (c *Client) waitBatch(ctx context.Context, batchID string, timeout time.Duration) ([]*ExtractResult, error) {
@@ -492,9 +449,6 @@ func applyOpts(opts []ExtractOption) extractConfig {
 
 func buildPayload(cfg extractConfig, modelVersion string) map[string]any {
 	m := map[string]any{"model_version": modelVersion}
-	if cfg.ocr {
-		m["is_ocr"] = true
-	}
 	if !cfg.formula {
 		m["enable_formula"] = false
 	}
@@ -504,13 +458,37 @@ func buildPayload(cfg extractConfig, modelVersion string) map[string]any {
 	if cfg.language != "ch" {
 		m["language"] = cfg.language
 	}
-	if cfg.pages != nil {
-		m["page_ranges"] = *cfg.pages
-	}
 	if len(cfg.extraFormats) > 0 {
 		m["extra_formats"] = cfg.extraFormats
 	}
 	return m
+}
+
+// applyFileFields adds per-file fields (is_ocr, page_ranges, data_id) to a file entry map.
+// If cfg.fileParams has an entry matching the key (path or URL), per-file values take priority.
+func applyFileFields(file map[string]any, key string, cfg extractConfig) {
+	fp, hasOverride := cfg.fileParams[key]
+
+	// OCR: per-file overrides global
+	ocr := cfg.ocr
+	if hasOverride && fp.OCR != nil {
+		ocr = *fp.OCR
+	}
+	if ocr {
+		file["is_ocr"] = true
+	}
+
+	// Pages: per-file overrides global
+	if hasOverride && fp.Pages != "" {
+		file["page_ranges"] = fp.Pages
+	} else if cfg.pages != nil {
+		file["page_ranges"] = *cfg.pages
+	}
+
+	// DataID: per-file only
+	if hasOverride && fp.DataID != "" {
+		file["data_id"] = fp.DataID
+	}
 }
 
 func isURL(s string) bool {

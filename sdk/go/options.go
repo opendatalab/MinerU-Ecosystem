@@ -76,6 +76,7 @@ type extractConfig struct {
 	language     string
 	pages        *string
 	extraFormats []string
+	fileParams   map[string]FileParam
 	timeout      time.Duration // This is the business polling timeout
 }
 
@@ -132,6 +133,40 @@ func WithExtraFormats(formats ...string) ExtractOption {
 func WithPollTimeout(d time.Duration) ExtractOption {
 	return func(c *extractConfig) { c.timeout = d }
 }
+
+// ---------------------------------------------------------------------------
+// Per-file parameters for batch methods
+// ---------------------------------------------------------------------------
+
+// FileParam holds per-file overrides for batch extraction.
+// Fields left at zero value inherit the global ExtractOption defaults.
+type FileParam struct {
+	// Pages overrides page_ranges for this file (e.g. "1-10,15").
+	Pages string
+
+	// OCR overrides is_ocr for this file. nil inherits the global WithOCR value.
+	OCR *bool
+
+	// DataID sets data_id for this file, used to correlate with your business data.
+	DataID string
+}
+
+// WithFileParams provides per-file overrides keyed by path or URL.
+// Keys must match the strings passed to ExtractBatch / SubmitBatch / CrawlBatch.
+//
+//	client.SubmitBatch(ctx, []string{"a.pdf", "b.pdf"},
+//	    mineru.WithFileParams(map[string]mineru.FileParam{
+//	        "a.pdf": {Pages: "1-5"},
+//	        "b.pdf": {Pages: "10-20", OCR: mineru.Bool(true)},
+//	    }),
+//	)
+func WithFileParams(params map[string]FileParam) ExtractOption {
+	return func(c *extractConfig) { c.fileParams = params }
+}
+
+// Bool is a helper that returns a pointer to a bool value,
+// useful for setting optional per-file fields like [FileParam.OCR].
+func Bool(v bool) *bool { return &v }
 
 // ---------------------------------------------------------------------------
 // FlashExtract options
