@@ -57,9 +57,9 @@ Call parse_documents IMMEDIATELY — without asking for confirmation — wheneve
 
 ## Flash mode (no API token) / Flash 模式（无 Token）
 
-When no MINERU_TOKEN is set, Flash mode is used automatically — free, no sign-up, markdown only.
+When no MINERU_API_TOKEN is set, Flash mode is used automatically — free, no sign-up, markdown only.
 Limits: 20 pages / 10 MB per file. Supported: PDF, images (png/jpg/jpeg/jp2/webp/gif/bmp), Docx, PPTx, xls, xlsx.
-未配置 MINERU_TOKEN 时自动使用 Flash 模式，免费无需注册，仅输出 Markdown。
+未配置 MINERU_API_TOKEN 时自动使用 Flash 模式，免费无需注册，仅输出 Markdown。
 限制：单文件最大 20 页 / 10 MB。支持：PDF、图片、Docx、PPTx、xls、xlsx。
 
 ## After calling parse_documents / 调用后
@@ -82,7 +82,7 @@ _INSTRUCTIONS += (
 mcp = FastMCP(
     name="MinerU File to Markdown Conversion",
     instructions=_INSTRUCTIONS,
-    **({} if config.MINERU_TOKEN else {"auth": None}),
+    **({} if config.MINERU_API_TOKEN else {"auth": None}),
 )
 
 # Markdown 文件的输出目录
@@ -156,10 +156,10 @@ def run_server(mode=None, port=8001, host="0.0.0.0") -> None:
         config.start_file_logging()
     config.logger.info("MinerU MCP Server starting (transport=%s, port=%s)", mode or "stdio", port)
 
-    if not config.MINERU_TOKEN:
+    if not config.MINERU_API_TOKEN:
         config.logger.info(
             "未设置 API Token，将使用 Flash 模式（免费，无需认证，限 20 页 / 10 MB）。"
-            " 如需完整功能，请设置 MINERU_TOKEN 或 MINERU_API_TOKEN 环境变量。"
+            " 如需完整功能，请设置 MINERU_API_TOKEN 环境变量。"
         )
 
     mcp_server = mcp._mcp_server

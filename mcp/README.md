@@ -57,23 +57,7 @@ MINERU_API_TOKEN=your_key mineru-open-mcp --transport streamable-http --port 800
 ```
 
 
-## Building the Wheel
 
-`mineru-open-sdk` is a regular PyPI dependency — no bundling needed. Run this to produce a distributable wheel:
-
-### Prerequisites
-
-- Python ≥ 3.10
-
-```bash
-make build-wheel
-```
-
-Output: `dist/mineru-open-mcp-<version>-py3-none-any.whl`
-
-The build automatically bumps the patch version and runs `python -m build --wheel`.
-
----
 
 ## Features
 
@@ -106,7 +90,7 @@ uv run mineru-open-mcp --transport streamable-http --port 8001
 
 | Variable | Description | Default |
 |---|---|---|
-| `MINERU_API_TOKEN` | MinerU cloud API token (also accepted as `MINERU_TOKEN`) | — |
+| `MINERU_API_TOKEN` | MinerU cloud API token | — |
 | `OUTPUT_DIR` | Directory for saved Markdown (and extra format) output | `~/mineru-downloads` |
 | `ENABLE_LOG` | Set to `true` to write timestamped log files | disabled |
 | `MINERU_LOG_DIR` | Override directory for log files | workspace `logs/` or `~/.mineru-open-mcp/logs/` |
