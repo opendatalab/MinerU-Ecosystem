@@ -29,7 +29,6 @@ This skill wraps the `mineru-open-api` CLI. Determine where the problem lies bef
 2. Test the command in your terminal to isolate the issue:
 
    ```bash
-   mineru-open-api version
    mineru-open-api auth --verify
    mineru-open-api extract test.pdf
    ```
@@ -46,7 +45,6 @@ This skill wraps the `mineru-open-api` CLI. Determine where the problem lies bef
 **Command:** mineru-open-api extract report.pdf -o ./out/
 **Expected:** Markdown output saved to ./out/report.md
 **Actual:** [describe what happened]
-**Version:** [output of `mineru-open-api version`]
 **OS:** [e.g. macOS 14, Ubuntu 22.04]
 ```
 
