@@ -143,10 +143,10 @@ These defaults apply to `extract()`, `submit()`, `extractBatch()`, and `submitBa
 | Option | Default | Behavior when omitted |
 | :--- | :--- | :--- |
 | `model` | `undefined` | Auto-infers model from the source: `.html` / `.htm` becomes `"html"` (`"MinerU-HTML"` at the API layer), everything else uses `"vlm"` |
-| `ocr` | `false` | OCR stays disabled |
-| `formula` | `true` | Formula recognition stays enabled |
-| `table` | `true` | Table recognition stays enabled |
-| `language` | `"ch"` | Chinese is the default; the field is only sent when changed |
+| `ocr` | `undefined` | OCR is disabled (API default) |
+| `formula` | `undefined` | Formula recognition is enabled (API default) |
+| `table` | `undefined` | Table recognition is enabled (API default) |
+| `language` | `undefined` | Chinese `"ch"` (API default) |
 | `pages` | `undefined` | Full document is processed. Only available on single-source `extract()` / `submit()` |
 | `extraFormats` | `undefined` | Only the default Markdown/JSON payload is returned |
 | `timeout` | `300` seconds | Max total polling time for `extract()` / `crawl()` |
@@ -217,45 +217,33 @@ console.log(result.markdown);
 
 ---
 
-## 🔄 `submit()` / `getTask()` / `getBatch()` Semantics
+## 🔄 `submit()` / `getBatch()` Semantics
 
-This is the main thing to understand before building your own async polling:
+The important rule is simple:
 
-- `getTask(taskId)` only works with a real **task ID**
-- `getBatch(batchId)` only works with a real **batch ID**
-- `submit(source)` is **source-type dependent**
-- `submitBatch(sources)` always returns a **batch ID**
+- `submit()` returns a **batch ID**
+- `submitBatch()` also returns a **batch ID**
+- the normal async flow is therefore `submit(...) -> getBatch(batchId)`
+- `getTask(taskId)` is only useful when you obtained a real task ID from somewhere else, not from `submit()`
 
-### What `submit()` returns
+### Why `submit()` returns a batch ID
 
-- For a **URL**, `submit(url)` calls the single-task endpoint and returns a **task ID**
-- For a **local file**, `submit("./report.pdf")` goes through the upload-batch flow and returns a **batch ID**, even if there is only one file
+The SDK deliberately normalizes both single-URL and local-file submissions onto batch semantics:
 
-### What `submitBatch()` returns
+- a single URL is submitted through the batch endpoint internally
+- a single local file is uploaded through the batch upload flow internally
+- that means `submit()` always gives you a batch-oriented handle
+
+### `submitBatch()` returns what
 
 - `submitBatch([...])` always returns a **batch ID**
 - `submitBatch()` does **not** allow mixing URLs and local files in one call
 - `extractBatch()` does allow mixed sources because it internally creates separate batches and merges the completed results for you
 
-### Recommended polling patterns
-
-Use `submit(url) -> getTask(taskId)` for a single URL:
+### Recommended polling pattern
 
 ```typescript
-const taskId = await client.submit("https://example.com/report.pdf");
-
-while (true) {
-  const result = await client.getTask(taskId);
-  if (result.state === "done" || result.state === "failed") {
-    break;
-  }
-}
-```
-
-Use `submit("./local.pdf") -> getBatch(batchId)` for a local file:
-
-```typescript
-const batchId = await client.submit("./local.pdf");
+const batchId = await client.submit("https://example.com/report.pdf");
 
 while (true) {
   const [result] = await client.getBatch(batchId);
@@ -265,21 +253,10 @@ while (true) {
 }
 ```
 
-Use `submitBatch(urls) -> getBatch(batchId)` when you want one batch-oriented flow for multiple URLs:
-
-```typescript
-const batchId = await client.submitBatch([
-  "https://example.com/a.pdf",
-  "https://example.com/b.pdf",
-]);
-
-const results = await client.getBatch(batchId);
-```
-
 ### What the query methods populate
 
 - If a queried result is still pending/running, you only get metadata such as `state`, `progress`, `taskId`, and possible error fields
-- Once a result reaches `state === "done"` and includes a zip URL, `getTask()` / `getBatch()` automatically download and parse the zip so `markdown`, `images`, `contentList`, `docx`, `html`, and `latex` become available
+- Once a result reaches `state === "done"` and includes a zip URL, `getBatch()` automatically downloads and parses the zip so `markdown`, `images`, `contentList`, `docx`, `html`, and `latex` become available
 
 ---
 
@@ -288,10 +265,10 @@ const results = await client.getBatch(batchId);
 The SDK exposes enough state for agent loops via `result.state` and `result.progress`.
 
 ```typescript
-const taskId = await client.submit("https://example.com/large-report.pdf");
+const batchId = await client.submit("https://example.com/large-report.pdf");
 
-let result = await client.getTask(taskId);
-if (result.state === "done") {
+const [result] = await client.getBatch(batchId);
+if (result?.state === "done") {
   processMarkdown(result.markdown);
 }
 ```

@@ -143,10 +143,10 @@ console.log(result.images);
 | 参数 | 默认值 | 省略时行为 |
 | :--- | :--- | :--- |
 | `model` | `undefined` | 根据输入自动推断：`.html` / `.htm` 走 `"html"`（发给 API 时为 `"MinerU-HTML"`），其余默认 `"vlm"` |
-| `ocr` | `false` | 默认关闭 OCR |
-| `formula` | `true` | 默认开启公式识别 |
-| `table` | `true` | 默认开启表格识别 |
-| `language` | `"ch"` | 默认中文；只有修改时才会显式传给 API |
+| `ocr` | `undefined` | 默认关闭 OCR（API 默认行为） |
+| `formula` | `undefined` | 默认开启公式识别（API 默认行为） |
+| `table` | `undefined` | 默认开启表格识别（API 默认行为） |
+| `language` | `undefined` | 默认中文 `"ch"`（API 默认行为） |
 | `pages` | `undefined` | 默认处理完整文档。仅单任务 `extract()` / `submit()` 支持 |
 | `extraFormats` | `undefined` | 只返回默认 Markdown / JSON 结果 |
 | `timeout` | `300` 秒 | `extract()` / `crawl()` 的总轮询超时 |
@@ -217,19 +217,22 @@ console.log(result.markdown);
 
 ---
 
-## 🔄 `submit()` / `getTask()` / `getBatch()` 语义说明
+## 🔄 `submit()` / `getBatch()` 语义说明
 
-自定义异步轮询前，最需要先搞清楚这一组接口：
+最重要的一条规则：
 
-- `getTask(taskId)` 只能查询真正的 **task ID**
-- `getBatch(batchId)` 只能查询真正的 **batch ID**
-- `submit(source)` 的返回值取决于 **source 类型**
-- `submitBatch(sources)` 永远返回 **batch ID**
+- `submit()` 返回的是 **batch ID**
+- `submitBatch()` 返回的也是 **batch ID**
+- 因此最常见的异步流程应该是 `submit(...) -> getBatch(batchId)`
+- `getTask(taskId)` 只有在你已经从别处拿到真实 task ID 时才适合使用，不能假定它来自 `submit()`
 
-### `submit()` 到底返回什么
+### 为什么 `submit()` 返回 batch ID
 
-- 当 `source` 是 **URL** 时，`submit(url)` 调用的是单任务接口，返回 **task ID**
-- 当 `source` 是 **本地文件** 时，`submit("./report.pdf")` 走的是上传批次流程，因此即便只有一个文件，返回的也是 **batch ID**
+SDK 在实现上刻意把单任务提交也统一到了 batch 语义：
+
+- 单个 URL 会通过 batch endpoint 提交
+- 单个本地文件会通过 batch upload 流程提交
+- 所以 `submit()` 始终返回一个适合 `getBatch()` 轮询的 ID
 
 ### `submitBatch()` 返回什么
 
@@ -239,23 +242,8 @@ console.log(result.markdown);
 
 ### 推荐轮询方式
 
-单个 URL 走 `submit(url) -> getTask(taskId)`：
-
 ```typescript
-const taskId = await client.submit("https://example.com/report.pdf");
-
-while (true) {
-  const result = await client.getTask(taskId);
-  if (result.state === "done" || result.state === "failed") {
-    break;
-  }
-}
-```
-
-本地文件走 `submit("./local.pdf") -> getBatch(batchId)`：
-
-```typescript
-const batchId = await client.submit("./local.pdf");
+const batchId = await client.submit("https://example.com/report.pdf");
 
 while (true) {
   const [result] = await client.getBatch(batchId);
@@ -265,21 +253,10 @@ while (true) {
 }
 ```
 
-多 URL 需要统一按 batch 轮询时，走 `submitBatch(urls) -> getBatch(batchId)`：
-
-```typescript
-const batchId = await client.submitBatch([
-  "https://example.com/a.pdf",
-  "https://example.com/b.pdf",
-]);
-
-const results = await client.getBatch(batchId);
-```
-
 ### 查询接口返回结果的填充时机
 
 - 当任务仍处于 pending / running 等非终态时，返回值主要包含 `state`、`progress`、`taskId` 以及可能的错误字段
-- 当任务进入 `state === "done"` 且返回 zip 地址后，`getTask()` / `getBatch()` 会自动下载并解析结果包，此时 `markdown`、`images`、`contentList`、`docx`、`html`、`latex` 等字段才会被填充
+- 当任务进入 `state === "done"` 且返回 zip 地址后，`getBatch()` 会自动下载并解析结果包，此时 `markdown`、`images`、`contentList`、`docx`、`html`、`latex` 等字段才会被填充
 
 ---
 
@@ -288,10 +265,10 @@ const results = await client.getBatch(batchId);
 SDK 提供了适合 Agent 循环使用的状态字段，核心就是 `result.state` 和 `result.progress`。
 
 ```typescript
-const taskId = await client.submit("https://example.com/large-report.pdf");
+const batchId = await client.submit("https://example.com/large-report.pdf");
 
-let result = await client.getTask(taskId);
-if (result.state === "done") {
+const [result] = await client.getBatch(batchId);
+if (result?.state === "done") {
   processMarkdown(result.markdown);
 }
 ```

@@ -136,10 +136,10 @@ These defaults apply to `extract()`, `extract_batch()`, `submit()`, `submit_batc
 | Option | Default | Behavior when omitted |
 | :--- | :--- | :--- |
 | `model` | `None` | Auto-infers model: `.html`/`.htm` uses `"html"`, everything else uses `"vlm"` |
-| `ocr` | `False` | OCR is disabled |
-| `formula` | `True` | Formula recognition stays enabled |
-| `table` | `True` | Table recognition stays enabled |
-| `language` | `"ch"` | Default language is Chinese; the field is only sent when changed |
+| `ocr` | not set | OCR is disabled (API default) |
+| `formula` | not set | Formula recognition is enabled (API default) |
+| `table` | not set | Table recognition is enabled (API default) |
+| `language` | not set | Chinese `"ch"` (API default) |
 | `pages` | `None` | Full document is processed |
 | `extra_formats` | `None` | Only the default Markdown/JSON payload is returned |
 | `timeout` | `300` seconds for single-item methods | Max total polling time for `extract()` / `crawl()` |

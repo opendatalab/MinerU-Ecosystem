@@ -136,10 +136,10 @@ print(result.images) # 获取提取出的图片列表
 | 参数 | 默认值 | 省略时行为 |
 | :--- | :--- | :--- |
 | `model` | `None` | 自动推断：`.html` / `.htm` 走 `"html"`，其余默认 `"vlm"` |
-| `ocr` | `False` | 默认关闭 OCR |
-| `formula` | `True` | 默认开启公式识别 |
-| `table` | `True` | 默认开启表格识别 |
-| `language` | `"ch"` | 默认中文；只有修改时才显式传给 API |
+| `ocr` | 不设置 | 默认关闭 OCR（API 默认行为） |
+| `formula` | 不设置 | 默认开启公式识别（API 默认行为） |
+| `table` | 不设置 | 默认开启表格识别（API 默认行为） |
+| `language` | 不设置 | 默认中文 `"ch"`（API 默认行为） |
 | `pages` | `None` | 默认处理完整文档 |
 | `extra_formats` | `None` | 仅返回默认的 Markdown / JSON 结果 |
 | `timeout` | 单任务 `300` 秒 | `extract()` / `crawl()` 的总轮询超时 |
