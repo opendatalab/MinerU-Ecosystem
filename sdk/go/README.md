@@ -98,6 +98,9 @@ func main() {
 - `mineru.New(token string, opts ...ClientOption) (*Client, error)`
 - `mineru.NewFlash(opts ...ClientOption) *Client`
 - `client.SetSource("your-app")`
+- `mineru.WithBaseURL(url)`
+- `mineru.WithFlashBaseURL(url)`
+- `mineru.WithHTTPClient(client)`
 
 ### Blocking extraction methods
 
@@ -164,8 +167,8 @@ func main() {
 | :--- | :--- | :--- |
 | `New(token, opts...)` | `token` must be non-empty or provided via `MINERU_TOKEN` | If both are empty, `New` returns `AuthError`; it does not fall back to flash-only mode |
 | `NewFlash(opts...)` | No token required | Creates a flash-only client; auth-required methods such as `Extract()` / `Submit()` / `GetTask()` return `ErrNoAuthClient` |
-| `WithBaseURL(url)` on `New(...)` | `https://mineru.net/api/v4` | Overrides the standard API base URL |
-| `WithBaseURL(url)` on `NewFlash(...)` | Flash default base URL | Overrides the flash API base URL |
+| `WithBaseURL(url)` | `https://mineru.net/api/v4` | Overrides the standard API base URL only |
+| `WithFlashBaseURL(url)` | Flash default base URL | Overrides the flash API base URL only |
 | `WithHTTPClient(client)` | SDK-managed `http.Client` | Uses your custom HTTP client for both standard and flash requests |
 
 ### HTTP and polling defaults

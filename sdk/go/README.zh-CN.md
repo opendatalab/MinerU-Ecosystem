@@ -98,6 +98,9 @@ func main() {
 - `mineru.New(token string, opts ...ClientOption) (*Client, error)`
 - `mineru.NewFlash(opts ...ClientOption) *Client`
 - `client.SetSource("your-app")`
+- `mineru.WithBaseURL(url)`
+- `mineru.WithFlashBaseURL(url)`
+- `mineru.WithHTTPClient(client)`
 
 ### 阻塞式解析接口
 
@@ -164,8 +167,8 @@ func main() {
 | :--- | :--- | :--- |
 | `New(token, opts...)` | `token` 必须非空，或由 `MINERU_TOKEN` 提供 | 如果两者都为空，`New` 会返回 `AuthError`，不会退化为 flash-only mode |
 | `NewFlash(opts...)` | 无需 token | 创建 flash-only client；`Extract()` / `Submit()` / `GetTask()` 等鉴权接口会返回 `ErrNoAuthClient` |
-| `WithBaseURL(url)` 用于 `New(...)` | `https://mineru.net/api/v4` | 覆盖标准 API 的 base URL |
-| `WithBaseURL(url)` 用于 `NewFlash(...)` | flash 默认 base URL | 覆盖 flash API 的 base URL |
+| `WithBaseURL(url)` | `https://mineru.net/api/v4` | 只覆盖标准 API 的 base URL |
+| `WithFlashBaseURL(url)` | flash 默认 base URL | 只覆盖 flash API 的 base URL |
 | `WithHTTPClient(client)` | SDK 默认创建的 `http.Client` | 自定义 HTTP client 会同时用于标准 API 和 flash API |
 
 ### HTTP 与轮询默认值

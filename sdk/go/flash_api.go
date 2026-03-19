@@ -9,9 +9,6 @@ import (
 	"net/http"
 )
 
-// TODO(release): 上线前换回 https://mineru.net/api/v1/agent
-const defaultFlashBaseURL = "https://staging.mineru.org.cn/api/v1/agent"
-
 // flashApiClient is the low-level HTTP wrapper for the Flash (agent) API.
 // It never sends an Authorization header.
 type flashApiClient struct {
