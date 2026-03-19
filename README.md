@@ -1,7 +1,7 @@
 # MinerU Open API SDK (Python)
 
 [![PyPI version](https://badge.fury.io/py/mineru-open-sdk.svg)](https://badge.fury.io/py/mineru-open-sdk)
-[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/OpenDataLab/mineru-open-sdk-python/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/opendatalab/MinerU-Ecosystem/sdk/go-python/blob/main/LICENSE)
 
 [中文文档](./README.zh-CN.md)
 

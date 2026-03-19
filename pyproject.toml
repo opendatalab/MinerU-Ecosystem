@@ -31,8 +31,8 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yangqi/mineru-open-sdk"
-Repository = "https://github.com/yangqi/mineru-open-sdk"
+Homepage = "https://github.com/opendatalab/MinerU-Ecosystem/sdk/python"
+Repository = "https://github.com/opendatalab/MinerU-Ecosystem/sdk/python"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mineru"]
