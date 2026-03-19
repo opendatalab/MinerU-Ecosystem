@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import time
+from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Iterator
 
@@ -53,29 +54,73 @@ def _resolve_model(model: str | None, source: str) -> str:
     return _infer_model(source)
 
 
+_SENTINEL = object()  # distinguishes "not passed" from any real value
+
+
+@dataclass
+class FileParam:
+    """Per-file parameter overrides for batch methods.
+
+    Fields left at their default (``None`` / ``""``) inherit global options.
+
+    Example::
+
+        client.submit_batch(
+            ["a.pdf", "b.pdf"],
+            file_params={
+                "a.pdf": FileParam(pages="1-5"),
+                "b.pdf": FileParam(pages="10-20", ocr=True),
+            },
+        )
+    """
+    pages: str = ""
+    ocr: bool | None = None
+    data_id: str = ""
+
+
 def _build_options(
     model_version: str,
-    ocr: bool,
-    formula: bool,
-    table: bool,
-    language: str,
-    pages: str | None,
+    formula: object,
+    table: object,
+    language: object,
     extra_formats: list[str] | None,
 ) -> dict:
+    """Build top-level payload fields. Only includes explicitly-set values."""
     opts: dict = {"model_version": model_version}
-    if ocr:
-        opts["is_ocr"] = True
-    if not formula:
-        opts["enable_formula"] = False
-    if not table:
-        opts["enable_table"] = False
-    if language != "ch":
+    if formula is not _SENTINEL:
+        opts["enable_formula"] = formula
+    if table is not _SENTINEL:
+        opts["enable_table"] = table
+    if language is not _SENTINEL:
         opts["language"] = language
-    if pages is not None:
-        opts["page_ranges"] = pages
     if extra_formats:
         opts["extra_formats"] = extra_formats
     return opts
+
+
+def _apply_file_fields(
+    file_entry: dict,
+    key: str,
+    ocr: bool | None,
+    pages: str | None,
+    file_params: dict[str, FileParam] | None,
+) -> None:
+    """Add per-file fields (is_ocr, page_ranges, data_id) to a file entry dict."""
+    fp = file_params.get(key) if file_params else None
+
+    # OCR: per-file overrides global
+    effective_ocr = fp.ocr if (fp and fp.ocr is not None) else ocr
+    if effective_ocr is not None:
+        file_entry["is_ocr"] = effective_ocr
+
+    # Pages: per-file overrides global
+    effective_pages = fp.pages if (fp and fp.pages) else pages
+    if effective_pages:
+        file_entry["page_ranges"] = effective_pages
+
+    # DataID: per-file only
+    if fp and fp.data_id:
+        file_entry["data_id"] = fp.data_id
 
 
 def _parse_task_result(data: dict) -> ExtractResult:
@@ -170,12 +215,13 @@ class MinerU:
         source: str,
         *,
         model: str | None = None,
-        ocr: bool = False,
-        formula: bool = True,
-        table: bool = True,
-        language: str = "ch",
+        ocr: bool | None = None,
+        formula: object = _SENTINEL,
+        table: object = _SENTINEL,
+        language: object = _SENTINEL,
         pages: str | None = None,
         extra_formats: list[str] | None = None,
+        file_params: dict[str, FileParam] | None = None,
         timeout: int = _DEFAULT_TIMEOUT_POLL_SINGLE,
     ) -> ExtractResult:
         """Parse a single document. Blocks until the result is ready.
@@ -183,12 +229,13 @@ class MinerU:
         Args:
             source: URL (``http://`` or ``https://``) or local file path.
             model: ``"pipeline"``, ``"vlm"``, or ``"html"``.
-            ocr: Enable OCR.
-            formula: Enable formula recognition. Defaults to ``True``.
-            table: Enable table recognition. Defaults to ``True``.
-            language: Document language code. Defaults to ``"ch"``.
+            ocr: Enable OCR. Only sent when explicitly set.
+            formula: Enable formula recognition. Only sent when explicitly set.
+            table: Enable table recognition. Only sent when explicitly set.
+            language: Document language code. Only sent when explicitly set.
             pages: Page range string, e.g. ``"1-10,15"``.
             extra_formats: Additional export formats.
+            file_params: Per-file overrides keyed by path/URL.
             timeout: Maximum seconds to wait for task completion (polling).
 
         Returns:
@@ -197,56 +244,42 @@ class MinerU:
         """
         model_version = _resolve_model(model, source)
         self._require_auth()
-        opts = _build_options(model_version, ocr, formula, table, language, pages, extra_formats)
+        opts = _build_options(model_version, formula, table, language, extra_formats)
 
         if _is_url(source):
-            task_id = self._submit_url(source, opts)
-            return self._wait_single(task_id, timeout)
+            batch_id = self._submit_urls_batch([source], opts, ocr, pages, file_params)
         else:
-            batch_id = self._upload_and_submit([source], opts)
-            results = self._wait_batch(batch_id, timeout)
-            return results[0]
+            batch_id = self._upload_and_submit([source], opts, ocr, pages, file_params)
+        results = self._wait_batch(batch_id, timeout)
+        return results[0]
 
     def extract_batch(
         self,
         sources: list[str],
         *,
         model: str | None = None,
-        ocr: bool = False,
-        formula: bool = True,
-        table: bool = True,
-        language: str = "ch",
+        ocr: bool | None = None,
+        formula: object = _SENTINEL,
+        table: object = _SENTINEL,
+        language: object = _SENTINEL,
         extra_formats: list[str] | None = None,
+        file_params: dict[str, FileParam] | None = None,
         timeout: int = _DEFAULT_TIMEOUT_POLL_BATCH,
     ) -> Iterator[ExtractResult]:
-        """Parse multiple documents. Yields each result as it completes.
-
-        Args:
-            sources: List of URLs or local file paths (can be mixed).
-            model: Model version.
-            ocr: Enable OCR.
-            formula: Enable formula recognition.
-            table: Enable table recognition.
-            language: Document language code.
-            extra_formats: Additional export formats.
-            timeout: Maximum seconds to wait for *all* tasks to complete (polling).
-
-        Yields:
-            :class:`ExtractResult` for each completed document.
-        """
+        """Parse multiple documents. Yields each result as it completes."""
         first_source = sources[0] if sources else ""
         model_version = _resolve_model(model, first_source)
         self._require_auth()
-        opts = _build_options(model_version, ocr, formula, table, language, None, extra_formats)
+        opts = _build_options(model_version, formula, table, language, extra_formats)
 
         urls = [s for s in sources if _is_url(s)]
         files = [s for s in sources if not _is_url(s)]
 
         batch_ids: list[str] = []
         if urls:
-            batch_ids.append(self._submit_urls_batch(urls, opts))
+            batch_ids.append(self._submit_urls_batch(urls, opts, ocr, None, file_params))
         if files:
-            batch_ids.append(self._upload_and_submit(files, opts))
+            batch_ids.append(self._upload_and_submit(files, opts, ocr, None, file_params))
 
         yield from self._yield_batch(batch_ids, len(sources), timeout)
 
@@ -279,39 +312,41 @@ class MinerU:
         source: str,
         *,
         model: str | None = None,
-        ocr: bool = False,
-        formula: bool = True,
-        table: bool = True,
-        language: str = "ch",
+        ocr: bool | None = None,
+        formula: object = _SENTINEL,
+        table: object = _SENTINEL,
+        language: object = _SENTINEL,
         pages: str | None = None,
         extra_formats: list[str] | None = None,
+        file_params: dict[str, FileParam] | None = None,
     ) -> str:
         """Submit a single task without waiting. Always returns a batch ID."""
         model_version = _resolve_model(model, source)
         self._require_auth()
-        opts = _build_options(model_version, ocr, formula, table, language, pages, extra_formats)
+        opts = _build_options(model_version, formula, table, language, extra_formats)
 
         if _is_url(source):
-            return self._submit_urls_batch([source], opts)
+            return self._submit_urls_batch([source], opts, ocr, pages, file_params)
         else:
-            return self._upload_and_submit([source], opts)
+            return self._upload_and_submit([source], opts, ocr, pages, file_params)
 
     def submit_batch(
         self,
         sources: list[str],
         *,
         model: str | None = None,
-        ocr: bool = False,
-        formula: bool = True,
-        table: bool = True,
-        language: str = "ch",
+        ocr: bool | None = None,
+        formula: object = _SENTINEL,
+        table: object = _SENTINEL,
+        language: object = _SENTINEL,
         extra_formats: list[str] | None = None,
+        file_params: dict[str, FileParam] | None = None,
     ) -> str:
         """Submit multiple tasks without waiting. Returns a batch ID string."""
         first_source = sources[0] if sources else ""
         model_version = _resolve_model(model, first_source)
         self._require_auth()
-        opts = _build_options(model_version, ocr, formula, table, language, None, extra_formats)
+        opts = _build_options(model_version, formula, table, language, extra_formats)
 
         urls = [s for s in sources if _is_url(s)]
         files = [s for s in sources if not _is_url(s)]
@@ -326,8 +361,8 @@ class MinerU:
             )
 
         if urls:
-            return self._submit_urls_batch(urls, opts)
-        return self._upload_and_submit(files, opts)
+            return self._submit_urls_batch(urls, opts, ocr, None, file_params)
+        return self._upload_and_submit(files, opts, ocr, None, file_params)
 
     def get_task(self, task_id: str) -> ExtractResult:
         """Query a single task by task ID."""
@@ -352,20 +387,37 @@ class MinerU:
     #  Internal helpers
     # ══════════════════════════════════════════════════════════════════
 
-    def _submit_url(self, url: str, opts: dict) -> str:
-        payload = {"url": url, **opts}
-        body = self._require_auth().post("/extract/task", payload)
-        return body["data"]["task_id"]
-
-    def _submit_urls_batch(self, urls: list[str], opts: dict) -> str:
-        files = [{"url": u} for u in urls]
+    def _submit_urls_batch(
+        self,
+        urls: list[str],
+        opts: dict,
+        ocr: bool | None,
+        pages: str | None,
+        file_params: dict[str, FileParam] | None,
+    ) -> str:
+        files = []
+        for u in urls:
+            entry: dict = {"url": u}
+            _apply_file_fields(entry, u, ocr, pages, file_params)
+            files.append(entry)
         payload = {"files": files, **opts}
         body = self._require_auth().post("/extract/task/batch", payload)
         return body["data"]["batch_id"]
 
-    def _upload_and_submit(self, file_paths: list[str], opts: dict) -> str:
+    def _upload_and_submit(
+        self,
+        file_paths: list[str],
+        opts: dict,
+        ocr: bool | None,
+        pages: str | None,
+        file_params: dict[str, FileParam] | None,
+    ) -> str:
         api = self._require_auth()
-        files_meta = [{"name": Path(p).name} for p in file_paths]
+        files_meta = []
+        for p in file_paths:
+            entry: dict = {"name": Path(p).name}
+            _apply_file_fields(entry, p, ocr, pages, file_params)
+            files_meta.append(entry)
         payload = {"files": files_meta, **opts}
         body = api.post("/file-urls/batch", payload)
         batch_id: str = body["data"]["batch_id"]
@@ -383,18 +435,6 @@ class MinerU:
         parsed = parse_zip(zip_bytes, task_id=result.task_id, filename=result.filename)
         parsed.zip_url = result.zip_url
         return parsed
-
-    def _wait_single(self, task_id: str, timeout: int) -> ExtractResult:
-        deadline = time.monotonic() + timeout
-        interval = 2.0
-        while True:
-            result = self.get_task(task_id)
-            if result.state in ("done", "failed"):
-                return result
-            if time.monotonic() > deadline:
-                raise TimeoutError(timeout, task_id)
-            time.sleep(min(interval, max(0, deadline - time.monotonic())))
-            interval = min(interval * 2, 30.0)
 
     def _wait_batch(self, batch_id: str, timeout: int) -> list[ExtractResult]:
         deadline = time.monotonic() + timeout
