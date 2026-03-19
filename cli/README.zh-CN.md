@@ -28,13 +28,13 @@
 ### Windows (PowerShell)
 
 ```powershell
-irm https://cdn-mineru.openxlab.org.cn/open-api-cli/install/install.ps1 | iex
+irm https://cdn-mineru.openxlab.org.cn/open-api-cli/install.ps1 | iex
 ```
 
 ### Linux / macOS (Shell)
 
 ```bash
-curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install/install.sh | sh
+curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
 ```
 
 ---
@@ -51,6 +51,17 @@ curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install/install.sh | 
 | `set-source` | 否 | 持久化请求来源标识 |
 | `update` | 否 | 检查或安装最新 CLI 版本 |
 | `version` | 否 | 输出版本与构建信息 |
+
+### `flash-extract` 与 `extract` 对比
+
+| | `flash-extract` | `extract` |
+|---|---|---|
+| **鉴权** | 无需 Token | 需要 Token |
+| **支持格式** | PDF, 图片 (png, jpg, webp 等), Docx, PPTx, Excel (xls, xlsx) | PDF, 图片 (png, jpg 等), Doc, Docx, Ppt, Pptx, Html |
+| **文件大小** | 最大 10 MB | 最大 200 MB |
+| **页数限制** | 最大 20 页 | 最大 600 页 |
+| **输出内容** | 仅 Markdown（图片/表格/公式以占位符替代） | Markdown, HTML, LaTeX, Docx, JSON |
+| **批量处理** | 一次一个文件 | 支持多文件和 URL |
 
 ---
 
