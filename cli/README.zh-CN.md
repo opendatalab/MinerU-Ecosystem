@@ -187,8 +187,8 @@ mineru-open-api flash-extract 报告.pdf --language en --pages 1-5
 | `-f`, `--format` | `md` | 逗号分隔的输出格式 |
 | `--model` | 自动推断 | HTML 文件/URL 走 `html`；其余默认 `vlm` |
 | `--ocr` | `false` | OCR 默认关闭 |
-| `--no-formula` | `false` | 默认开启公式识别 |
-| `--no-table` | `false` | 默认开启表格识别 |
+| `--formula` | `true` | 启用/禁用公式识别 |
+| `--table` | `true` | 启用/禁用表格识别 |
 | `--language` | `ch` | 只有改动时才会显式传给 API |
 | `--pages` | 未设置 | 默认处理完整文档 |
 | `--timeout` | 单文件 `300` / 批量 `1800` 秒 | 轮询等待总时长 |
@@ -216,8 +216,8 @@ mineru-open-api flash-extract 报告.pdf --language en --pages 1-5
 | `-f`, `--format` | `md,json,html,latex,docx` |
 | `--model` | `vlm`、`pipeline` 或 `html` |
 | `--ocr` | 启用 OCR |
-| `--no-formula` | 关闭公式识别 |
-| `--no-table` | 关闭表格识别 |
+| `--formula=false` | 关闭公式识别 |
+| `--table=false` | 关闭表格识别 |
 | `--language` | 文档语言 |
 | `--pages` | 页码范围，例如 `1-10,15` |
 | `--timeout` | 轮询超时时间，单位秒 |

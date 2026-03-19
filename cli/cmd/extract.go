@@ -23,8 +23,8 @@ var (
 	extractFormat      string
 	extractModel       string
 	extractOCR         bool
-	extractNoFormula   bool
-	extractNoTable     bool
+	extractFormula     bool
+	extractTable       bool
 	extractLanguage    string
 	extractPages       string
 	extractTimeout     int
@@ -64,9 +64,9 @@ func init() {
 	extractCmd.Flags().StringVarP(&extractFormat, "format", "f", "md", "Output format(s): md,json,html,latex,docx (comma-separated)")
 	extractCmd.Flags().StringVar(&extractModel, "model", "", "Model: vlm, pipeline, html (default: auto)")
 	extractCmd.Flags().BoolVar(&extractOCR, "ocr", false, "Enable OCR for scanned documents")
-	extractCmd.Flags().BoolVar(&extractNoFormula, "no-formula", false, "Disable formula recognition")
-	extractCmd.Flags().BoolVar(&extractNoTable, "no-table", false, "Disable table recognition")
-	extractCmd.Flags().StringVar(&extractLanguage, "language", "ch", "Document language")
+	extractCmd.Flags().BoolVar(&extractFormula, "formula", true, "Enable formula recognition")
+	extractCmd.Flags().BoolVar(&extractTable, "table", true, "Enable table recognition")
+	extractCmd.Flags().StringVarP(&extractLanguage, "language", "l", "ch", "Document language")
 	extractCmd.Flags().StringVar(&extractPages, "pages", "", "Page range, e.g. '1-10,15'")
 	extractCmd.Flags().IntVar(&extractTimeout, "timeout", 0, "Timeout in seconds (default: 300 single, 1800 batch)")
 	extractCmd.Flags().StringVar(&extractListFile, "list", "", "Read input list from file (one per line)")
@@ -106,7 +106,7 @@ func runExtract(cmd *cobra.Command, args []string) error {
 	}
 	client.SetSource(config.ResolveSource())
 
-	opts := buildExtractOpts()
+	opts := buildExtractOpts(cmd)
 
 	if extractStdin {
 		return runStdinExtract(client, opts)
@@ -413,7 +413,7 @@ func isBinaryFormat(f string) bool {
 
 // ── options builders ──
 
-func buildExtractOpts() []mineru.ExtractOption {
+func buildExtractOpts(cmd *cobra.Command) []mineru.ExtractOption {
 	var opts []mineru.ExtractOption
 	if extractModel != "" {
 		opts = append(opts, mineru.WithModel(extractModel))
@@ -421,11 +421,11 @@ func buildExtractOpts() []mineru.ExtractOption {
 	if extractOCR {
 		opts = append(opts, mineru.WithOCR(true))
 	}
-	if extractNoFormula {
-		opts = append(opts, mineru.WithFormula(false))
+	if cmd.Flags().Changed("formula") {
+		opts = append(opts, mineru.WithFormula(extractFormula))
 	}
-	if extractNoTable {
-		opts = append(opts, mineru.WithTable(false))
+	if cmd.Flags().Changed("table") {
+		opts = append(opts, mineru.WithTable(extractTable))
 	}
 	if extractLanguage != "ch" {
 		opts = append(opts, mineru.WithLanguage(extractLanguage))
