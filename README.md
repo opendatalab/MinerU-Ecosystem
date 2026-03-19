@@ -10,7 +10,7 @@ Empowering developers and AI agents with seamless document parsing capabilities.
 [![MinerU](https://img.shields.io/badge/Powered%20by-MinerU-orange)](https://github.com/opendatalab/MinerU)
 [![Online](https://img.shields.io/badge/Online-mineru.net-purple)](https://mineru.net)
 
-[English](README.md) | [中文](README.zh-CN.md)
+[中文](README.zh-CN.md)
 
 </div>
 
