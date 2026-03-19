@@ -8,7 +8,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-replace github.com/opendatalab/MinerU-Ecosystem/sdk/go => ../mineru-open-sdk-go
+replace github.com/opendatalab/MinerU-Ecosystem/sdk/go => ../sdk/go
 
 require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
