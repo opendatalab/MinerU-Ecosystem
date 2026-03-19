@@ -1,0 +1,82 @@
+#!/bin/sh
+set -e
+
+# MinerU CLI installer
+# Usage: curl -fsSL https://mineru.net/install.sh | sh
+#
+# Environment variables:
+#   MINERU_VERSION   - version to install (default: "latest")
+#   MINERU_BASE_URL  - override OSS base URL
+#   INSTALL_DIR      - install directory (default: /usr/local/bin)
+
+VERSION="${MINERU_VERSION:-latest}"
+BASE_URL="${MINERU_BASE_URL:-https://cdn-mineru.openxlab.org.cn/open-api-cli}"
+INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+
+detect_platform() {
+    OS="$(uname -s)"
+    ARCH="$(uname -m)"
+
+    case "$OS" in
+        Linux)  OS="linux" ;;
+        Darwin) OS="darwin" ;;
+        *)      echo "Error: unsupported OS: $OS"; exit 1 ;;
+    esac
+
+    case "$ARCH" in
+        x86_64|amd64)   ARCH="amd64" ;;
+        aarch64|arm64)  ARCH="arm64" ;;
+        *)              echo "Error: unsupported architecture: $ARCH"; exit 1 ;;
+    esac
+}
+
+download_and_install() {
+    BINARY="mineru-open-api-cli-${OS}-${ARCH}"
+    URL="${BASE_URL}/${VERSION}/${BINARY}"
+    TMP="$(mktemp)"
+
+    echo "Downloading mineru ${VERSION} for ${OS}/${ARCH}..."
+    echo "  ${URL}"
+
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsSL -o "$TMP" "$URL"
+    elif command -v wget >/dev/null 2>&1; then
+        wget -qO "$TMP" "$URL"
+    else
+        echo "Error: curl or wget required"
+        exit 1
+    fi
+
+    if [ ! -s "$TMP" ]; then
+        echo "Error: download failed or file is empty"
+        rm -f "$TMP"
+        exit 1
+    fi
+
+    # Install
+    if [ -w "$INSTALL_DIR" ]; then
+        mv "$TMP" "${INSTALL_DIR}/mineru-open-api"
+        chmod +x "${INSTALL_DIR}/mineru-open-api"
+    else
+        echo "Installing to ${INSTALL_DIR} (requires sudo)..."
+        sudo mv "$TMP" "${INSTALL_DIR}/mineru-open-api"
+        sudo chmod +x "${INSTALL_DIR}/mineru-open-api"
+    fi
+
+    echo ""
+    echo "Installed successfully!"
+    echo "=========================================================="
+    echo " IMPORTANT: If the command 'mineru-open-api' is not found,"
+    echo " please restart your terminal or ensure ${INSTALL_DIR} is in your PATH."
+    echo "=========================================================="
+    "${INSTALL_DIR}/mineru-open-api" version
+    echo ""
+    echo "====================[ AGENT GUIDANCE ]===================="
+    echo "Executable Path: ${INSTALL_DIR}/mineru-open-api"
+    echo "Note: To use the CLI immediately in automation scripts or Code Agents,"
+    echo "please invoke it using the absolute path above."
+    echo "=========================================================="
+}
+
+detect_platform
+download_and_install

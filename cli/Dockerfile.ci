@@ -1,0 +1,30 @@
+FROM golang:1.21
+
+ARG LDFLAGS
+ARG TARGETS="verify"
+
+ENV GOPROXY=https://goproxy.cn,direct
+
+WORKDIR /workspace
+
+# Copy the entire monorepo (sdk/go + cli)
+COPY sdk/go/ /workspace/sdk/go/
+COPY cli/    /workspace/cli/
+
+WORKDIR /workspace/cli
+
+RUN if [ "$TARGETS" = "verify" ]; then \
+      go build ./... && go vet ./... ; \
+    else \
+      mkdir -p /output && \
+      for target in $TARGETS; do \
+        os=$(echo $target | cut -d/ -f1) ; \
+        arch=$(echo $target | cut -d/ -f2) ; \
+        ext="" ; \
+        if [ "$os" = "windows" ]; then ext=".exe"; fi ; \
+        echo "Building ${os}/${arch}..." ; \
+        CGO_ENABLED=0 GOOS=$os GOARCH=$arch \
+          go build -ldflags="${LDFLAGS}" \
+          -o /output/mineru-open-api-cli-${os}-${arch}${ext} || exit 1 ; \
+      done ; \
+    fi
