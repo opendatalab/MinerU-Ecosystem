@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mineru-open-sdk"
-version = "0.1.0"
+version = "0.1.1"
 description = "MinerU API Python SDK — one line to turn documents into Markdown"
 readme = "README.md"
 license = "Apache-2.0"
