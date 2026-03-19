@@ -1,3 +1,4 @@
+[中文文档](./README.zh-CN.md)
 # MinerU Open MCP
 
 An Official Mineru  MCP server that exposes [MinerU](https://mineru.net)'s document parsing as MCP tools. Connect any MCP-compatible AI client to convert PDFs, Word docs, PowerPoint files, spreadsheets, and images into Markdown, Word (docx), HTML, or LaTeX.
@@ -61,7 +62,7 @@ MINERU_API_TOKEN=your_key mineru-open-mcp --transport streamable-http --port 800
 
 ## Features
 
-- **`parse_documents`** — convert local files and/or remote URLs to Markdown; supports PDF, DOCX, PPTX, JPG, PNG, HTML; optional extra output formats (Word, HTML, LaTeX). Flash Mode also supports xlsx.
+- **`parse_documents`** — convert local files and/or remote URLs to Markdown; supports PDF, DOCX, PPTX, JPG, PNG, HTML; optional extra output formats (Word, HTML, LaTeX). Flash Mode also supports xls and xlsx.
 - **`get_ocr_languages`** — list all OCR languages supported by MinerU
 - **`clean_logs`** — delete old server log files (only available when `ENABLE_LOG=true`)
 - **Flash mode** — works without an API key (free, markdown-only, 20 pages / 10 MB per file, supports PDF/images/Docx/PPTx/xls/xlsx); For full features, please provide `MINERU_API_TOKEN`, which will quit flash mode.

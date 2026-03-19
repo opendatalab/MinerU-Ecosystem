@@ -31,7 +31,7 @@ MinerU-Ecosystem/
 │   ├── python/           #   Python SDK
 │   ├── go/               #   Go SDK
 │   └── typescript/       #   TypeScript SDK
-├── mcp_server/           # Model Context Protocol server (Python)
+├── mcp/           # Model Context Protocol server (Python)
 └── skills/               # AI agent skills (Claude Code, OpenClaw, etc.)
 ```
 
@@ -156,7 +156,7 @@ print(result.images)  # Get the list of extracted images
 
 Multi-language SDKs are also available: **[Go](sdk/go/)** | **[TypeScript](sdk/typescript/)**. See the [`sdk/`](sdk/) directory for details.
 
-### MCP Server (`mcp_server/`)
+### MCP Server (`mcp/`)
 
 A [Model Context Protocol](https://modelcontextprotocol.io/) server implementation in Python, allowing MCP-compatible AI clients (such as Claude) to use MinerU's document parsing as a tool.
 
