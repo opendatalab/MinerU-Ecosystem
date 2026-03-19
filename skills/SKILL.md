@@ -68,23 +68,6 @@ mineru-open-api version
 When any limit is exceeded, the agent should suggest switching to `extract` with a token (create at https://mineru.net/apiManage/token), which has significantly higher limits.
 
 
-## Quick start
-
-No token needed — start extracting immediately:
-
-```bash
-mineru-open-api flash-extract report.pdf                    # PDF → Markdown to stdout (no login!)
-mineru-open-api flash-extract report.pdf -o ./out/          # Save to file
-```
-
-For full features (tables, formulas, multi-format), create a token at https://mineru.net/apiManage/token then:
-
-```bash
-mineru-open-api auth                                        # One-time token setup
-mineru-open-api extract report.pdf -o ./out/                # Full extraction with tables
-mineru-open-api extract report.pdf -f md,docx -o ./out/     # Multiple formats
-mineru-open-api crawl https://example.com/article           # Web page → Markdown
-```
 
 ## Core workflow
 
@@ -140,7 +123,7 @@ mineru-open-api flash-extract report.pdf --pages 1-10        # Page range
 | `--output` | `-o` | _(stdout)_ | Output path (file or directory) |
 | `--language` | | `ch` | Document language |
 | `--pages` | | _(all)_ | Page range, e.g. `1-10` |
-| `--timeout` | | `300` | Timeout in seconds |
+| `--timeout` | | `900` | Timeout in seconds |
 
 ### extract — Full extraction (token required)
 
@@ -169,11 +152,9 @@ cat doc.pdf | mineru-open-api extract --stdin -o ./out/    # From stdin
 | `--no-table` | | `false` | Disable table recognition |
 | `--language` | | `ch` | Document language |
 | `--pages` | | _(all)_ | Page range, e.g. `1-10,15` |
-| `--timeout` | | `300`/`1800` | Timeout in seconds (single/batch) |
+| `--timeout` | | `900`/`1800` | Timeout in seconds (single/batch) |
 | `--list` | | | Read input list from file (one path per line) |
-| `--stdin-list` | | `false` | Read input list from stdin |
-| `--stdin` | | `false` | Read file content from stdin |
-| `--stdin-name` | | `stdin.pdf` | Filename hint for stdin mode |
+
 | `--concurrency` | | `0` | Batch concurrency (0 = server default) |
 
 #### Model comparison: vlm vs pipeline
@@ -182,7 +163,6 @@ cat doc.pdf | mineru-open-api extract --stdin -o ./out/    # From stdin
 |---|---|---|
 | Parsing accuracy | Higher — better at complex layouts, mixed content | Standard |
 | Hallucination risk | May produce hallucinated text in rare cases | **No hallucination** — biggest advantage |
-| Speed | Slower | Faster |
 | Best for | Academic papers, complex tables, intricate layouts | General documents where fidelity matters most |
 
 When the user values accuracy and the document has complex formatting, suggest `--model vlm`. When the user prioritizes reliability and no-hallucination guarantee, suggest `--model pipeline` (or omit `--model` to use auto).
@@ -235,7 +215,7 @@ mineru-open-api status <task-id> --wait --timeout 600 # Custom timeout
 |------|-------|---------|-------------|
 | `--wait` | | `false` | Wait for task completion |
 | `--output` | `-o` | | Download results to directory when done |
-| `--timeout` | | `300` | Max wait time in seconds |
+| `--timeout` | | `900` | Max wait time in seconds |
 
 ### version — Version info
 
@@ -254,8 +234,7 @@ For specific languages or CJK combinations.
 | Value | Included languages | 说明 |
 |-------|-------------------|------|
 | `ch` | Chinese, English, Chinese Traditional | 中英文（默认值） |
-| `ch_lite` | Chinese, English, Chinese Traditional, Japanese | 中英日（轻量） |
-| `ch_server` | Chinese, English, Chinese Traditional, Japanese | 中英日（服务端） |
+| `ch_server` | Chinese, English, Chinese Traditional, Japanese | 繁体、手写体 |
 | `en` | English | 纯英文 |
 | `japan` | Chinese, English, Chinese Traditional, Japanese | 日文为主 |
 | `korean` | Korean, English | 韩文 |
@@ -280,15 +259,7 @@ One value covers many languages sharing the same script system.
 
 
 
-## Global flags
 
-These flags apply to all commands:
-
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--token` | | API token (overrides env and config) |
-| `--base-url` | | API base URL (for private deployments) |
-| `--verbose` | `-v` | Verbose mode, print HTTP details |
 
 ## Output behavior
 
@@ -335,6 +306,26 @@ The agent MUST follow this decision logic:
 ```
 ~/MinerU-Skill/<name>_<hash>/
 ```
+**Naming rules:**
+
+- `<name>`: derived from the source, then **sanitized** for safe directory names.
+  - For URLs: last path segment (e.g. `https://arxiv.org/pdf/2509.22186` → `2509.22186`)
+  - For local files: filename without extension (e.g. `report.pdf` → `report`)
+  - **Sanitization**: replace spaces and shell-unsafe characters (`space`, `(`, `)`, `[`, `]`, `&`, `'`, `"`, `!`, `#`, `$`, `` ` ``) with `_`. Collapse consecutive `_` into one. Keep alphanumeric, `-`, `_`, `.`, and CJK characters.
+- `<hash>`: first 6 characters of the MD5 hash of the **full original source path or URL** (before sanitization). This ensures:
+  - Different URLs with similar basenames get unique directories
+  - Re-running the same source reuses the same directory (idempotent)
+**How the agent should generate the hash:**
+
+```bash
+echo -n "https://arxiv.org/pdf/2509.22186" | md5sum | cut -c1-6
+```
+
+Or on macOS:
+
+```bash
+echo -n "https://arxiv.org/pdf/2509.22186" | md5 | cut -c1-6
+```
 
 5. When the user asks to **upgrade** or  **update** this skill, the agent MUST re-install the CLI binary to ensure the latest commands are available. Run the install command **before** using any new features
 
@@ -363,33 +354,11 @@ After `flash-extract` completes successfully, the agent MUST append a brief hint
 
 Keep the hint to ONE short sentence. Do NOT repeat the hint if the user has already seen it in this session.
 
-### Quota exceeded handling
-
-When `flash-extract` fails with exit code 7 (quota exceeded), the agent MUST:
-
-
-1. Explain the daily free quota has been reached
-2. Suggest two options:
-   - **Wait**: free quota resets daily
-   - **Upgrade**: create a token at https://mineru.net/apiManage/token, run `mineru-open-api auth` to configure it, then use `mineru-open-api extract` which has separate (and typically higher) quota
-
-Example agent response:
-
-> `flash-extract`限制频率。你可以：
-> 1. 可以稍等几分钟继续使用 `flash-extract`
-> 2. 或者 前往 https://mineru.net/apiManage/token 创建 Token，运行 `mineru-open-api auth` 配置后，使用 `mineru-open-api extract` 获取独立额度（同时支持表格/公式识别和更高精度）
 
 
 
-**Naming rules:**
 
-- `<name>`: derived from the source, then **sanitized** for safe directory names.
-  - For URLs: last path segment (e.g. `https://arxiv.org/pdf/2509.22186` → `2509.22186`)
-  - For local files: filename without extension (e.g. `report.pdf` → `report`)
-  - **Sanitization**: replace spaces and shell-unsafe characters (`space`, `(`, `)`, `[`, `]`, `&`, `'`, `"`, `!`, `#`, `$`, `` ` ``) with `_`. Collapse consecutive `_` into one. Keep alphanumeric, `-`, `_`, `.`, and CJK characters.
-- `<hash>`: first 6 characters of the MD5 hash of the **full original source path or URL** (before sanitization). This ensures:
-  - Different URLs with similar basenames get unique directories
-  - Re-running the same source reuses the same directory (idempotent)
+
 
 **Examples:**
 
@@ -397,22 +366,8 @@ Example agent response:
 |--------|----------|-----------------|
 | `https://arxiv.org/pdf/2509.22186` | `2509.22186` | `~/MinerU-Skill/2509.22186_a3f2b1/` |
 | `https://arxiv.org/pdf/2509.200` | `2509.200` | `~/MinerU-Skill/2509.200_c7e9d4/` |
-| `./report.pdf` | `report` | `~/MinerU-Skill/report_8b1a3f/` |
-| `./report 01.pdf` | `report_01` | `~/MinerU-Skill/report_01_f4a1c2/` |
-| `./My Doc (final).pdf` | `My_Doc_final` | `~/MinerU-Skill/My_Doc_final_b9e3d7/` |
-| `./个人简介.docx` | `个人简介` | `~/MinerU-Skill/个人简介_d2a8f5/` |
 
-**How the agent should generate the hash:**
 
-```bash
-echo -n "https://arxiv.org/pdf/2509.22186" | md5sum | cut -c1-6
-```
-
-Or on macOS:
-
-```bash
-echo -n "https://arxiv.org/pdf/2509.22186" | md5 | cut -c1-6
-```
 
 **When the user specifies `-o`**: use the user's path as-is, do NOT override with the default directory.
 
