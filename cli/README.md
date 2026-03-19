@@ -9,7 +9,7 @@ It is designed for:
 
 - AI agents that need clean `stdout` for downstream tools
 - CI/CD jobs and scripts
-- developers who want one binary instead of a Python or Node.js runtime
+- developers and teams integrating document extraction into their workflows
 
 ---
 
