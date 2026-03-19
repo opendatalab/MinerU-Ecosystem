@@ -93,14 +93,7 @@ func flashOutputResult(result *mineru.ExtractResult, source string) error {
 		return nil
 	}
 
-	dir := flashOutput
-	base := baseNameNoExt(source)
-
-	info, err := os.Stat(dir)
-	if err == nil && !info.IsDir() {
-		dir = filepath.Dir(flashOutput)
-		base = baseNameNoExt(flashOutput)
-	}
+	dir, base := resolveOutputTarget(flashOutput, source, []string{"md"})
 
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
