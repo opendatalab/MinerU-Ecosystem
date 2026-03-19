@@ -142,6 +142,7 @@ These defaults apply to `extract()`, `extract_batch()`, `submit()`, `submit_batc
 | `language` | not set | Chinese `"ch"` (API default) |
 | `pages` | `None` | Full document is processed |
 | `extra_formats` | `None` | Only the default Markdown/JSON payload is returned |
+| `file_params` | `None` | Per-file overrides for batch methods. A `dict[str, FileParam]` keyed by path/URL, where `FileParam` has fields `pages`, `ocr`, `data_id` |
 | `timeout` | `300` seconds for single-item methods | Max total polling time for `extract()` / `crawl()` |
 | `timeout` | `1800` seconds for batch methods | Max total polling time for `extract_batch()` / `crawl_batch()` |
 
@@ -193,6 +194,19 @@ with MinerU("your-api-token") as client:
 # Yields results as they complete
 for result in client.extract_batch(["a.pdf", "b.pdf", "c.pdf"]):
     print(f"{result.filename}: Done")
+```
+
+### Batch With Per-File Pages
+```python
+from mineru import FileParam
+
+batch_id = client.submit_batch(
+    ["a.pdf", "b.pdf"],
+    file_params={
+        "a.pdf": FileParam(pages="1-5"),
+        "b.pdf": FileParam(pages="10-20"),
+    },
+)
 ```
 
 ### Web Crawling

@@ -193,6 +193,7 @@ These defaults apply to `Extract()`, `ExtractBatch()`, `Submit()`, and `SubmitBa
 | `WithLanguage(...)` | not set | Chinese `"ch"` (API default) |
 | `WithPages(...)` | not set | Full document is processed |
 | `WithExtraFormats(...)` | none | Only the default Markdown/JSON payload is returned |
+| `WithFileParams(map)` | none | Per-file overrides for batch methods. A `map[string]FileParam` keyed by path/URL, where `FileParam` has fields `Pages`, `OCR`, `DataID` |
 
 ### `Crawl()` / `CrawlBatch()`
 
@@ -261,6 +262,17 @@ if err != nil {
 for result := range ch {
     fmt.Printf("%s: %s\n", result.Filename, result.State)
 }
+```
+
+### Batch With Per-File Pages
+
+```go
+batchID, err := client.SubmitBatch(ctx, []string{"a.pdf", "b.pdf"},
+    mineru.WithFileParams(map[string]mineru.FileParam{
+        "a.pdf": {Pages: "1-5"},
+        "b.pdf": {Pages: "10-20"},
+    }),
+)
 ```
 
 ### Web Crawling
