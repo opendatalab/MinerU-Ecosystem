@@ -29,13 +29,13 @@ It is designed for:
 ### Windows (PowerShell)
 
 ```powershell
-irm https://cdn-mineru.openxlab.org.cn/open-api-cli/install/install.ps1 | iex
+irm https://cdn-mineru.openxlab.org.cn/open-api-cli/install.ps1 | iex
 ```
 
 ### Linux / macOS (Shell)
 
 ```bash
-curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install/install.sh | sh
+curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
 ```
 
 ---
@@ -52,6 +52,17 @@ curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install/install.sh | 
 | `set-source` | No | Persist the source header used for request tracking |
 | `update` | No | Check for or install the latest CLI version |
 | `version` | No | Print build and version info |
+
+### `flash-extract` vs `extract`
+
+| | `flash-extract` | `extract` |
+|---|---|---|
+| **Auth** | No token required | Token required |
+| **File Formats** | PDF, Images (png, jpg, webp, etc.), Docx, PPTx, Excel (xls, xlsx) | PDF, Images (png, jpg, etc.), Doc, Docx, Ppt, Pptx, Html |
+| **File Size** | Max 10 MB | Max 200 MB |
+| **Page Limit** | Max 20 pages | Max 600 pages |
+| **Output** | Markdown only (images/tables/formulas as placeholders) | Markdown, HTML, LaTeX, Docx, JSON |
+| **Batch** | One file at a time | Multiple files and URLs |
 
 ---
 
