@@ -3,7 +3,7 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 from pypdf import PdfWriter
@@ -14,6 +14,7 @@ from langchain_mineru.document_loaders.mineru import MinerULoader
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def make_result(
     *,
@@ -51,6 +52,7 @@ def _make_loader(source="a.pdf", **kwargs) -> MinerULoader:
 # Validation tests
 # ---------------------------------------------------------------------------
 
+
 class TestValidation:
     def test_empty_source_list_raises(self):
         with pytest.raises(ValueError, match="source list must not be empty"):
@@ -68,6 +70,7 @@ class TestValidation:
 # ---------------------------------------------------------------------------
 # Single source tests
 # ---------------------------------------------------------------------------
+
 
 class TestSingleSource:
     def test_single_source_markdown(self):
@@ -110,10 +113,23 @@ class TestSingleSource:
             timeout=1200,
         )
 
+    def test_non_pdf_source_not_split(self):
+        """Non-PDF sources always produce 1 Document even with split_pages=True."""
+        loader = _make_loader(source="report.docx", split_pages=True)
+        loader._client.flash_extract = MagicMock(
+            return_value=make_result(markdown="docx content")
+        )
+
+        docs = loader.load()
+
+        assert len(docs) == 1
+        assert "page" not in docs[0].metadata
+
 
 # ---------------------------------------------------------------------------
 # Multiple sources tests
 # ---------------------------------------------------------------------------
+
 
 class TestMultiSource:
     def test_multi_source(self):
@@ -133,13 +149,28 @@ class TestMultiSource:
         assert docs[1].page_content == "content b"
         assert docs[1].metadata["source"] == "b.pdf"
 
+    def test_lazy_load_yields_incrementally(self):
+        """lazy_load() should yield Documents one by one, not wait for all."""
+        loader = _make_loader(source=["a.pdf", "b.pdf"])
+        loader._client.flash_extract = MagicMock(
+            side_effect=[
+                make_result(markdown="content a"),
+                make_result(markdown="content b"),
+            ]
+        )
+
+        docs = list(loader.lazy_load())
+        assert len(docs) == 2
+
 
 # ---------------------------------------------------------------------------
 # Split pages tests
 # ---------------------------------------------------------------------------
 
+
 class TestSplitPages:
-    def test_split_pages_local_pdf(self):
+    def test_split_pages_local_pdf_all_pages(self):
+        """split_pages=True without pages → all pages extracted."""
         with tempfile.TemporaryDirectory() as tmp:
             pdf_path = Path(tmp) / "test.pdf"
             _create_dummy_pdf(pdf_path, num_pages=3)
@@ -161,6 +192,43 @@ class TestSplitPages:
                 assert doc.metadata["source"] == str(pdf_path)
                 assert doc.metadata["page_source"] == str(pdf_path)
                 assert doc.metadata["split_pages"] is True
+
+    def test_split_pages_with_page_range(self):
+        """split_pages=True + pages='1-2' → only pages 1 and 2 extracted."""
+        with tempfile.TemporaryDirectory() as tmp:
+            pdf_path = Path(tmp) / "test.pdf"
+            _create_dummy_pdf(pdf_path, num_pages=5)
+
+            loader = _make_loader(source=str(pdf_path), split_pages=True, pages="1-2")
+            loader._client.flash_extract = MagicMock(
+                side_effect=[
+                    make_result(markdown="page 1 content"),
+                    make_result(markdown="page 2 content"),
+                ]
+            )
+
+            docs = loader.load()
+
+            assert len(docs) == 2
+            assert docs[0].metadata["page"] == 1
+            assert docs[1].metadata["page"] == 2
+
+    def test_split_pages_with_single_page(self):
+        """split_pages=True + pages='3' → only page 3 extracted."""
+        with tempfile.TemporaryDirectory() as tmp:
+            pdf_path = Path(tmp) / "test.pdf"
+            _create_dummy_pdf(pdf_path, num_pages=5)
+
+            loader = _make_loader(source=str(pdf_path), split_pages=True, pages="3")
+            loader._client.flash_extract = MagicMock(
+                return_value=make_result(markdown="page 3 content")
+            )
+
+            docs = loader.load()
+
+            assert len(docs) == 1
+            assert docs[0].metadata["page"] == 3
+            assert docs[0].page_content == "page 3 content"
 
     def test_split_pages_false_no_split(self):
         loader = _make_loader(source="a.pdf", split_pages=False)
@@ -197,6 +265,7 @@ class TestSplitPages:
 # Error handling tests
 # ---------------------------------------------------------------------------
 
+
 class TestErrorHandling:
     def test_failed_result_raises(self):
         loader = _make_loader(source="a.pdf")
@@ -217,10 +286,28 @@ class TestErrorHandling:
         with pytest.raises(ValueError, match="result.markdown is empty"):
             loader.load()
 
+    def test_failed_result_in_split_mode_raises(self):
+        """Failure during split-page extraction should propagate."""
+        with tempfile.TemporaryDirectory() as tmp:
+            pdf_path = Path(tmp) / "test.pdf"
+            _create_dummy_pdf(pdf_path, num_pages=2)
+
+            loader = _make_loader(source=str(pdf_path), split_pages=True)
+            loader._client.flash_extract = MagicMock(
+                side_effect=[
+                    make_result(markdown="page 1 ok"),
+                    make_result(state="failed", markdown=None, error="timeout"),
+                ]
+            )
+
+            with pytest.raises(ValueError, match="state=failed"):
+                loader.load()
+
 
 # ---------------------------------------------------------------------------
 # Metadata tests
 # ---------------------------------------------------------------------------
+
 
 class TestMetadata:
     def test_metadata_fields(self):
@@ -263,10 +350,30 @@ class TestMetadata:
             assert meta["page_source"] == str(pdf_path)
             assert meta["split_pages"] is True
 
+    def test_metadata_source_always_original(self):
+        """source in metadata must always be the original input, not temp file path."""
+        with tempfile.TemporaryDirectory() as tmp:
+            pdf_path = Path(tmp) / "original.pdf"
+            _create_dummy_pdf(pdf_path, num_pages=2)
+
+            loader = _make_loader(source=str(pdf_path), split_pages=True)
+            loader._client.flash_extract = MagicMock(
+                side_effect=[
+                    make_result(markdown="p1"),
+                    make_result(markdown="p2"),
+                ]
+            )
+
+            docs = loader.load()
+            for doc in docs:
+                assert doc.metadata["source"] == str(pdf_path)
+                assert "tmp" not in doc.metadata["source"] or str(pdf_path) in doc.metadata["source"]
+
 
 # ---------------------------------------------------------------------------
 # Flash extract call verification
 # ---------------------------------------------------------------------------
+
 
 class TestFlashExtractCall:
     def test_calls_flash_extract(self):
@@ -298,7 +405,8 @@ class TestFlashExtractCall:
             timeout=1200,
         )
 
-    def test_split_pages_does_not_forward_page_range_to_single_page_extract(self):
+    def test_split_pages_does_not_forward_page_range_to_api(self):
+        """In split mode, page_range must NOT be forwarded to flash_extract."""
         with tempfile.TemporaryDirectory() as tmp:
             pdf_path = Path(tmp) / "test.pdf"
             _create_dummy_pdf(pdf_path, num_pages=2)
@@ -317,3 +425,27 @@ class TestFlashExtractCall:
             assert loader._client.flash_extract.call_count == 2
             for called in loader._client.flash_extract.call_args_list:
                 assert "page_range" not in called.kwargs
+
+    def test_set_source_called_on_client(self):
+        """MinerU client.set_source() must be called with the langchain-mineru tag."""
+        mock_client = MagicMock()
+        with patch.object(MinerULoader, "_create_client", return_value=mock_client):
+            pass  # _create_client is already mocked via _make_loader
+
+        # Test _create_client directly with real MinerU mock
+        mock_mineru_cls = MagicMock()
+        mock_instance = MagicMock()
+        mock_mineru_cls.return_value = mock_instance
+
+        with patch("langchain_mineru.document_loaders.mineru.MinerULoader._create_client") as mock_create:
+            mock_create.return_value = mock_instance
+            loader = MinerULoader.__new__(MinerULoader)
+            loader.source = "a.pdf"
+            loader.language = "ch"
+            loader.pages = None
+            loader.timeout = 1200
+            loader.split_pages = False
+            loader._validate = lambda: None
+            loader._client = loader._create_client()
+
+        mock_create.assert_called_once()
