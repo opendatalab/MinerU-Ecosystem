@@ -263,4 +263,4 @@ This project is licensed under the Apache-2.0 License.
 
 ## 🔗 Links
 - [Official Website](https://mineru.net)
-- [API Documentation](https://mineru.net/docs)
+- [API Documentation](https://mineru.net/apiManage/docs)
