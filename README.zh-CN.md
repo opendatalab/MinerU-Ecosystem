@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🔮 MinerU-Ecosystem
+# MinerU-Ecosystem
 
 **[MinerU](https://github.com/opendatalab/MinerU) Open API 官方生态工具集**
 
