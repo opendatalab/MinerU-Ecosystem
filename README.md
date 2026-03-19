@@ -110,11 +110,15 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) server implementati
 
 ### AI Agent Skills (`skills/`)
 
-Pre-built skills for AI coding agents and platforms:
+Pre-built skill for AI coding agents, enabling document extraction directly within agent workflows. The skill is wrapper by the `mineru-open-api` CLI and provides:
 
-- **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** — Document extraction and analysis skill
-- **[OpenClaw](https://openclawskills.org/)** — Extensible document parsing skill
-- Other AI agents that support skill/tool interfaces
+#### Skills Download
+
+- **[OpenClaw](https://openclaw.com)** — `View skill details on ClawHub`
+- **[lobeChat](TBD)** — Compatible via SKILL.md
+- **[CDN Link](https://webpub.shlab.tech/MinerU/skills/api/0.1.0.zip)** — One-click download skill package
+- Other AI agents like zeroclaw that also support skill/tool interfaces
+
 
 ## 📚 Documentation
 
@@ -233,11 +237,14 @@ MinerU-Ecosystem/
 
 ### AI 智能体技能 (`skills/`)
 
-为 AI 编程智能体和平台预构建的技能：
+为 AI 编程智能体预构建的文档解析技能，封装 `mineru-open-api` CLI。
 
-- **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** — 文档提取与分析技能
-- **[OpenClaw](https://openclawskills.org/)** — 可扩展的文档解析技能
-- 其他支持技能/工具接口的 AI 智能体
+#### Skills 下载
+
+- **[OpenClaw](https://openclaw.com)** — `在 clawhub 查看skills详情`
+- **[lobeChat](待定)** — 通过 SKILL.md 兼容
+- **[CDN Link](https://webpub.shlab.tech/MinerU/skills/api/0.1.0.zip)** — 一键下载skill资源包
+- 其他支持技能/工具接口的 AI 智能体（如 zeroclaw）
 
 ## 📚 相关文档
 
