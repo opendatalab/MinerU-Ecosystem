@@ -1,7 +1,5 @@
 import { raiseForCode } from "./errors.js";
-
-// TODO(release): 上线前换回 https://mineru.net/api/v1/agent
-const DEFAULT_FLASH_BASE_URL = "https://staging.mineru.org.cn/api/v1/agent";
+import { DEFAULT_FLASH_BASE_URL } from "./constants.js";
 
 interface FlashApiResponse {
   code: number;
@@ -9,8 +7,6 @@ interface FlashApiResponse {
   trace_id?: string;
   data: Record<string, unknown>;
 }
-
-export { DEFAULT_FLASH_BASE_URL };
 
 export class FlashApiClient {
   private readonly baseUrl: string;

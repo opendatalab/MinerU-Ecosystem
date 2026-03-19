@@ -6,10 +6,8 @@ from typing import Any
 
 import httpx
 
+from ._constants import DEFAULT_FLASH_BASE_URL
 from .exceptions import raise_for_code
-
-# TODO(release): 上线前换回 https://mineru.net/api/v1/agent
-DEFAULT_FLASH_BASE_URL = "https://staging.mineru.org.cn/api/v1/agent"
 
 _TIMEOUT = httpx.Timeout(30.0, read=120.0)
 

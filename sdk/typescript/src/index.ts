@@ -1,3 +1,5 @@
+export { DEFAULT_BASE_URL, DEFAULT_FLASH_BASE_URL } from "./constants.js";
+
 export { MinerU } from "./client.js";
 export type { ExtractOptions, BatchOptions, FlashExtractOptions } from "./client.js";
 

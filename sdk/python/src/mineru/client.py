@@ -8,7 +8,8 @@ from pathlib import Path, PurePosixPath
 from typing import Iterator
 
 from ._api import ApiClient
-from ._flash_api import DEFAULT_FLASH_BASE_URL, FlashApiClient
+from ._constants import DEFAULT_BASE_URL, DEFAULT_FLASH_BASE_URL
+from ._flash_api import FlashApiClient
 from ._zip import parse_zip
 from .exceptions import NoAuthClientError, TimeoutError
 from .models import ExtractResult, Progress
@@ -116,7 +117,7 @@ class MinerU:
     def __init__(
         self,
         token: str | None = None,
-        base_url: str = "https://mineru.net/api/v4",
+        base_url: str = DEFAULT_BASE_URL,
         flash_base_url: str | None = None,
     ) -> None:
         resolved_token = token or os.environ.get("MINERU_TOKEN")

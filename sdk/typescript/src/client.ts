@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { basename, extname } from "node:path";
 
 import { ApiClient } from "./api.js";
+import { DEFAULT_BASE_URL } from "./constants.js";
 import { NoAuthClientError, TimeoutError } from "./errors.js";
 import { FlashApiClient } from "./flash-api.js";
 import type { ExtractResult, Progress } from "./models.js";
@@ -139,7 +140,7 @@ export class MinerU {
    */
   constructor(
     token?: string,
-    baseUrl = "https://mineru.net/api/v4",
+    baseUrl = DEFAULT_BASE_URL,
     flashBaseUrl?: string,
   ) {
     const resolved = token ?? process.env["MINERU_TOKEN"];
