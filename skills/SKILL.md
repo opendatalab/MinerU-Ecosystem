@@ -148,8 +148,8 @@ cat doc.pdf | mineru-open-api extract --stdin -o ./out/    # From stdin
 | `--format` | `-f` | `md` | Output formats: `md`, `json`, `html`, `latex`, `docx` (comma-separated) |
 | `--model` | | _(auto)_ | Model: `vlm`, `pipeline`, `html` (see below) |
 | `--ocr` | | `false` | Enable OCR for scanned documents |
-| `--no-formula` | | `false` | Disable formula recognition |
-| `--no-table` | | `false` | Disable table recognition |
+| `--formula` | | `true` | Enable/disable formula recognition |
+| `--table` | | `true` | Enable/disable table recognition |
 | `--language` | | `ch` | Document language |
 | `--pages` | | _(all)_ | Page range, e.g. `1-10,15` |
 | `--timeout` | | `900`/`1800` | Timeout in seconds (single/batch) |
@@ -185,7 +185,7 @@ mineru-open-api crawl --list urls.txt -o ./pages/               # Batch from fil
 |------|-------|---------|-------------|
 | `--output` | `-o` | _(stdout)_ | Output path |
 | `--format` | `-f` | `md` | Output formats: `md`, `json`, `html` (comma-separated) |
-| `--timeout` | | `300`/`1800` | Timeout in seconds (single/batch) |
+| `--timeout` | | `900`/`1800` | Timeout in seconds (single/batch) |
 | `--list` | | | Read URL list from file (one per line) |
 | `--stdin-list` | | `false` | Read URL list from stdin |
 | `--concurrency` | | `0` | Batch concurrency |
@@ -386,7 +386,7 @@ Keep the hint to ONE short sentence. Do NOT repeat the hint if the user has alre
 ## Troubleshooting
 
 - **"no API token found"** (on `extract`/`crawl`): Run `mineru-open-api auth` or set `MINERU_TOKEN` env variable. Or use `flash-extract` which needs no token.
-- **Timeout on large files**: Increase with `--timeout 600` (seconds)
+- **Timeout on large files**: Increase with `--timeout 1600` (seconds)
 - **Batch fails partially**: Check stderr for per-file status; succeeded files are still saved
 - **Binary format to stdout**: Use `-o` flag; `docx` cannot stream to stdout
 - **Private deployment**: Use `--base-url https://your-server.com/api`
