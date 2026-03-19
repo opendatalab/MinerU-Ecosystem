@@ -176,9 +176,8 @@ print(result.images)  # 获取提取出的图片列表
 
 ### AI 智能体技能 (`skills/`)
 
-- **[OpenClaw](https://openclaw.com)** — `在 clawhub 查看skills详情`
-- **[lobeChat](待定)** — 通过 SKILL.md 兼容
-- **[CDN Link](https://webpub.shlab.tech/MinerU/skills/api/0.1.0.zip)** — 一键下载skill资源包
+- **[OpenClaw](https://clawhub.ai/MinerU-Extract/mineru-document-extractor)** — `在 clawhub 查看skills详情`
+- **[CDN Link](https://webpub.shlab.tech/MinerU/skills/api/1.0.0.zip)** — 一键下载skill资源包
 - 其他支持技能/工具接口的 AI 智能体（如 zeroclaw）
 
 ## 📚 相关文档

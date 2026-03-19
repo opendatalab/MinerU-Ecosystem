@@ -1,0 +1,26 @@
+downloads
+.env
+uv.lock
+.venv
+**/__pycache__
+**/*.pyc
+**/*.pyo
+dist
+.DS_Store
+.cursor
+build
+*.lock
+src/mineru_open_mcp.egg-info
+test
+docs
+.idea
+
+# React UI build artifacts
+ui/dist/
+ui/node_modules/
+# Package build: ui dist and vendored SDK copied into src for wheel/sdist
+src/mineru_open_mcp/ui_dist/
+src/mineru_open_mcp/vendor/
+changes.md
+logs/
+opensorcestd.md
