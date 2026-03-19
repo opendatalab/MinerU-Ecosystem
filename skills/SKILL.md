@@ -46,11 +46,11 @@ mineru-open-api version
 | Token required | No | Yes (`mineru-open-api auth`) |
 | Speed | Fast | Normal |
 | Table recognition | No | Yes |
-| Formula recognition | Yes | Yes |
+| Formula recognition | No | Yes |
 | OCR | Yes | Yes |
 | Output formats | Markdown only | md, html, latex, docx, json |
 | Batch mode | No | Yes |
-| Model selection | pipeline | Yes (vlm, pipeline) |
+| Model selection | pipeline | Yes (vlm, pipeline, MinerU-HTML) |
 | File size limit | **10 MB** | Much higher |
 | Page limit | **20 pages** | Much higher |
 | Rate limit | Per-IP per-minute/hour cap | Based on API plan |
@@ -200,30 +200,10 @@ mineru-open-api auth --verify     # Verify current token is valid
 mineru-open-api auth --show       # Show current token source and masked value
 ```
 
-### status — Async task status
 
-Query the status of a previously submitted extraction task.
 
-```bash
-mineru-open-api status <task-id>                      # Check status once
-mineru-open-api status <task-id> --wait               # Wait for completion
-mineru-open-api status <task-id> --wait -o ./out/     # Wait and download results
-mineru-open-api status <task-id> --wait --timeout 600 # Custom timeout
-```
 
-#### status flags
 
-| Flag | Short | Default | Description |
-|------|-------|---------|-------------|
-| `--wait` | | `false` | Wait for task completion |
-| `--output` | `-o` | | Download results to directory when done |
-| `--timeout` | | `900` | Max wait time in seconds |
-
-### version — Version info
-
-```bash
-mineru-open-api version    # Show version, commit, build date, Go version, OS/arch
-```
 
 ## Supported `--language` values
 
@@ -336,9 +316,7 @@ echo -n "https://arxiv.org/pdf/2509.22186" | md5 | cut -c1-6
 
 When `flash-extract` fails due to file limits or rate limiting, the agent MUST provide a clear explanation and suggest `extract` as the upgrade path:
 
-**File too large (>10 MB) or too many pages (>50):**
 
-> 该文件超出 `flash-extract` 的限制（最大 10 MB / 20 页）。请前往 https://mineru.net/apiManage/token 创建 Token，运行 `mineru-open-api auth` 配置后使用 `mineru-open-api extract`，文件大小和页数限制大幅放宽。
 
 **Rate limited (HTTP 429):**
 
@@ -395,12 +373,11 @@ Keep the hint to ONE short sentence. Do NOT repeat the hint if the user has alre
 - **Extraction quality is poor**: Try `mineru-open-api extract` with `--model vlm` for complex layouts, or `--ocr` for scanned documents
 - **Tables not extracted**: `flash-extract` does NOT support tables. Use `mineru-open-api extract` with a token.
 - **HTTP 429 on flash-extract**: IP rate limit hit. Wait a few minutes or switch to `mineru-open-api extract` with token.
-- **File too large for flash-extract**: Max 10 MB / 20 pages. Use `mineru-open-api extract` with token for larger files.
 
 ## Notes
 
-- `flash-extract` is token-free but limited to 10 MB / 20 pages per file, has IP rate limits, and no table recognition
 - `extract` requires a token but provides full-featured extraction
 - All status/progress messages go to stderr; only document content goes to stdout
 - Batch mode automatically polls the API with exponential backoff
 - Token is stored in `~/.mineru/config.yaml` after `mineru-open-api auth`
+
