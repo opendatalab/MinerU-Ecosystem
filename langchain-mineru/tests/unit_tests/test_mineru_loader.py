@@ -66,6 +66,32 @@ class TestValidation:
         loader = _make_loader(source=["a.pdf", "b.pdf"])
         assert loader.source == ["a.pdf", "b.pdf"]
 
+    def test_invalid_model_raises(self):
+        with pytest.raises(ValueError, match="model must be 'fast' or 'accurate'"):
+            _make_loader(source="a.pdf", model="invalid")
+
+    def test_accurate_mode_without_token_raises(self, monkeypatch):
+        monkeypatch.delenv("MINERU_TOKEN", raising=False)
+        with pytest.raises(ValueError, match="accurate mode requires token"):
+            _make_loader(source="a.pdf", model="accurate")
+
+    def test_accurate_mode_with_explicit_token_ok(self):
+        loader = _make_loader(source="a.pdf", model="accurate", token="test-token")
+        assert loader.model == "accurate"
+        assert loader.token == "test-token"
+
+    @pytest.mark.parametrize(
+        ("kwargs", "match"),
+        [
+            ({"ocr": True}, "ocr/formula/table are only supported in accurate mode"),
+            ({"formula": False}, "ocr/formula/table are only supported in accurate mode"),
+            ({"table": False}, "ocr/formula/table are only supported in accurate mode"),
+        ],
+    )
+    def test_fast_mode_rejects_accurate_only_options(self, kwargs, match):
+        with pytest.raises(ValueError, match=match):
+            _make_loader(source="a.pdf", model="fast", **kwargs)
+
 
 # ---------------------------------------------------------------------------
 # Single source tests
@@ -326,6 +352,7 @@ class TestMetadata:
         assert meta["source"] == "report.pdf"
         assert meta["loader"] == "mineru"
         assert meta["output_format"] == "markdown"
+        assert meta["model"] == "fast"
         assert meta["language"] == "en"
         assert meta["pages"] == "1-3"
         assert meta["split_pages"] is False
@@ -449,3 +476,78 @@ class TestFlashExtractCall:
             loader._client = loader._create_client()
 
         mock_create.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# Accurate extract call verification
+# ---------------------------------------------------------------------------
+
+
+class TestAccurateExtractCall:
+    def test_calls_extract(self):
+        loader = _make_loader(
+            source="test.pdf",
+            model="accurate",
+            token="token-123",
+            language="en",
+            pages="2-5",
+            timeout=300,
+        )
+        loader._client.extract = MagicMock(return_value=make_result(markdown="content"))
+
+        loader.load()
+
+        loader._client.extract.assert_called_once_with(
+            "test.pdf",
+            language="en",
+            pages="2-5",
+            timeout=300,
+            ocr=False,
+            formula=True,
+            table=True,
+        )
+
+    def test_calls_extract_with_ocr_formula_table(self):
+        loader = _make_loader(
+            source="test.pdf",
+            model="accurate",
+            token="token-123",
+            ocr=True,
+            formula=False,
+            table=False,
+        )
+        loader._client.extract = MagicMock(return_value=make_result(markdown="content"))
+
+        loader.load()
+
+        loader._client.extract.assert_called_once_with(
+            "test.pdf",
+            language="ch",
+            timeout=1200,
+            ocr=True,
+            formula=False,
+            table=False,
+        )
+
+    def test_split_pages_does_not_forward_pages_to_extract(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            pdf_path = Path(tmp) / "test.pdf"
+            _create_dummy_pdf(pdf_path, num_pages=2)
+
+            loader = _make_loader(
+                source=str(pdf_path),
+                model="accurate",
+                token="token-123",
+                pages="1-2",
+                split_pages=True,
+            )
+            loader._client.extract = MagicMock(
+                side_effect=[make_result(markdown="page1"), make_result(markdown="page2")]
+            )
+
+            docs = loader.load()
+
+            assert len(docs) == 2
+            assert loader._client.extract.call_count == 2
+            for called in loader._client.extract.call_args_list:
+                assert "pages" not in called.kwargs

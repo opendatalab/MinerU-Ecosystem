@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from pathlib import Path, PurePosixPath
+import os
+from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Iterator
-from urllib.parse import urlparse
 
 from langchain_core.document_loaders import BaseLoader
 from langchain_core.documents import Document
@@ -16,14 +16,6 @@ from langchain_mineru.utils.pdf import (
 )
 
 _SOURCE_TAG = "langchain-mineru"
-
-
-def _filename_from_source(src: str) -> str | None:
-    """Derive a display filename from a source path or URL."""
-    if is_url(src):
-        name = PurePosixPath(urlparse(src).path).name
-        return name if name else None
-    return Path(src).name
 
 
 def _parse_page_range(page_range: str) -> set[int]:
@@ -40,9 +32,11 @@ def _parse_page_range(page_range: str) -> set[int]:
 
 
 class MinerULoader(BaseLoader):
-    """LangChain Document Loader for MinerU (flash mode).
+    """LangChain Document Loader for MinerU.
 
-    Uses the MinerU flash API — no token required, outputs Markdown only.
+    Supports two parsing modes:
+    - fast: uses MinerU flash API (no token required)
+    - accurate: uses MinerU standard extract API (token required)
 
     Design:
     - Only implement lazy_load(); BaseLoader.load() will consume it.
@@ -61,12 +55,22 @@ class MinerULoader(BaseLoader):
         pages: str | None = None,
         timeout: int = 1200,
         split_pages: bool = False,
+        model: str = "fast",
+        token: str | None = None,
+        ocr: bool = False,
+        formula: bool = True,
+        table: bool = True,
     ) -> None:
         self.source = source
         self.language = language
         self.pages = pages
         self.timeout = timeout
         self.split_pages = split_pages
+        self.model = model
+        self.token = token
+        self.ocr = ocr
+        self.formula = formula
+        self.table = table
 
         self._validate()
         self._client = self._create_client()
@@ -77,19 +81,29 @@ class MinerULoader(BaseLoader):
         except ImportError as exc:
             raise ImportError(
                 "MinerU SDK is required to use MinerULoader. "
-                # TODO: replace with PyPI package name after SDK is published
-                #   e.g. "pip install mineru-open-sdk"
-                "Install from GitLab: "
-                "pip install git+https://gitlab.pjlab.org.cn/yangqi/mineru-open-sdk-python.git"
+                "Install with: pip install mineru-open-sdk"
             ) from exc
 
-        client = MinerU()
+        client = MinerU(token=self.token)
         client.set_source(_SOURCE_TAG)
         return client
 
     def _validate(self) -> None:
         if isinstance(self.source, list) and len(self.source) == 0:
             raise ValueError("source list must not be empty")
+        if self.model not in {"fast", "accurate"}:
+            raise ValueError("model must be 'fast' or 'accurate'")
+        if self.model == "fast":
+            if self.ocr is not False or self.formula is not True or self.table is not True:
+                raise ValueError(
+                    "ocr/formula/table are only supported in accurate mode. "
+                    "Use model='accurate' to enable them."
+                )
+        if self.model == "accurate" and not (self.token or os.environ.get("MINERU_TOKEN")):
+            raise ValueError(
+                "accurate mode requires token. "
+                "Pass token=... or set MINERU_TOKEN in environment."
+            )
 
     def lazy_load(self) -> Iterator[Document]:
         """Yield Document objects lazily.
@@ -161,7 +175,7 @@ class MinerULoader(BaseLoader):
                 download_temp_dir.cleanup()
 
     def _extract(self, src: str, use_page_range: bool = True):
-        """Call MinerU flash API synchronously.
+        """Call MinerU API synchronously.
 
         Args:
             src: File path or URL.
@@ -169,13 +183,23 @@ class MinerULoader(BaseLoader):
                 Set to False when the file is already a single-page PDF
                 produced by local splitting.
         """
-        kwargs: dict = {
-            "language": self.language,
-            "timeout": self.timeout,
-        }
+        kwargs: dict = {"language": self.language, "timeout": self.timeout}
+
+        if self.model == "fast":
+            if use_page_range and self.pages:
+                kwargs["page_range"] = self.pages
+            return self._client.flash_extract(src, **kwargs)
+
+        kwargs.update(
+            {
+                "ocr": self.ocr,
+                "formula": self.formula,
+                "table": self.table,
+            }
+        )
         if use_page_range and self.pages:
-            kwargs["page_range"] = self.pages
-        return self._client.flash_extract(src, **kwargs)
+            kwargs["pages"] = self.pages
+        return self._client.extract(src, **kwargs)
 
     def _result_to_page_content(self, result) -> str:
         """Convert ExtractResult into Document.page_content (Markdown)."""
@@ -195,10 +219,11 @@ class MinerULoader(BaseLoader):
             "source": original_source,
             "loader": "mineru",
             "output_format": "markdown",
+            "model": self.model,
             "language": self.language,
             "pages": self.pages,
             "split_pages": self.split_pages,
-            "filename": _filename_from_source(original_source),
+            "filename": getattr(result, "filename", None),
         }
 
         if page is not None:
