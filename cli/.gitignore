@@ -1,0 +1,11 @@
+/images/
+/*.exe
+/.env
+.idea
+/testdata/
+/.claude/settings.local.json
+/mineru-open-api-cli-darwin-amd64
+/mineru-open-api-cli-darwin-arm64
+/mineru-open-api-cli-linux-amd64
+/mineru-open-api-cli-linux-arm64
+/dist/
