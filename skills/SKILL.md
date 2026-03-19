@@ -163,7 +163,7 @@ cat doc.pdf | mineru-open-api extract --stdin -o ./out/    # From stdin
 |------|-------|---------|-------------|
 | `--output` | `-o` | _(stdout)_ | Output path (file or directory) |
 | `--format` | `-f` | `md` | Output formats: `md`, `json`, `html`, `latex`, `docx` (comma-separated) |
-| `--model` | | _(auto)_ | Model: `vlm`, `pipeline`, `html` |
+| `--model` | | _(auto)_ | Model: `vlm`, `pipeline`, `html` (see below) |
 | `--ocr` | | `false` | Enable OCR for scanned documents |
 | `--no-formula` | | `false` | Disable formula recognition |
 | `--no-table` | | `false` | Disable table recognition |
@@ -175,6 +175,17 @@ cat doc.pdf | mineru-open-api extract --stdin -o ./out/    # From stdin
 | `--stdin` | | `false` | Read file content from stdin |
 | `--stdin-name` | | `stdin.pdf` | Filename hint for stdin mode |
 | `--concurrency` | | `0` | Batch concurrency (0 = server default) |
+
+#### Model comparison: vlm vs pipeline
+
+| | `vlm` | `pipeline` |
+|---|---|---|
+| Parsing accuracy | Higher — better at complex layouts, mixed content | Standard |
+| Hallucination risk | May produce hallucinated text in rare cases | **No hallucination** — biggest advantage |
+| Speed | Slower | Faster |
+| Best for | Academic papers, complex tables, intricate layouts | General documents where fidelity matters most |
+
+When the user values accuracy and the document has complex formatting, suggest `--model vlm`. When the user prioritizes reliability and no-hallucination guarantee, suggest `--model pipeline` (or omit `--model` to use auto).
 
 ### crawl — Web page extraction (token required)
 
