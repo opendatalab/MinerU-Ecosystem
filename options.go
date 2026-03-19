@@ -6,19 +6,35 @@ import (
 )
 
 // ---------------------------------------------------------------------------
+// Constants & Defaults
+// ---------------------------------------------------------------------------
+
+const (
+	// DefaultRequestTimeout is the timeout for a single HTTP request (e.g., upload, query).
+	DefaultRequestTimeout = 60 * time.Second
+
+	// DefaultSinglePollTimeout is the total time to wait for a single document extraction.
+	DefaultSinglePollTimeout = 5 * time.Minute
+
+	// DefaultBatchPollTimeout is the total time to wait for a batch of documents.
+	DefaultBatchPollTimeout = 30 * time.Minute
+)
+
+func defaultClientConfig() clientConfig {
+	return clientConfig{
+		baseURL: "https://mineru.net/api/v4",
+		// This is the HTTP connection timeout for single requests.
+		httpClient: &http.Client{Timeout: DefaultRequestTimeout},
+	}
+}
+
+// ---------------------------------------------------------------------------
 // Client options
 // ---------------------------------------------------------------------------
 
 type clientConfig struct {
 	baseURL    string
 	httpClient *http.Client
-}
-
-func defaultClientConfig() clientConfig {
-	return clientConfig{
-		baseURL:    "https://mineru.net/api/v4",
-		httpClient: &http.Client{Timeout: 5 * time.Minute},
-	}
 }
 
 // ClientOption configures the [Client] constructor.
@@ -46,7 +62,7 @@ type extractConfig struct {
 	language     string
 	pages        *string
 	extraFormats []string
-	timeout      time.Duration
+	timeout      time.Duration // This is the business polling timeout
 }
 
 func defaultExtractConfig() extractConfig {
@@ -54,7 +70,7 @@ func defaultExtractConfig() extractConfig {
 		formula:  true,
 		table:    true,
 		language: "ch",
-		timeout:  5 * time.Minute,
+		timeout:  DefaultSinglePollTimeout,
 	}
 }
 
@@ -62,7 +78,6 @@ func defaultExtractConfig() extractConfig {
 type ExtractOption func(*extractConfig)
 
 // WithModel sets the model version: "pipeline", "vlm", or "html".
-// When omitted, the model is auto-inferred from the file extension.
 func WithModel(model string) ExtractOption {
 	return func(c *extractConfig) { c.model = &model }
 }
@@ -97,11 +112,9 @@ func WithExtraFormats(formats ...string) ExtractOption {
 	return func(c *extractConfig) { c.extraFormats = formats }
 }
 
-// WithPollTimeout sets the maximum duration for the SDK to poll for task
-// completion. If the caller's context already carries an earlier deadline,
-// that deadline takes precedence.
+// WithPollTimeout sets the maximum total duration to wait for task completion.
 //
-// Default: 5 minutes.
+// Default: DefaultSinglePollTimeout (5 minutes).
 func WithPollTimeout(d time.Duration) ExtractOption {
 	return func(c *extractConfig) { c.timeout = d }
 }
@@ -113,13 +126,13 @@ func WithPollTimeout(d time.Duration) ExtractOption {
 type flashExtractConfig struct {
 	language string
 	pages    *string
-	timeout  time.Duration
+	timeout  time.Duration // Business polling timeout
 }
 
 func defaultFlashExtractConfig() flashExtractConfig {
 	return flashExtractConfig{
 		language: "ch",
-		timeout:  5 * time.Minute,
+		timeout:  DefaultSinglePollTimeout,
 	}
 }
 
@@ -137,7 +150,7 @@ func WithFlashPages(pages string) FlashExtractOption {
 }
 
 // WithFlashTimeout sets the maximum polling duration for flash extraction.
-// Default: 5 minutes.
+// Default: DefaultSinglePollTimeout (5 minutes).
 func WithFlashTimeout(d time.Duration) FlashExtractOption {
 	return func(c *flashExtractConfig) { c.timeout = d }
 }

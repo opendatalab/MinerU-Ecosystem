@@ -112,6 +112,9 @@ func (c *Client) Extract(ctx context.Context, source string, opts ...ExtractOpti
 //	}
 func (c *Client) ExtractBatch(ctx context.Context, sources []string, opts ...ExtractOption) (<-chan *ExtractResult, error) {
 	cfg := applyOpts(opts)
+	if cfg.timeout == DefaultSinglePollTimeout {
+		cfg.timeout = DefaultBatchPollTimeout
+	}
 	first := ""
 	if len(sources) > 0 {
 		first = sources[0]
