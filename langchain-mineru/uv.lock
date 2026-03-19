@@ -350,7 +350,7 @@ dependencies = [
 requires-dist = [
     { name = "langchain-core", specifier = ">=1.2.18" },
     { name = "langchain-tests", specifier = ">=1.1.5" },
-    { name = "mineru-open-sdk", specifier = ">=0.1.0", index = "https://test.pypi.org/simple/" },
+    { name = "mineru-open-sdk", specifier = ">=0.1.0" },
     { name = "pypdf", specifier = ">=6.8.0" },
 ]
 
@@ -421,13 +421,13 @@ wheels = [
 [[package]]
 name = "mineru-open-sdk"
 version = "0.1.1"
-source = { registry = "https://test.pypi.org/simple/" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
 ]
-sdist = { url = "https://test-files.pythonhosted.org/packages/c8/03/0b60a24a4de5eba5a3a71fa8c156ac9d4fdd068436060a077da597c3ff91/mineru_open_sdk-0.1.1.tar.gz", hash = "sha256:3f982fd5e02a267abcec0e545c6c2a275fb84d5fed6d4e43345888571b712995", size = 31521, upload-time = "2026-03-19T08:54:12.239Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/27/5b/c4bb99855553f2e2b739060ec7b46510eb7004d48ae665c20caf468b2a72/mineru_open_sdk-0.1.1.tar.gz", hash = "sha256:b8ed69e83b189eb38b7ca7435cd940ea0586fb6c4d85d397fb42a31790417afa", size = 31813, upload-time = "2026-03-19T12:01:22.17Z" }
 wheels = [
-    { url = "https://test-files.pythonhosted.org/packages/a0/7d/3a1385650ee6dcf23805fefa67a4739cfd9cbde28b64be98e3dc44259661/mineru_open_sdk-0.1.1-py3-none-any.whl", hash = "sha256:947962ecf3a216daf9e73c1bfa4c3c0af9b84d183e51e34363056742930aa983", size = 19236, upload-time = "2026-03-19T08:54:10.083Z" },
+    { url = "https://files.pythonhosted.org/packages/89/1f/eb93bcd55f13b59305f9d622ead28b054e5ea5440e1b3cdd22ac3d916e86/mineru_open_sdk-0.1.1-py3-none-any.whl", hash = "sha256:06a57df316fa9d2e1cd80fcd4a00f8cdc7d833ad1a743f4c68d6abc7191f205b", size = 19327, upload-time = "2026-03-19T12:01:23.778Z" },
 ]
 
 [[package]]

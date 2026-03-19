@@ -4,11 +4,12 @@
 
 ## langchain-mineru 简介
 
-`langchain-mineru` 是深度集成至 LangChain 生态的文档加载器（Document Loader）。无需注册 API key 即可直接调用，利用 MinerU 的文档解析能力将多种外部数据源转换为 LangChain 可处理的 `Document` 对象，便于直接接入 RAG 构建链路。支持单文档与多文档输入，并无缝衔接后续的 Text Splitter、Embedding 与 Vector Store 流程。
+`langchain-mineru` 是深度集成至 LangChain 生态的文档加载器（Document Loader）。利用 MinerU 的文档解析能力将多种外部数据源转换为 LangChain 可处理的 `Document` 对象，便于直接接入 RAG 构建链路。支持单文档与多文档输入，并无缝衔接后续的 Text Splitter、Embedding 与 Vector Store 流程。
 
 - ✅ 支持 PDF / 图片 / DOCX / PPTx / XLS / XLSX / 在线 URL 
 - ✅ 支持单文档、多文档输入与 `lazy_load` 流式加载
 - ✅ PDF 类型可选 `split_pages`，按页拆分 PDF 后输出多个 `Document`
+- ✅ 支持两种解析模式：`fast`（快速，无需 Token）与 `accurate`（精准，需 Token）
 - ✅ 适配 LangChain RAG Pipeline，便于后续切分、向量化与检索
 
 ### MinerU 简介
@@ -19,45 +20,17 @@
 
 ## 安装
 
-<!-- TODO: 发布到 PyPI 后取消注释，替换为以下安装方式：
-```bash
-pip install langchain-mineru
-```
--->
-
 ### 环境要求
 
 - Python >= 3.10
-- [uv](https://docs.astral.sh/uv/)（推荐）或 pip
 
-### 第一步：克隆仓库
-
-```bash
-git clone https://github.com/opendatalab/langchain-mineru.git
-cd langchain-mineru
-```
-
-### 第二步：安装
-
-**使用 uv（推荐）：**
+### 安装步骤
 
 ```bash
-uv sync
+pip install langchain-mineru
 ```
 
-`uv sync` 会自动读取 `pyproject.toml`，安装所有依赖（包括 MinerU SDK）并创建虚拟环境。
-
-**使用 pip：**
-
-```bash
-# 先安装 MinerU SDK（尚未发布到 PyPI，需要从 GitLab 安装）
-pip install git+https://gitlab.pjlab.org.cn/yangqi/mineru-open-sdk-python.git
-
-# 再安装 langchain-mineru
-pip install -e .
-```
-
-### 第三步：验证安装
+### 验证安装
 
 ```bash
 python -c "from langchain_mineru import MinerULoader; print('OK')"
@@ -75,7 +48,24 @@ print(docs[0].page_content[:500])
 print(docs[0].metadata)
 ```
 
-无需 API Token。
+默认 `model="fast"`，无需 API Token。
+
+## 模式说明
+
+- `fast`：快速解析模式，调用 MinerU flash API，无需 Token，支持文档与 HTML 输入。
+- `accurate`：精准解析模式，调用 MinerU 标准 `extract` 接口，需要申请 Token。
+
+精准模式可通过以下两种方式提供 Token：
+
+```bash
+# 方式 1：环境变量（推荐）
+export MINERU_TOKEN="your-token"
+```
+
+```python
+# 方式 2：构造 Loader 时显式传入
+loader = MinerULoader(source="report.pdf", model="accurate", token="your-token")
+```
 
 ## 使用示例
 
@@ -101,6 +91,7 @@ from langchain_mineru import MinerULoader
 
 loader = MinerULoader(
     source="/path/to/demo.pdf",
+    model="fast",
     language="en",
     pages="1-10",
     timeout=300,
@@ -108,6 +99,34 @@ loader = MinerULoader(
 
 docs = loader.load()
 print(docs[0].page_content[:500])
+```
+
+### 精准模式（需 Token）
+
+```python
+from langchain_mineru import MinerULoader
+
+loader = MinerULoader(
+    source="/path/to/demo.pdf",
+    model="accurate",
+    token="your-token",  # 或通过 MINERU_TOKEN 环境变量提供
+    language="en",
+    pages="1-10",
+    timeout=300,
+    ocr=True,
+    formula=True,
+    table=True,
+)
+
+docs = loader.load()
+print(docs[0].page_content[:500])
+```
+
+也可以直接运行示例脚本：
+
+```bash
+export MINERU_TOKEN="your-token"
+uv run python mineru_example/example_accurate.py
 ```
 
 ### 多文件输入
@@ -128,7 +147,9 @@ for doc in docs:
     print(doc.metadata["source"], "-", doc.page_content[:100])
 ```
 
-### RAG 流水线
+### RAG
+
+#### RAG（fast 模式，无需 Token）
 
 ```python
 from langchain_mineru import MinerULoader
@@ -136,7 +157,34 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 
-loader = MinerULoader(source="manual.pdf")
+loader = MinerULoader(source="manual.pdf", model="fast")
+docs = loader.load()
+
+splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=200)
+chunks = splitter.split_documents(docs)
+
+vs = FAISS.from_documents(chunks, OpenAIEmbeddings())
+results = vs.similarity_search("这个文档的核心配置步骤是什么？", k=3)
+for r in results:
+    print(r.page_content[:200])
+```
+
+#### RAG（accurate 模式，需 Token）
+
+```python
+from langchain_mineru import MinerULoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
+
+loader = MinerULoader(
+    source="manual.pdf",
+    model="accurate",
+    token="your-token",  # 或设置 MINERU_TOKEN
+    ocr=True,
+    formula=True,
+    table=True,
+)
 docs = loader.load()
 
 splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=200)
@@ -153,10 +201,15 @@ for r in results:
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | `source` | `str \| list[str]` | *必填* | 本地文件路径或 URL，支持单个或列表。支持 PDF、DOCX、PPTX、图片及在线 URL。 |
+| `model` | `str` | `"fast"` | 解析模式。`"fast"` 为快速模式（无需 Token）；`"accurate"` 为精准模式（需 Token）。 |
+| `token` | `str \| None` | `None` | MinerU API Token。仅 `model="accurate"` 时需要。不传时会读取环境变量 `MINERU_TOKEN`。 |
 | `language` | `str` | `"ch"` | OCR 识别语言代码。常用值：`"ch"`（中文）、`"en"`（英文）、`"auto"`（自动检测）。完整列表请参考[标准 API 文档](https://mineru.net/apiManage/docs)。 |
 | `pages` | `str \| None` | `None` | 页码范围，仅对 PDF 有效，例如 `"1-5"` 或 `"3"`。`split_pages=False` 时，页码范围直接传给 API；`split_pages=True` 时，本地只拆指定页，减少 API 调用次数。 |
 | `timeout` | `int` | `1200` | 单文件最大等待时间（秒）。 |
 | `split_pages` | `bool` | `False` | 仅对 PDF 有效。为 `True` 时，按页拆分 PDF，每页生成一个 `Document`，`metadata["page"]` 可用。非 PDF 文件不受影响，始终返回一个 `Document`。 |
+| `ocr` | `bool` | `False` | 仅 `model="accurate"` 生效，是否启用 OCR。`model="fast"` 下传非默认值会报错。 |
+| `formula` | `bool` | `True` | 仅 `model="accurate"` 生效，是否启用公式识别。`model="fast"` 下传非默认值会报错。 |
+| `table` | `bool` | `True` | 仅 `model="accurate"` 生效，是否启用表格识别。`model="fast"` 下传非默认值会报错。 |
 
 ## Document Metadata 说明
 
@@ -167,6 +220,7 @@ for r in results:
     "source": "report.pdf",          # 原始输入路径或 URL
     "loader": "mineru",
     "output_format": "markdown",
+    "model": "fast",                 # fast / accurate
     "language": "ch",
     "pages": None,
     "split_pages": False,
@@ -183,8 +237,8 @@ PDF、DOC、DOCX、PPT、PPTX、PNG、JPG、JPEG
 ## 限制
 
 - 输出格式仅支持 Markdown
-- 单文档最多 20 页
-- 单文件最大 10 MB
+- `fast` 模式受 flash API 限制（如页数/文件大小），请以 MinerU 官方文档为准
+- `accurate` 模式需要有效 Token，且请求配额由账号策略决定
 
 ## 许可证
 
