@@ -114,7 +114,7 @@ Token resolution order: `--token` flag > `MINERU_TOKEN` env > `~/.mineru/config.
 | Images (`.png`, `.jpg`, `.jpeg`, `.jp2`, `.webp`, `.gif`, `.bmp`) | Yes | Yes |
 | Word (`.doc`, `.docx`) | Yes | Yes |
 | PowerPoint (`.ppt`, `.pptx`) | Yes | Yes |
-| HTML (`.html`) | Yes | Yes |
+| HTML (`.html`) | No | Yes |
 | URLs (remote files) | Yes | Yes |
 
 The `crawl` command accepts any HTTP/HTTPS URL and extracts web page content.
@@ -138,7 +138,7 @@ mineru-open-api flash-extract report.pdf --pages 1-10        # Page range
 | Flag | Short | Default | Description |
 |------|-------|---------|-------------|
 | `--output` | `-o` | _(stdout)_ | Output path (file or directory) |
-| `--language` | | `ch` | Document language |
+| `--language` | | `en` | Document language |
 | `--pages` | | _(all)_ | Page range, e.g. `1-10` |
 | `--timeout` | | `300` | Timeout in seconds |
 
@@ -335,112 +335,12 @@ These flags apply to all commands:
 - **Binary formats** (`docx`, `extract` only): cannot output to stdout, must use `-o`
 - Markdown output includes extracted images saved alongside the `.md` file
 
-## Examples
 
-### Quick extraction (no token)
-
-```bash
-mineru-open-api flash-extract report.pdf
-mineru-open-api flash-extract report.pdf -o ./out/
-mineru-open-api flash-extract report.pdf --language en --pages "1-5"
-```
-
-### Single PDF extraction (full)
-
-```bash
-mineru-open-api extract report.pdf -o ./output/
-# Output: ./output/report.md + ./output/images/
-```
-
-### Extract with OCR and specific pages
-
-```bash
-mineru-open-api extract scanned.pdf --ocr --pages "1-5" -o ./out/
-```
-
-### Multi-format output
-
-```bash
-mineru-open-api extract paper.pdf -f md,html,docx -o ./out/
-# Output: ./out/paper.md, ./out/paper.html, ./out/paper.docx
-```
-
-### Batch processing from file list
-
-```bash
-# files.txt contains one path per line
-mineru-open-api extract --list files.txt -o ./results/
-```
-
-### Extract to LaTeX
-
-```bash
-mineru-open-api extract paper.pdf -f latex -o ./out/
-# Output: ./out/paper.tex
-```
-
-### English document with specific language
-
-```bash
-mineru-open-api extract english-report.pdf --language en -o ./out/
-```
-
-### Extract Word document to Markdown
-
-```bash
-mineru-open-api extract resume.docx -o ./out/
-# Output: ./out/resume.md
-```
-
-### Pipe workflow
-
-```bash
-# Download and extract in one pipeline
-curl -sL https://example.com/doc.pdf | mineru-open-api extract --stdin --stdin-name doc.pdf
-```
-
-### Web crawling
-
-```bash
-mineru-open-api crawl https://example.com/docs/guide -o ./docs/
-```
-
-### Batch crawl with URL list
-
-```bash
-echo -e "https://example.com/page1\nhttps://example.com/page2" | mineru-open-api crawl --stdin-list -o ./pages/
-```
-
-### Use with other tools
-
-```bash
-# Extract and pipe to another tool
-mineru-open-api extract report.pdf | wc -w              # Word count
-mineru-open-api extract report.pdf | grep "keyword"     # Search content
-mineru-open-api extract report.pdf -f json | jq '.[]'   # Parse structured output
-```
-
-**Linux / macOS:**
-
-```bash
-curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
-```
-
-**Windows (PowerShell):**
-
-```powershell
-irm https://cdn-mineru.openxlab.org.cn/open-api-cli/install.ps1 | iex
-```
-
-After install, verify with `mineru-open-api version` to confirm the CLI is up to date.
-
-If a command fails with "unknown command" (e.g. `flash-extract` not found), this is almost certainly because the CLI is outdated. Re-install and retry.
 
 ### General rules
 
 When using this skill on behalf of the user:
 
-- **Always ask for the file path** if the user didn't specify one. Never guess or fabricate a filename.
 - **Quote file paths** that contain spaces or special characters with double quotes in commands. Example: `mineru-open-api extract "report 01.pdf"`, NOT `mineru-open-api extract report 01.pdf`.
 - **Don't run commands blindly on errors** — if the user asks "提取失败了怎么办", explain the exit code and troubleshooting steps instead of re-running the command.
 - **Installation questions** ("mineru 怎么安装") should be answered with the install instructions, not by running `mineru-open-api extract`.
@@ -586,4 +486,3 @@ echo -n "https://arxiv.org/pdf/2509.22186" | md5 | cut -c1-6
 - All status/progress messages go to stderr; only document content goes to stdout
 - Batch mode automatically polls the API with exponential backoff
 - Token is stored in `~/.mineru/config.yaml` after `mineru-open-api auth`
-- The CLI wraps the MinerU Open SDK (`github.com/OpenDataLab/mineru-open-sdk`)
