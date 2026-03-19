@@ -525,7 +525,152 @@ func TestCrawlToDir(t *testing.T) {
 	}
 }
 
+// ── stdin-name tests ──
+
+func TestExtractStdinNameOutputNaming(t *testing.T) {
+	token := requireToken(t)
+	// Download a small PDF to use as stdin input
+	outDir := t.TempDir()
+	r := run(t, "extract", testURL, "-o", outDir, "--token", token)
+	if r.exitCode != 0 {
+		t.Fatalf("setup: download failed, exit code = %d, stderr:\n%s", r.exitCode, r.stderr)
+	}
+	mdFiles, _ := filepath.Glob(filepath.Join(outDir, "*.md"))
+	if len(mdFiles) == 0 {
+		t.Fatal("setup: no .md file produced")
+	}
+
+	// Now use a URL to get raw PDF bytes for stdin test
+	// Instead, create a minimal dummy to verify naming (the API call may fail, but we can test offline validation)
+	// Better: use the URL directly via extract, then use stdin with a local copy
+
+	// Use a simple approach: extract via URL to get a working PDF, then re-extract via stdin
+	// Actually: just download the PDF via curl, then pipe it
+	dlDir := t.TempDir()
+	dlPath := filepath.Join(dlDir, "downloaded.pdf")
+	dl := exec.Command("curl", "-sL", "-o", dlPath, testURL)
+	dl.Env = os.Environ()
+	if err := dl.Run(); err != nil {
+		t.Skipf("curl not available or download failed: %v", err)
+	}
+	pdfData, err := os.ReadFile(dlPath)
+	if err != nil || len(pdfData) == 0 {
+		t.Skip("failed to download test PDF")
+	}
+
+	stdinOutDir := t.TempDir()
+	sr := runWithStdin(t, pdfData, "extract", "--stdin", "--stdin-name", "my-report.pdf", "-o", stdinOutDir, "--token", token)
+	if sr.exitCode != 0 {
+		t.Fatalf("exit code = %d, stderr:\n%s", sr.exitCode, sr.stderr)
+	}
+
+	// The output file should be named my-report.md, NOT a random temp name
+	expected := filepath.Join(stdinOutDir, "my-report.md")
+	if _, err := os.Stat(expected); err != nil {
+		// List what was actually created
+		files, _ := filepath.Glob(filepath.Join(stdinOutDir, "*"))
+		t.Fatalf("expected %s but not found; files in dir: %v", expected, files)
+	}
+	content, _ := os.ReadFile(expected)
+	if len(content) == 0 {
+		t.Error("my-report.md is empty")
+	}
+}
+
+// ── batch format tests ──
+
+func TestExtractBatchHtmlOnly(t *testing.T) {
+	token := requireToken(t)
+	outDir := t.TempDir()
+
+	r := run(t, "extract", testURL, "-f", "html", "-o", outDir, "--token", token)
+	if r.exitCode != 0 {
+		t.Fatalf("exit code = %d, stderr:\n%s", r.exitCode, r.stderr)
+	}
+
+	htmlFiles, _ := filepath.Glob(filepath.Join(outDir, "*.html"))
+	if len(htmlFiles) == 0 {
+		t.Fatal("no .html file produced")
+	}
+
+	// Should NOT produce .md when only html was requested
+	mdFiles, _ := filepath.Glob(filepath.Join(outDir, "*.md"))
+	if len(mdFiles) > 0 {
+		t.Errorf("unexpected .md files when -f html: %v", mdFiles)
+	}
+}
+
+func TestExtractBatchMultiFormat(t *testing.T) {
+	token := requireToken(t)
+	outDir := t.TempDir()
+
+	r := run(t, "extract", testURL, "-f", "md,html", "-o", outDir, "--token", token)
+	if r.exitCode != 0 {
+		t.Fatalf("exit code = %d, stderr:\n%s", r.exitCode, r.stderr)
+	}
+
+	mdFiles, _ := filepath.Glob(filepath.Join(outDir, "*.md"))
+	htmlFiles, _ := filepath.Glob(filepath.Join(outDir, "*.html"))
+	if len(mdFiles) == 0 {
+		t.Error("no .md file produced")
+	}
+	if len(htmlFiles) == 0 {
+		t.Error("no .html file produced")
+	}
+}
+
+func TestExtractBatchJsonFormat(t *testing.T) {
+	token := requireToken(t)
+	outDir := t.TempDir()
+
+	r := run(t, "extract", testURL, "-f", "json", "-o", outDir, "--token", token)
+	if r.exitCode != 0 {
+		t.Fatalf("exit code = %d, stderr:\n%s", r.exitCode, r.stderr)
+	}
+
+	jsonFiles, _ := filepath.Glob(filepath.Join(outDir, "*.json"))
+	if len(jsonFiles) == 0 {
+		t.Fatal("no .json file produced")
+	}
+
+	content, err := os.ReadFile(jsonFiles[0])
+	if err != nil {
+		t.Fatalf("read json file: %v", err)
+	}
+	if len(content) == 0 {
+		t.Error("json file is empty")
+	}
+	// Validate it's actual JSON
+	if !json.Valid(content) {
+		t.Errorf("output is not valid JSON: %s", string(content[:min(len(content), 200)]))
+	}
+}
+
 // ── helpers ──
+
+func runWithStdin(t *testing.T, stdinData []byte, args ...string) runResult {
+	t.Helper()
+	cmd := exec.Command(binaryPath, args...)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdin = bytes.NewReader(stdinData)
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	cmd.Env = os.Environ()
+
+	err := cmd.Run()
+	code := 0
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		code = exitErr.ExitCode()
+	} else if err != nil {
+		t.Fatalf("exec error: %v", err)
+	}
+
+	return runResult{
+		stdout:   stdout.String(),
+		stderr:   stderr.String(),
+		exitCode: code,
+	}
+}
 
 func filterEnv(env []string, exclude string) []string {
 	var filtered []string

@@ -130,9 +130,9 @@ func Wrap(err error) *ErrorInfo {
 		return &ErrorInfo{
 			Code:    FileError,
 			Message: err.Error(),
-			Hint: "Document exceeds flash mode limit (50 pages). Use --pages to split:\n" +
-				"  mineru-open-api flash-extract doc.pdf --pages 1-50\n" +
-				"  mineru-open-api flash-extract doc.pdf --pages 51-100\n" +
+			Hint: "Document exceeds flash mode limit (20 pages). Use --pages to split:\n" +
+				"  mineru-open-api flash-extract doc.pdf --pages 1-20\n" +
+				"  mineru-open-api flash-extract doc.pdf --pages 21-40\n" +
 				"Or use 'extract' for a higher page limit (requires token):\n" +
 				"  mineru-open-api extract doc.pdf",
 		}

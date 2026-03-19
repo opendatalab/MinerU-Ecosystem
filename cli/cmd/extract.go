@@ -73,7 +73,7 @@ func init() {
 	extractCmd.Flags().BoolVar(&extractStdinList, "stdin-list", false, "Read input list from stdin")
 	extractCmd.Flags().BoolVar(&extractStdin, "stdin", false, "Read file content from stdin")
 	extractCmd.Flags().StringVar(&extractStdinName, "stdin-name", "stdin.pdf", "Filename for stdin mode")
-	extractCmd.Flags().IntVar(&extractConcurrency, "concurrency", 0, "Batch concurrency (0 = server default)")
+	extractCmd.Flags().IntVar(&extractConcurrency, "concurrency", 0, "Batch concurrency (reserved, not yet applied)")
 }
 
 func runExtract(cmd *cobra.Command, args []string) error {
@@ -158,20 +158,19 @@ func runStdinExtract(client *mineru.Client, opts []mineru.ExtractOption) error {
 		return fmt.Errorf("no data received from stdin")
 	}
 
-	tmpFile, err := os.CreateTemp("", "mineru-stdin-*"+filepath.Ext(extractStdinName))
+	tmpDir, err := os.MkdirTemp("", "mineru-stdin-*")
 	if err != nil {
-		return fmt.Errorf("failed to create temp file: %w", err)
+		return fmt.Errorf("failed to create temp dir: %w", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer os.RemoveAll(tmpDir)
 
-	if _, err := tmpFile.Write(data); err != nil {
-		tmpFile.Close()
+	tmpPath := filepath.Join(tmpDir, extractStdinName)
+	if err := os.WriteFile(tmpPath, data, 0o600); err != nil {
 		return fmt.Errorf("failed to write temp file: %w", err)
 	}
-	tmpFile.Close()
 
 	formats := parseFormats(extractFormat)
-	return runSingleExtract(client, tmpFile.Name(), formats, opts)
+	return runSingleExtract(client, tmpPath, formats, opts)
 }
 
 // ── batch ──
@@ -228,15 +227,39 @@ func runBatchExtract(client *mineru.Client, sources, formats []string, opts []mi
 			}
 
 			if r.State == "done" {
-				outPath := filepath.Join(extractOutput, baseNameNoExt(src)+".md")
-				if err := r.SaveMarkdown(outPath, true); err != nil {
-					output.Status("[%d/%d] Error: %s - failed to save: %v", i+1, total, filepath.Base(src), err)
-					failed++
-				} else {
-					saveExtraFormatsToDir(r, extractOutput, baseNameNoExt(src), formats)
-					output.Status("[%d/%d] Done: %s -> %s (%s, %.1fs)", i+1, total,
-						filepath.Base(src), outPath, humanSize(len(r.Markdown)), time.Since(start).Seconds())
+				base := baseNameNoExt(src)
+				var saved []string
+				for _, f := range formats {
+					p := filepath.Join(extractOutput, base+"."+f)
+					var saveErr error
+					switch f {
+					case "md":
+						saveErr = r.SaveMarkdown(p, true)
+					case "docx":
+						saveErr = r.SaveDocx(p)
+					case "html":
+						saveErr = r.SaveHTML(p)
+					case "latex":
+						p = filepath.Join(extractOutput, base+".tex")
+						saveErr = r.SaveLaTeX(p)
+					case "json":
+						if r.ContentList != nil {
+							saveErr = os.WriteFile(p, []byte(contentListToJSON(r.ContentList)), 0o644)
+						}
+					}
+					if saveErr != nil {
+						output.Status("[%d/%d] Warning: %s - failed to save %s: %v", i+1, total, filepath.Base(src), f, saveErr)
+					} else {
+						saved = append(saved, p)
+					}
+				}
+				if len(saved) > 0 {
+					output.Status("[%d/%d] Done: %s -> %s (%.1fs)", i+1, total,
+						filepath.Base(src), strings.Join(saved, ", "), time.Since(start).Seconds())
 					succeeded++
+				} else {
+					output.Status("[%d/%d] Error: %s - all formats failed to save", i+1, total, filepath.Base(src))
+					failed++
 				}
 			} else {
 				if taskErr := r.Err(); taskErr != nil {
@@ -368,6 +391,14 @@ func outputResult(result *mineru.ExtractResult, source string, formats []string)
 				return fmt.Errorf("failed to save latex: %w", err)
 			}
 			saved = append(saved, p)
+		case "json":
+			if result.ContentList != nil {
+				p := filepath.Join(dir, base+".json")
+				if err := os.WriteFile(p, []byte(contentListToJSON(result.ContentList)), 0o644); err != nil {
+					return fmt.Errorf("failed to save json: %w", err)
+				}
+				saved = append(saved, p)
+			}
 		}
 	}
 
@@ -514,19 +545,6 @@ func baseNameNoExt(source string) string {
 		return base[:len(base)-len(ext)]
 	}
 	return base
-}
-
-func saveExtraFormatsToDir(result *mineru.ExtractResult, dir, base string, formats []string) {
-	for _, f := range formats {
-		switch f {
-		case "docx":
-			_ = result.SaveDocx(filepath.Join(dir, base+".docx"))
-		case "html":
-			_ = result.SaveHTML(filepath.Join(dir, base+".html"))
-		case "latex":
-			_ = result.SaveLaTeX(filepath.Join(dir, base+".tex"))
-		}
-	}
 }
 
 func resolveOutputTarget(outputPath, source string, formats []string) (dir, base string) {
