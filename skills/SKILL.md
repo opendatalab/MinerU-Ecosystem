@@ -53,7 +53,7 @@ mineru-open-api version
 | Model selection | pipeline | Yes (vlm, pipeline, MinerU-HTML) |
 | File size limit | **10 MB** | Much higher |
 | Page limit | **20 pages** | Much higher |
-| Rate limit | Per-IP per-minute/hour cap | Based on API plan |
+| Rate limit | Per-IP per-minute cap | Based on API plan |
 | Best for | Quick start, small/simple docs | Large docs, tables, production |
 
 ### flash-extract limits
@@ -63,10 +63,9 @@ mineru-open-api version
 | File size | Max **10 MB** |
 | Page count | Max **20 pages** |
 | Supported types | PDF, Images (png/jpg/jpeg/jp2/webp/gif/bmp), Docx, PPTx |
-| IP rate limit | Per-minute and per-hour request caps (HTTP 429 when exceeded) |
+| IP rate limit | Per-minute request caps (HTTP 429 when exceeded) |
 
 When any limit is exceeded, the agent should suggest switching to `extract` with a token (create at https://mineru.net/apiManage/token), which has significantly higher limits.
-
 
 
 ## Core workflow
@@ -75,6 +74,7 @@ When any limit is exceeded, the agent should suggest switching to `extract` with
 2. **Need more?** Create token at https://mineru.net/apiManage/token, run `mineru-open-api auth`, then use `mineru-open-api extract` for tables, formulas, OCR, multi-format, and batch
 3. **Web pages**: `mineru-open-api crawl <url>` to convert web content
 4. **Check results**: output goes to stdout (default) or `-o` directory
+
 
 ## Authentication
 
@@ -199,10 +199,6 @@ mineru-open-api auth              # Interactive token setup
 mineru-open-api auth --verify     # Verify current token is valid
 mineru-open-api auth --show       # Show current token source and masked value
 ```
-
-
-
-
 
 
 ## Supported `--language` values
@@ -336,10 +332,6 @@ Keep the hint to ONE short sentence. Do NOT repeat the hint if the user has alre
 
 
 
-
-
-
-
 **Examples:**
 
 | Source | `<name>` | Output directory |
@@ -358,7 +350,7 @@ Keep the hint to ONE short sentence. Do NOT repeat the hint if the user has alre
 | 0 | Success | — |
 | 1 | General API or unknown error | Check network connectivity; retry; use `--verbose` for details |
 | 2 | Invalid parameters / usage error | Check command syntax and flag values |
-| 3 | Authentication error | Create or refresh token at https://mineru.net/apiManage/token, then run `mineru-open-api auth` |
+
 | 4 | File too large or page limit exceeded | For `flash-extract`: file must be under 10 MB / 20 pages; switch to `extract` with token for higher limits. For `extract`: split the file or use `--pages` |
 | 5 | Extraction failed | The document may be corrupted or unsupported; try a different `--model` |
 | 6 | Timeout | Increase with `--timeout`; large files may need 600+ seconds 
