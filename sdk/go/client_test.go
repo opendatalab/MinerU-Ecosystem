@@ -228,49 +228,58 @@ func TestCrawl_EquivalentToExtractHTML(t *testing.T) {
 //  Async — submit + get_task
 // ═══════════════════════════════════════════════════════════════════
 
-func TestSubmit_ReturnsTaskID(t *testing.T) {
+func TestSubmit_ReturnsBatchID(t *testing.T) {
 	requireStandardClient(t)
 	ctx := context.Background()
-	taskID, err := client.Submit(ctx, testPDFURL, mineru.WithModel(testModel))
+	batchID, err := client.Submit(ctx, testPDFURL, mineru.WithModel(testModel))
 	if err != nil {
 		t.Fatalf("Submit: %v", err)
 	}
-	if taskID == "" {
-		t.Fatal("task_id is empty")
+	if batchID == "" {
+		t.Fatal("batch_id is empty")
 	}
 }
 
-func TestGetTask_ReturnsResult(t *testing.T) {
+func TestSubmitAndGetBatch_ReturnsResult(t *testing.T) {
 	requireStandardClient(t)
 	ctx := context.Background()
-	taskID, err := client.Submit(ctx, testPDFURL, mineru.WithModel(testModel))
+	batchID, err := client.Submit(ctx, testPDFURL, mineru.WithModel(testModel))
 	if err != nil {
 		t.Fatalf("Submit: %v", err)
 	}
-	result, err := client.GetTask(ctx, taskID)
+	results, err := client.GetBatch(ctx, batchID)
 	if err != nil {
-		t.Fatalf("GetTask: %v", err)
+		t.Fatalf("GetBatch: %v", err)
 	}
+	if len(results) < 1 {
+		t.Fatal("expected at least 1 result")
+	}
+	result := results[0]
 	validStates := map[string]bool{"done": true, "pending": true, "running": true, "failed": true, "converting": true}
 	if !validStates[result.State] {
 		t.Fatalf("unexpected state: %s", result.State)
 	}
 }
 
-func TestGetTask_EventuallyDone(t *testing.T) {
+func TestSubmitAndGetBatch_EventuallyDone(t *testing.T) {
 	requireStandardClient(t)
 	ctx := context.Background()
 	// Use HTML crawl for speed — tests the submit+poll workflow, not the model.
-	taskID, err := client.Submit(ctx, testHTMLURL, mineru.WithModel("html"))
+	batchID, err := client.Submit(ctx, testHTMLURL, mineru.WithModel("html"))
 	if err != nil {
 		t.Fatalf("Submit: %v", err)
 	}
 	deadline := time.Now().Add(testTimeout)
 	for time.Now().Before(deadline) {
-		result, err := client.GetTask(ctx, taskID)
+		results, err := client.GetBatch(ctx, batchID)
 		if err != nil {
-			t.Fatalf("GetTask: %v", err)
+			t.Fatalf("GetBatch: %v", err)
 		}
+		if len(results) < 1 {
+			time.Sleep(5 * time.Second)
+			continue
+		}
+		result := results[0]
 		if result.State == "done" {
 			if result.Markdown == "" {
 				t.Fatal("done but markdown is empty")
