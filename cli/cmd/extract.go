@@ -293,7 +293,7 @@ func pollBatch(ctx context.Context, client *mineru.Client, batchID string) (*min
 		}
 		if len(results) > 0 {
 			r := results[0]
-			if r.Progress != nil {
+			if r.State == "running" && r.Progress != nil {
 				output.Status("Parsing %d/%d pages", r.Progress.ExtractedPages, r.Progress.TotalPages)
 			}
 			if r.State == "done" || r.State == "failed" {
@@ -330,20 +330,12 @@ func outputResult(result *mineru.ExtractResult, source string, formats []string)
 				fmt.Print(contentListToJSON(result.ContentList))
 			}
 		}
-		output.Status("Done: %d pages, %.1fs", pageCount(result), 0.0)
+		output.Status("Done")
 		return nil
 	}
 
 	// file mode
-	base := baseNameNoExt(source)
-	dir := extractOutput
-
-	info, err := os.Stat(dir)
-	if err == nil && !info.IsDir() {
-		// -o points to a file path
-		dir = filepath.Dir(extractOutput)
-		base = baseNameNoExt(extractOutput)
-	}
+	dir, base := resolveOutputTarget(extractOutput, source, formats)
 
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
@@ -379,20 +371,26 @@ func outputResult(result *mineru.ExtractResult, source string, formats []string)
 		}
 	}
 
-	output.Status("Done: %s (%d pages)", strings.Join(saved, ", "), pageCount(result))
+	output.Status("Done: %s", strings.Join(saved, ", "))
 	return nil
 }
 
 // ── validation ──
 
 func validateOutputMode(outputPath string, formats []string, sources []string, isStdin bool) error {
-	if outputPath != "" {
-		return nil
-	}
-
 	count := len(sources)
 	if isStdin {
 		count = 1
+	}
+
+	if outputPath != "" {
+		if count > 1 && outputPathLooksLikeFile(outputPath, formats) {
+			return fmt.Errorf("batch mode requires -o to specify output directory, not a file path")
+		}
+		if len(formats) > 1 && outputPathLooksLikeFile(outputPath, formats) {
+			return fmt.Errorf("multiple formats require -o to specify an output directory, not a file path")
+		}
+		return nil
 	}
 
 	if count > 1 {
@@ -531,11 +529,74 @@ func saveExtraFormatsToDir(result *mineru.ExtractResult, dir, base string, forma
 	}
 }
 
-func pageCount(r *mineru.ExtractResult) int {
-	if r.Progress != nil {
-		return r.Progress.TotalPages
+func resolveOutputTarget(outputPath, source string, formats []string) (dir, base string) {
+	dir = outputPath
+	base = baseNameNoExt(source)
+
+	info, err := os.Stat(outputPath)
+	if err == nil && !info.IsDir() {
+		return filepath.Dir(outputPath), baseNameNoExt(outputPath)
 	}
-	return 0
+
+	if outputPathLooksLikeFile(outputPath, formats) {
+		return filepath.Dir(outputPath), baseNameNoExt(outputPath)
+	}
+
+	return dir, base
+}
+
+func outputPathLooksLikeFile(outputPath string, formats []string) bool {
+	if outputPath == "" || hasTrailingPathSeparator(outputPath) {
+		return false
+	}
+
+	ext := strings.ToLower(filepath.Ext(outputPath))
+	if ext == "" {
+		return false
+	}
+
+	for _, candidate := range outputExtensions(formats) {
+		if ext == candidate {
+			return true
+		}
+	}
+	return false
+}
+
+func outputExtensions(formats []string) []string {
+	seen := make(map[string]struct{})
+	var exts []string
+	for _, format := range formats {
+		for _, ext := range formatExtensions(format) {
+			if _, ok := seen[ext]; ok {
+				continue
+			}
+			seen[ext] = struct{}{}
+			exts = append(exts, ext)
+		}
+	}
+	return exts
+}
+
+func formatExtensions(format string) []string {
+	switch format {
+	case "md":
+		return []string{".md", ".markdown"}
+	case "json":
+		return []string{".json"}
+	case "html":
+		return []string{".html", ".htm"}
+	case "latex":
+		return []string{".tex", ".latex"}
+	case "docx":
+		return []string{".docx"}
+	default:
+		return nil
+	}
+}
+
+func hasTrailingPathSeparator(path string) bool {
+	return strings.HasSuffix(path, "/") || strings.HasSuffix(path, "\\")
 }
 
 func humanSize(n int) string {
