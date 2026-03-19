@@ -391,6 +391,14 @@ func outputResult(result *mineru.ExtractResult, source string, formats []string)
 				return fmt.Errorf("failed to save latex: %w", err)
 			}
 			saved = append(saved, p)
+		case "json":
+			if result.ContentList != nil {
+				p := filepath.Join(dir, base+".json")
+				if err := os.WriteFile(p, []byte(contentListToJSON(result.ContentList)), 0o644); err != nil {
+					return fmt.Errorf("failed to save json: %w", err)
+				}
+				saved = append(saved, p)
+			}
 		}
 	}
 
