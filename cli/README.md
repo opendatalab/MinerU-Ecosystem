@@ -201,7 +201,7 @@ Full-featured document extraction. Requires a token.
 | `--ocr` | `false` | OCR is opt-in |
 | `--formula` | `true` | Enable/disable formula recognition |
 | `--table` | `true` | Enable/disable table recognition |
-| `--language` | `ch` | Only sent when changed |
+| `-l`, `--language` | `ch` | Only sent when changed |
 | `--pages` | unset | Full document |
 | `--timeout` | `300` single / `1800` batch | Total wait time for polling |
 | `--stdin` | `false` | Read file bytes from `stdin` |
@@ -230,7 +230,7 @@ Full-featured document extraction. Requires a token.
 | `--ocr` | Enable OCR for scanned documents |
 | `--formula=false` | Disable formula recognition |
 | `--table=false` | Disable table recognition |
-| `--language` | Document language |
+| `-l`, `--language` | Document language |
 | `--pages` | Page range like `1-10,15` |
 | `--timeout` | Poll timeout in seconds |
 | `--list` | Read sources from a file |
