@@ -22,7 +22,7 @@ var authCmd = &cobra.Command{
 	Short: "Configure API token for Full Feature extraction",
 	Long: `Authenticate with your MinerU API token. 
 This is required to access Full Feature extraction (large files, multi-format, rich assets).
-Get your free token at https://mineru.net`,
+Get your free token at https://mineru.net/apiManage/token`,
 	Example: `  mineru-open-api auth              # Interactive token setup
   mineru-open-api auth --verify     # Verify current token
   mineru-open-api auth --show       # Show token source
@@ -92,7 +92,7 @@ func runAuthVerify() error {
 
 func runAuthSetup() error {
 	output.Status("MinerU API Token Setup")
-	output.Status("Get your token from: https://mineru.net")
+	output.Status("Get your token from: https://mineru.net/apiManage/token")
 	fmt.Println()
 
 	reader := bufio.NewReader(os.Stdin)
