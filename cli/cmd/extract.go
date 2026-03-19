@@ -73,7 +73,7 @@ func init() {
 	extractCmd.Flags().BoolVar(&extractStdinList, "stdin-list", false, "Read input list from stdin")
 	extractCmd.Flags().BoolVar(&extractStdin, "stdin", false, "Read file content from stdin")
 	extractCmd.Flags().StringVar(&extractStdinName, "stdin-name", "stdin.pdf", "Filename for stdin mode")
-	extractCmd.Flags().IntVar(&extractConcurrency, "concurrency", 0, "Batch concurrency (0 = server default)")
+	extractCmd.Flags().IntVar(&extractConcurrency, "concurrency", 0, "Batch concurrency (reserved, not yet applied)")
 }
 
 func runExtract(cmd *cobra.Command, args []string) error {

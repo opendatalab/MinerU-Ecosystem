@@ -46,12 +46,12 @@ For quick, No Auth document extraction, use 'flash-extract' command.`,
 func init() {
 	rootCmd.AddCommand(crawlCmd)
 
-	crawlCmd.Flags().StringVarP(&crawlOutput, "output", "o", "", "Output path; omit to output to stdout")
+	crawlCmd.Flags().StringVarP(&crawlOutput, "output", "o", "", "Output directory; omit to output to stdout")
 	crawlCmd.Flags().StringVarP(&crawlFormat, "format", "f", "md", "Output format(s): md,json,html (comma-separated)")
 	crawlCmd.Flags().IntVar(&crawlTimeout, "timeout", 0, "Timeout in seconds (default: 300 single, 1800 batch)")
 	crawlCmd.Flags().StringVar(&crawlListFile, "list", "", "Read URL list from file (one per line)")
 	crawlCmd.Flags().BoolVar(&crawlStdinList, "stdin-list", false, "Read URL list from stdin")
-	crawlCmd.Flags().IntVar(&crawlConcurrency, "concurrency", 0, "Batch concurrency (0 = server default)")
+	crawlCmd.Flags().IntVar(&crawlConcurrency, "concurrency", 0, "Batch concurrency (reserved, not yet applied)")
 }
 
 func runCrawl(cmd *cobra.Command, args []string) error {
