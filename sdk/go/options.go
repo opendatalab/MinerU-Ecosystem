@@ -70,10 +70,10 @@ func WithHTTPClient(client *http.Client) ClientOption {
 
 type extractConfig struct {
 	model        *string
-	ocr          bool
-	formula      bool
-	table        bool
-	language     string
+	ocr          *bool
+	formula      *bool
+	table        *bool
+	language     *string
 	pages        *string
 	extraFormats []string
 	fileParams   map[string]FileParam
@@ -82,10 +82,7 @@ type extractConfig struct {
 
 func defaultExtractConfig() extractConfig {
 	return extractConfig{
-		formula:  true,
-		table:    true,
-		language: "ch",
-		timeout:  DefaultSinglePollTimeout,
+		timeout: DefaultSinglePollTimeout,
 	}
 }
 
@@ -99,22 +96,22 @@ func WithModel(model string) ExtractOption {
 
 // WithOCR enables OCR for scanned documents.
 func WithOCR(enabled bool) ExtractOption {
-	return func(c *extractConfig) { c.ocr = enabled }
+	return func(c *extractConfig) { c.ocr = &enabled }
 }
 
-// WithFormula controls formula recognition (default: true).
+// WithFormula controls formula recognition. Only sent to API when explicitly set.
 func WithFormula(enabled bool) ExtractOption {
-	return func(c *extractConfig) { c.formula = enabled }
+	return func(c *extractConfig) { c.formula = &enabled }
 }
 
-// WithTable controls table recognition (default: true).
+// WithTable controls table recognition. Only sent to API when explicitly set.
 func WithTable(enabled bool) ExtractOption {
-	return func(c *extractConfig) { c.table = enabled }
+	return func(c *extractConfig) { c.table = &enabled }
 }
 
-// WithLanguage sets the document language (default: "ch").
+// WithLanguage sets the document language. Only sent to API when explicitly set.
 func WithLanguage(lang string) ExtractOption {
-	return func(c *extractConfig) { c.language = lang }
+	return func(c *extractConfig) { c.language = &lang }
 }
 
 // WithPages sets the page range, e.g. "1-10,15" or "2--2".

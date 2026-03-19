@@ -449,14 +449,14 @@ func applyOpts(opts []ExtractOption) extractConfig {
 
 func buildPayload(cfg extractConfig, modelVersion string) map[string]any {
 	m := map[string]any{"model_version": modelVersion}
-	if !cfg.formula {
-		m["enable_formula"] = false
+	if cfg.formula != nil {
+		m["enable_formula"] = *cfg.formula
 	}
-	if !cfg.table {
-		m["enable_table"] = false
+	if cfg.table != nil {
+		m["enable_table"] = *cfg.table
 	}
-	if cfg.language != "ch" {
-		m["language"] = cfg.language
+	if cfg.language != nil {
+		m["language"] = *cfg.language
 	}
 	if len(cfg.extraFormats) > 0 {
 		m["extra_formats"] = cfg.extraFormats
@@ -470,18 +470,18 @@ func applyFileFields(file map[string]any, key string, cfg extractConfig) {
 	fp, hasOverride := cfg.fileParams[key]
 
 	// OCR: per-file overrides global
-	ocr := cfg.ocr
-	if hasOverride && fp.OCR != nil {
-		ocr = *fp.OCR
-	}
-	if ocr {
-		file["is_ocr"] = true
+	switch {
+	case hasOverride && fp.OCR != nil:
+		file["is_ocr"] = *fp.OCR
+	case cfg.ocr != nil:
+		file["is_ocr"] = *cfg.ocr
 	}
 
 	// Pages: per-file overrides global
-	if hasOverride && fp.Pages != "" {
+	switch {
+	case hasOverride && fp.Pages != "":
 		file["page_ranges"] = fp.Pages
-	} else if cfg.pages != nil {
+	case cfg.pages != nil:
 		file["page_ranges"] = *cfg.pages
 	}
 
