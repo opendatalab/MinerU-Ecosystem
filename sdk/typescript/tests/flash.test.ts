@@ -26,10 +26,10 @@ const FLASH_TEST_TIMEOUT = 300;
 describe("flash-only client (unit)", () => {
   const origToken = process.env["MINERU_TOKEN"];
 
-  function withoutToken(fn: () => void): void {
+  async function withoutToken(fn: () => Promise<void> | void): Promise<void> {
     delete process.env["MINERU_TOKEN"];
     try {
-      fn();
+      await fn();
     } finally {
       if (origToken != null) {
         process.env["MINERU_TOKEN"] = origToken;
@@ -44,37 +44,37 @@ describe("flash-only client (unit)", () => {
     });
   });
 
-  it("extract throws NoAuthClientError", () => {
-    withoutToken(() => {
+  it("extract throws NoAuthClientError", async () => {
+    await withoutToken(async () => {
       const c = new MinerU();
-      expect(() => c.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")).rejects.toThrow(
+      await expect(c.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")).rejects.toThrow(
         NoAuthClientError,
       );
     });
   });
 
-  it("crawl throws NoAuthClientError", () => {
-    withoutToken(() => {
+  it("crawl throws NoAuthClientError", async () => {
+    await withoutToken(async () => {
       const c = new MinerU();
-      expect(() => c.crawl("https://example.com")).rejects.toThrow(
+      await expect(c.crawl("https://example.com")).rejects.toThrow(
         NoAuthClientError,
       );
     });
   });
 
-  it("submit throws NoAuthClientError", () => {
-    withoutToken(() => {
+  it("submit throws NoAuthClientError", async () => {
+    await withoutToken(async () => {
       const c = new MinerU();
-      expect(() => c.submit("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")).rejects.toThrow(
+      await expect(c.submit("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")).rejects.toThrow(
         NoAuthClientError,
       );
     });
   });
 
-  it("getTask throws NoAuthClientError", () => {
-    withoutToken(() => {
+  it("getTask throws NoAuthClientError", async () => {
+    await withoutToken(async () => {
       const c = new MinerU();
-      expect(() => c.getTask("fake-id")).rejects.toThrow(NoAuthClientError);
+      await expect(c.getTask("fake-id")).rejects.toThrow(NoAuthClientError);
     });
   });
 });

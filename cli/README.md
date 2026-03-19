@@ -188,8 +188,8 @@ Full-featured document extraction. Requires a token.
 | `-f`, `--format` | `md` | Comma-separated formats |
 | `--model` | auto | HTML files/URLs use `html`; everything else defaults to `vlm` |
 | `--ocr` | `false` | OCR is opt-in |
-| `--no-formula` | `false` | Formula recognition stays enabled by default |
-| `--no-table` | `false` | Table recognition stays enabled by default |
+| `--formula` | `true` | Enable/disable formula recognition |
+| `--table` | `true` | Enable/disable table recognition |
 | `--language` | `ch` | Only sent when changed |
 | `--pages` | unset | Full document |
 | `--timeout` | `300` single / `1800` batch | Total wait time for polling |
@@ -217,8 +217,8 @@ Full-featured document extraction. Requires a token.
 | `-f`, `--format` | `md,json,html,latex,docx` |
 | `--model` | `vlm`, `pipeline`, or `html` |
 | `--ocr` | Enable OCR for scanned documents |
-| `--no-formula` | Disable formula recognition |
-| `--no-table` | Disable table recognition |
+| `--formula=false` | Disable formula recognition |
+| `--table=false` | Disable table recognition |
 | `--language` | Document language |
 | `--pages` | Page range like `1-10,15` |
 | `--timeout` | Poll timeout in seconds |
