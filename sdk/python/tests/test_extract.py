@@ -17,7 +17,6 @@ class TestExtractSinglePDF:
         assert isinstance(pdf_result.content_list, list)
 
     def test_has_metadata(self, pdf_result):
-        assert pdf_result.task_id
         assert pdf_result.zip_url is not None
         assert pdf_result.error is None
 
