@@ -52,7 +52,7 @@ mineru-open-api version
 | Batch mode | No | Yes |
 | Model selection | pipeline | Yes (vlm, pipeline) |
 | File size limit | **10 MB** | Much higher |
-| Page limit | **50 pages** | Much higher |
+| Page limit | **20 pages** | Much higher |
 | Rate limit | Per-IP per-minute/hour cap | Based on API plan |
 | Best for | Quick start, small/simple docs | Large docs, tables, production |
 
@@ -61,8 +61,8 @@ mineru-open-api version
 | Limit | Value |
 |-------|-------|
 | File size | Max **10 MB** |
-| Page count | Max **50 pages** |
-| Supported types | PDF, Images (png/jpg/jpeg/jp2/webp/gif/bmp), Doc/Docx, PPT/PPTx, Html |
+| Page count | Max **20 pages** |
+| Supported types | PDF, Images (png/jpg/jpeg/jp2/webp/gif/bmp), Doc/Docx, PPT/PPTx |
 | IP rate limit | Per-minute and per-hour request caps (HTTP 429 when exceeded) |
 
 When any limit is exceeded, the agent should suggest switching to `extract` with a token (create at https://mineru.net/apiManage/token), which has significantly higher limits.
@@ -123,7 +123,7 @@ The `crawl` command accepts any HTTP/HTTPS URL and extracts web page content.
 
 ### flash-extract — Quick extraction (no token needed)
 
-Fast, token-free document extraction. Outputs Markdown only. No table recognition. Limited to **10 MB / 50 pages** per file, with IP-based rate limiting.
+Fast, token-free document extraction. Outputs Markdown only. No table recognition. Limited to **10 MB / 20 pages** per file, with IP-based rate limiting.
 
 ```bash
 mineru-open-api flash-extract report.pdf                     # Markdown to stdout
@@ -455,14 +455,14 @@ The agent MUST follow this decision logic:
 1. **Default to `flash-extract`** when:
    - User has NOT configured a token (no `~/.mineru/config.yaml`, no `MINERU_TOKEN` env)
    - User wants a quick/simple extraction without mentioning tables, formulas, OCR, or specific formats
-   - File is **under 10 MB and under 50 pages**
+   - File is **under 10 MB and under 20 pages**
    - User is trying the tool for the first time
 
 2. **Use `extract`** when:
    - User explicitly asks for table recognition, formula recognition, or OCR
    - User requests non-Markdown output formats (html, latex, docx, json)
    - User needs batch processing (multiple files)
-   - File is **over 10 MB or over 50 pages** (exceeds flash-extract limits)
+   - File is **over 10 MB or over 20 pages** (exceeds flash-extract limits)
    - User has a token configured and wants full-quality extraction
 
 3. **If unsure**, prefer `flash-extract` — it's faster and requires no setup, but check file size first.
@@ -482,7 +482,7 @@ When `flash-extract` fails due to file limits or rate limiting, the agent MUST p
 
 **File too large (>10 MB) or too many pages (>50):**
 
-> 该文件超出 `flash-extract` 的限制（最大 10 MB / 50 页）。请前往 https://mineru.net/apiManage/token 创建 Token，运行 `mineru-open-api auth` 配置后使用 `mineru-open-api extract`，文件大小和页数限制大幅放宽。
+> 该文件超出 `flash-extract` 的限制（最大 10 MB / 20 页）。请前往 https://mineru.net/apiManage/token 创建 Token，运行 `mineru-open-api auth` 配置后使用 `mineru-open-api extract`，文件大小和页数限制大幅放宽。
 
 **Rate limited (HTTP 429):**
 
@@ -496,7 +496,7 @@ When `flash-extract` fails due to file limits or rate limiting, the agent MUST p
 
 After `flash-extract` completes successfully, the agent MUST append a brief hint:
 
-> Tip: `flash-extract` 为快速免登录模式（限 10MB/50页，不含表格识别）。如需解析更大文件、表格/公式识别或多格式导出，请前往 https://mineru.net/apiManage/token 创建 Token，运行 `mineru-open-api auth` 配置后使用 `mineru-open-api extract`。
+> Tip: `flash-extract` 为快速免登录模式（限 10MB/20页，不含表格识别）。如需解析更大文件、表格/公式识别或多格式导出，请前往 https://mineru.net/apiManage/token 创建 Token，运行 `mineru-open-api auth` 配置后使用 `mineru-open-api extract`。
 
 Keep the hint to ONE short sentence. Do NOT repeat the hint if the user has already seen it in this session.
 
@@ -561,7 +561,7 @@ echo -n "https://arxiv.org/pdf/2509.22186" | md5 | cut -c1-6
 | 1 | General API or unknown error | Check network connectivity; retry; use `--verbose` for details |
 | 2 | Invalid parameters / usage error | Check command syntax and flag values |
 | 3 | Authentication error | Create or refresh token at https://mineru.net/apiManage/token, then run `mineru-open-api auth` |
-| 4 | File too large or page limit exceeded | For `flash-extract`: file must be under 10 MB / 50 pages; switch to `extract` with token for higher limits. For `extract`: split the file or use `--pages` |
+| 4 | File too large or page limit exceeded | For `flash-extract`: file must be under 10 MB / 20 pages; switch to `extract` with token for higher limits. For `extract`: split the file or use `--pages` |
 | 5 | Extraction failed | The document may be corrupted or unsupported; try a different `--model` |
 | 6 | Timeout | Increase with `--timeout`; large files may need 600+ seconds |
 | 7 | Quota exceeded | For `flash-extract`: wait for daily reset or create token at https://mineru.net/apiManage/token and switch to `extract`. For `extract`: check API quota at https://mineru.net/apiManage/token |
@@ -577,11 +577,11 @@ echo -n "https://arxiv.org/pdf/2509.22186" | md5 | cut -c1-6
 - **Tables not extracted**: `flash-extract` does NOT support tables. Use `mineru-open-api extract` with a token.
 - **Quota exceeded on flash-extract**: Daily free limit reached. Use `mineru-open-api extract` with a token for separate quota.
 - **HTTP 429 on flash-extract**: IP rate limit hit. Wait a few minutes or switch to `mineru-open-api extract` with token.
-- **File too large for flash-extract**: Max 10 MB / 50 pages. Use `mineru-open-api extract` with token for larger files.
+- **File too large for flash-extract**: Max 10 MB / 20 pages. Use `mineru-open-api extract` with token for larger files.
 
 ## Notes
 
-- `flash-extract` is token-free but limited to 10 MB / 50 pages per file, has IP rate limits, and no table recognition
+- `flash-extract` is token-free but limited to 10 MB / 20 pages per file, has IP rate limits, and no table recognition
 - `extract` requires a token but provides full-featured extraction
 - All status/progress messages go to stderr; only document content goes to stdout
 - Batch mode automatically polls the API with exponential backoff
