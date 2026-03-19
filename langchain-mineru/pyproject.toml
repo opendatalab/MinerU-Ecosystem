@@ -16,11 +16,16 @@ dependencies = [
     "mineru-open-sdk>=0.1.0",
 ]
 
-# TODO: remove [tool.uv.sources] after mineru-open-sdk is published to PyPI
+# TODO: remove [[tool.uv.index]] and [tool.uv.sources] after mineru-open-sdk is published to PyPI
 #   发布后删除下面两行，依赖会自动从 PyPI 安装
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+explicit = true 
+
 [tool.uv.sources]
-# mineru-open-sdk = { path = "./mineru-open-sdk-python", editable = true }
-mineru-open-sdk = { git = "https://gitlab.pjlab.org.cn/yangqi/mineru-open-sdk-python.git" }
+# mineru-open-sdk = { git = "https://gitlab.pjlab.org.cn/yangqi/mineru-open-sdk-python.git" }
+mineru-open-sdk = { index = "testpypi" }
 
 [build-system]
 requires = ["uv_build>=0.9.17,<0.10.0"]
