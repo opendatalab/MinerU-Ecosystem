@@ -121,7 +121,7 @@ func Wrap(err error) *ErrorInfo {
 		return &ErrorInfo{
 			Code:    FileError,
 			Message: err.Error(),
-			Hint:    "Flash mode supports PDF, images, Doc/Docx, PPT/PPTx, and HTML only.",
+			Hint:    "Flash mode supports PDF, Images, Docx, PPTx, and Excel only.",
 		}
 	}
 
