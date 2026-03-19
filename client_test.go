@@ -14,7 +14,7 @@ import (
 const (
 	testPDFURL  = "https://bitcoin.org/bitcoin.pdf"
 	testModel   = "pipeline"
-	testHTMLURL = "https://opendatalab.com"
+	testHTMLURL = "https://mineru.net"
 	testTimeout = 10 * time.Minute
 )
 
@@ -370,7 +370,7 @@ func TestCrawlBatch_YieldsResults(t *testing.T) {
 	requireStandardClient(t)
 	ctx := context.Background()
 	ch, err := client.CrawlBatch(ctx,
-		[]string{"https://opendatalab.com", "https://www.example.org"},
+		[]string{"https://mineru.net", "https://www.example.org"},
 		mineru.WithPollTimeout(testTimeout),
 	)
 	if err != nil {
