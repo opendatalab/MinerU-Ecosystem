@@ -1,0 +1,34 @@
+[project]
+name = "langchain-mineru"
+version = "0.1.0"
+description = "LangChain document loader powered by MinerU — turn PDFs into Markdown"
+readme = "README.md"
+authors = [
+    { name = "renzhifei", email = "renzhifei@pjlab.org.cn" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "langchain-core>=1.2.18",
+    "langchain-tests>=1.1.5",
+    "pypdf>=6.8.0",
+    # TODO: replace with PyPI package name after SDK is published to PyPI
+    #   e.g. "mineru-open-sdk>=0.1.0"
+    "mineru-open-sdk>=0.1.0",
+]
+
+# TODO: remove [tool.uv.sources] after mineru-open-sdk is published to PyPI
+#   发布后删除下面两行，依赖会自动从 PyPI 安装
+[tool.uv.sources]
+# mineru-open-sdk = { path = "./mineru-open-sdk-python", editable = true }
+mineru-open-sdk = { git = "https://gitlab.pjlab.org.cn/yangqi/mineru-open-sdk-python.git" }
+
+[build-system]
+requires = ["uv_build>=0.9.17,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "langchain_mineru"
+module-root = ""
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
