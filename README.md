@@ -184,10 +184,9 @@ Pre-built skill for AI coding agents, enabling document extraction directly with
 
 #### Skills Download
 
-- **[OpenClaw](https://openclaw.com)** — View skill details on ClawHub
-- **[LobeChat](TBD)** — Compatible via SKILL.md
-- **[CDN Link](https://webpub.shlab.tech/MinerU/skills/api/0.1.0.zip)** — One-click download of the skill package
-- Other AI agents that support skill/tool interfaces (e.g. ZeroClaw)
+- **[OpenClaw](https://clawhub.ai/MinerU-Extract/mineru-document-extractor)** — `View skill details on ClawHub`
+- **[CDN Link](https://webpub.shlab.tech/MinerU/skills/api/10..0.zip)** — One-click download skill package
+- Other AI agents like zeroclaw that also support skill/tool interfaces
 
 
 ## 📚 Documentation
