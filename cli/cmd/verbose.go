@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -17,15 +18,12 @@ func (l *loggingRoundTripper) RoundTrip(req *http.Request) (*http.Response, erro
 
 	log.Printf("[DEBUG] → %s %s\n", req.Method, req.URL.String())
 
-	// Log request body for methods that typically carry a payload
-	if req.Body != nil && (req.Method == http.MethodPost || req.Method == http.MethodPut || req.Method == http.MethodPatch) {
+	// Log request body for JSON payloads only (skip binary uploads like OSS PUT)
+	if req.Body != nil && strings.Contains(req.Header.Get("Content-Type"), "application/json") {
 		bodyBytes, err := io.ReadAll(req.Body)
 		req.Body.Close()
 		if err == nil && len(bodyBytes) > 0 {
-			// Only log JSON-like bodies (skip binary uploads)
-			if len(bodyBytes) > 0 && bodyBytes[0] == '{' || len(bodyBytes) > 0 && bodyBytes[0] == '[' {
-				log.Printf("[DEBUG]    body: %s\n", string(bodyBytes))
-			}
+			log.Printf("[DEBUG]    body: %s\n", string(bodyBytes))
 		}
 		req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
 	}
