@@ -14,8 +14,7 @@ const (
 	DefaultBaseURL = "https://mineru.net/api/v4"
 
 	// DefaultFlashBaseURL is the default flash MinerU API base URL.
-	// TODO(release): 上线前换回 https://mineru.net/api/v1/agent
-	DefaultFlashBaseURL = "https://staging.mineru.org.cn/api/v1/agent"
+	DefaultFlashBaseURL = "https://mineru.net/api/v1/agent"
 
 	// DefaultRequestTimeout is the timeout for a single HTTP request (e.g., upload, query).
 	DefaultRequestTimeout = 60 * time.Second
