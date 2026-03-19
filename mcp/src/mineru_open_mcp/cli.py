@@ -46,9 +46,9 @@ def main():
         print("警告: 在STDIO模式下，--host和--port参数将被忽略", file=sys.stderr)
 
     # Warn (don't exit) if no API key is configured — per-request keys via ?api_key= are also supported
-    if not config.MINERU_TOKEN:
+    if not config.MINERU_API_TOKEN:
         print(
-            "警告: 未设置 MINERU_API_KEY / MINERU_TOKEN 环境变量。\n"
+            "警告: 未设置 MINERU_API_TOKEN 环境变量。\n"
             "可通过 MCP 服务器 URL 中的 ?api_key=YOUR_KEY 参数按请求传入。",
             file=sys.stderr,
         )

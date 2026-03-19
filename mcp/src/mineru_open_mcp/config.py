@@ -14,8 +14,6 @@ load_dotenv()
 # API 配置
 MINERU_API_BASE = os.getenv("MINERU_API_BASE", "https://mineru.net")
 MINERU_API_TOKEN = os.getenv("MINERU_API_TOKEN", "")
-# SDK uses MINERU_TOKEN; fall back to MINERU_API_TOKEN so existing setups keep working
-MINERU_TOKEN = os.getenv("MINERU_TOKEN") or MINERU_API_TOKEN or ""
 
 # File logging is disabled by default. Set ENABLE_LOG=true to enable timestamped log files.
 ENABLE_LOG = os.getenv("ENABLE_LOG", "").lower() in ("true", "1", "yes")
@@ -143,6 +141,6 @@ def validate_api_config():
     """
     return {
         "api_base": MINERU_API_BASE,
-        "api_key_set": bool(MINERU_TOKEN),
+        "api_key_set": bool(MINERU_API_TOKEN),
         "output_dir": DEFAULT_OUTPUT_DIR,
     }

@@ -145,7 +145,7 @@ async def convert_sources(
             Use ``"pipeline"`` only for documents in uncommon languages not well supported by vlm.
             Use ``"html"`` for web page extraction.
             Ignored in Flash mode.
-        token: Optional per-request MinerU API token. Falls back to config.MINERU_TOKEN if not given.
+        token: Optional per-request MinerU API token. Falls back to config.MINERU_API_TOKEN if not given.
         extra_formats: Optional list of additional output formats to generate alongside Markdown.
             Accepted values: "docx", "html", "latex", "all" (all three).
             Not available in Flash mode (markdown only). Saved next to the Markdown file.
@@ -168,7 +168,7 @@ async def convert_sources(
     if not sources:
         return []
 
-    token = token or config.MINERU_TOKEN
+    token = token or config.MINERU_API_TOKEN
     use_flash = not token
     sdk_formats = _normalize_extra_formats(extra_formats)
     lang = resolve_language(language)
