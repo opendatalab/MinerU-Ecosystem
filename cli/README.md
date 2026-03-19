@@ -1,6 +1,6 @@
 # MinerU Open API CLI
 
-[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/opendatalab/MinerU-Ecosystem/cli/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/opendatalab/MinerU-Ecosystem/blob/main/LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/opendatalab/MinerU-Ecosystem/cli)](https://goreportcard.com/report/github.com/opendatalab/MinerU-Ecosystem/cli)
 
 **MinerU Open API CLI** is a zero-dependency command-line tool for document extraction and web crawling.

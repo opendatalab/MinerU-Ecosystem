@@ -1,6 +1,6 @@
 # MinerU Open API 命令行工具 (CLI)
 
-[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/opendatalab/MinerU-Ecosystem/cli/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/opendatalab/MinerU-Ecosystem/blob/main/LICENSE)
 
 **MinerU Open API CLI** 是一个零依赖的命令行工具，用于文档解析和网页抓取。
 
