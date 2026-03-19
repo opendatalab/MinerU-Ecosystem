@@ -18,6 +18,13 @@ const HTML_EXTENSIONS = new Set([".html", ".htm"]);
 
 const DEFAULT_SOURCE = "open-api-sdk-js";
 
+/** Default timeout for a single HTTP request (in seconds). */
+const DEFAULT_TIMEOUT_REQUEST = 60;
+
+/** Default total business timeouts for extraction tasks (in seconds). */
+const DEFAULT_TIMEOUT_POLL_SINGLE = 300;
+const DEFAULT_TIMEOUT_POLL_BATCH = 1800;
+
 function isUrl(source: string): boolean {
   return source.startsWith("http://") || source.startsWith("https://");
 }
@@ -43,21 +50,14 @@ function resolveModel(model: string | undefined, source: string): string {
 }
 
 export interface ExtractOptions {
-  /** `"pipeline"` | `"vlm"` | `"html"`. Auto-inferred if omitted. */
   model?: string;
-  /** Enable OCR. Only effective with pipeline or vlm models. */
   ocr?: boolean;
-  /** Enable formula recognition. Default: true. */
   formula?: boolean;
-  /** Enable table recognition. Default: true. */
   table?: boolean;
-  /** Document language code. Default: `"ch"`. */
   language?: string;
-  /** Page range string, e.g. `"1-10,15"` or `"2--2"`. */
   pages?: string;
-  /** Additional export formats: `"docx"`, `"html"`, `"latex"`. */
   extraFormats?: string[];
-  /** Max seconds to wait for completion. Default: 300. */
+  /** Max total seconds to wait for task completion (polling). */
   timeout?: number;
 }
 
@@ -68,15 +68,14 @@ export interface BatchOptions {
   table?: boolean;
   language?: string;
   extraFormats?: string[];
+  /** Max total seconds to wait for all tasks (polling). */
   timeout?: number;
 }
 
 export interface FlashExtractOptions {
-  /** Document language code. Default: `"ch"`. */
   language?: string;
-  /** Page range, e.g. `"1-10"`. */
   pageRange?: string;
-  /** Max seconds to wait. Default: 300. */
+  /** Max total seconds to wait for task completion (polling). */
   timeout?: number;
 }
 
@@ -128,28 +127,15 @@ function sleep(ms: number): Promise<void> {
 
 /**
  * MinerU API client. Turn documents into Markdown with one method call.
- *
- * When no token is provided and `MINERU_TOKEN` is not set, a flash-only
- * client is created. Only {@link flashExtract} is available; calling
- * standard methods throws {@link NoAuthClientError}.
- *
- * @example
- * ```ts
- * import { MinerU } from "mineru";
- *
- * const client = new MinerU(); // reads MINERU_TOKEN env var
- * const md = (await client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")).markdown;
- * ```
  */
 export class MinerU {
   private readonly api: ApiClient | null;
   private readonly flashApi: FlashApiClient;
 
   /**
-   * @param token - API token. If omitted, reads `MINERU_TOKEN` env var.
-   *   If neither is available, creates a flash-only client.
-   * @param baseUrl - API base URL. Override for private deployments.
-   * @param flashBaseUrl - Flash API base URL. Override for testing.
+   * @param token - API token.
+   * @param baseUrl - API base URL.
+   * @param flashBaseUrl - Flash API base URL.
    */
   constructor(
     token?: string,
@@ -158,6 +144,7 @@ export class MinerU {
   ) {
     const resolved = token ?? process.env["MINERU_TOKEN"];
     if (resolved) {
+      // ApiClient should ideally use DEFAULT_TIMEOUT_REQUEST internally
       this.api = new ApiClient(resolved, baseUrl, DEFAULT_SOURCE);
     } else {
       this.api = null; // flash-only mode
@@ -165,10 +152,6 @@ export class MinerU {
     this.flashApi = new FlashApiClient(flashBaseUrl, DEFAULT_SOURCE);
   }
 
-  /**
-   * Override the source identifier sent with API requests.
-   * Used to track which application or integration is making the call.
-   */
   setSource(source: string): void {
     if (this.api !== null) {
       this.api.setSource(source);
@@ -187,21 +170,12 @@ export class MinerU {
   //  Synchronous (blocking) methods
   // ══════════════════════════════════════════════════════════════════
 
-  /**
-   * Parse a single document. Blocks until the result is ready.
-   *
-   * @example
-   * ```ts
-   * const result = await new MinerU().extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf");
-   * console.log(result.markdown);
-   * ```
-   */
   async extract(
     source: string,
     options: ExtractOptions = {},
   ): Promise<ExtractResult> {
     this.requireAuth();
-    const { timeout = 300, ...opts } = options;
+    const { timeout = DEFAULT_TIMEOUT_POLL_SINGLE, ...opts } = options;
     const modelVersion = resolveModel(opts.model, source);
     const apiOpts = buildApiOptions(modelVersion, opts);
 
@@ -214,23 +188,12 @@ export class MinerU {
     return results[0]!;
   }
 
-  /**
-   * Parse multiple documents. Returns an async iterable that yields
-   * each result as it completes — first done, first yielded.
-   *
-   * @example
-   * ```ts
-   * for await (const r of client.extractBatch(["a.pdf", "b.pdf"])) {
-   *   console.log(r.markdown);
-   * }
-   * ```
-   */
   async *extractBatch(
     sources: string[],
     options: BatchOptions = {},
   ): AsyncGenerator<ExtractResult> {
     this.requireAuth();
-    const { timeout = 600, ...opts } = options;
+    const { timeout = DEFAULT_TIMEOUT_POLL_BATCH, ...opts } = options;
     const firstSource = sources[0] ?? "";
     const modelVersion = resolveModel(opts.model, firstSource);
     const apiOpts = buildApiOptions(modelVersion, opts);
@@ -249,38 +212,24 @@ export class MinerU {
     yield* this.yieldBatch(batchIds, sources.length, timeout);
   }
 
-  /**
-   * Crawl a web page and parse it to Markdown.
-   * Shorthand for `extract(url, { model: "html" })`.
-   */
   async crawl(
     url: string,
     options: { extraFormats?: string[]; timeout?: number } = {},
   ): Promise<ExtractResult> {
-    return this.extract(url, { model: "html", ...options });
+    return this.extract(url, { model: "html", timeout: DEFAULT_TIMEOUT_POLL_SINGLE, ...options });
   }
 
-  /**
-   * Crawl multiple web pages. Yields results as each completes.
-   * Shorthand for `extractBatch(urls, { model: "html" })`.
-   */
   async *crawlBatch(
     urls: string[],
     options: { extraFormats?: string[]; timeout?: number } = {},
   ): AsyncGenerator<ExtractResult> {
-    yield* this.extractBatch(urls, { model: "html", ...options });
+    yield* this.extractBatch(urls, { model: "html", timeout: DEFAULT_TIMEOUT_POLL_BATCH, ...options });
   }
 
   // ══════════════════════════════════════════════════════════════════
   //  Async primitives (no polling, no waiting)
   // ══════════════════════════════════════════════════════════════════
 
-  /**
-   * Submit a single task without waiting. Returns a task ID (for URLs)
-   * or batch ID (for local files).
-   *
-   * Use {@link getTask} later to check the result.
-   */
   async submit(
     source: string,
     options: Omit<ExtractOptions, "timeout"> = {},
@@ -295,11 +244,6 @@ export class MinerU {
     return this.uploadAndSubmit([source], apiOpts);
   }
 
-  /**
-   * Submit multiple tasks without waiting. Returns a batch ID.
-   *
-   * Use {@link getBatch} later to check results.
-   */
   async submitBatch(
     sources: string[],
     options: Omit<BatchOptions, "timeout"> = {},
@@ -328,10 +272,6 @@ export class MinerU {
     return this.uploadAndSubmit(files, apiOpts);
   }
 
-  /**
-   * Query a single task's current state. When `state === "done"`,
-   * the result zip is downloaded and parsed automatically.
-   */
   async getTask(taskId: string): Promise<ExtractResult> {
     const api = this.requireAuth();
     const body = await api.get(`/extract/task/${taskId}`);
@@ -342,10 +282,6 @@ export class MinerU {
     return result;
   }
 
-  /**
-   * Query all tasks in a batch. Completed tasks have their content
-   * populated; in-progress tasks have `markdown === null`.
-   */
   async getBatch(batchId: string): Promise<ExtractResult[]> {
     const api = this.requireAuth();
     const body = await api.get(`/extract-results/batch/${batchId}`);
@@ -488,22 +424,11 @@ export class MinerU {
   //  Flash (agent) mode
   // ══════════════════════════════════════════════════════════════════
 
-  /**
-   * Parse a document using the flash (agent) API.
-   * No token required. Only outputs Markdown.
-   *
-   * @example
-   * ```ts
-   * const client = new MinerU(); // no token needed for flash mode
-   * const result = await client.flashExtract("report.pdf");
-   * console.log(result.markdown);
-   * ```
-   */
   async flashExtract(
     source: string,
     options: FlashExtractOptions = {},
   ): Promise<ExtractResult> {
-    const { language = "ch", pageRange, timeout = 300 } = options;
+    const { language = "ch", pageRange, timeout = DEFAULT_TIMEOUT_POLL_SINGLE } = options;
 
     let taskId: string;
     if (isUrl(source)) {
