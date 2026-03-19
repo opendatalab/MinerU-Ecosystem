@@ -1,0 +1,28 @@
+FROM golang:1.21
+
+ARG SDK_REPO
+ARG LDFLAGS
+ARG TARGETS="verify"
+
+ENV GOPROXY=https://goproxy.cn,direct
+
+RUN git clone ${SDK_REPO} /mineru-open-sdk-go
+
+WORKDIR /src
+COPY . .
+
+RUN if [ "$TARGETS" = "verify" ]; then \
+      go build ./... && go vet ./... ; \
+    else \
+      mkdir -p /output && \
+      for target in $TARGETS; do \
+        os=$(echo $target | cut -d/ -f1) ; \
+        arch=$(echo $target | cut -d/ -f2) ; \
+        ext="" ; \
+        if [ "$os" = "windows" ]; then ext=".exe"; fi ; \
+        echo "Building ${os}/${arch}..." ; \
+        CGO_ENABLED=0 GOOS=$os GOARCH=$arch \
+          go build -ldflags="${LDFLAGS}" \
+          -o /output/mineru-open-api-cli-${os}-${arch}${ext} || exit 1 ; \
+      done ; \
+    fi
