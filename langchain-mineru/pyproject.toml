@@ -31,4 +31,4 @@ module-name = "langchain_mineru"
 module-root = ""
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests/unit_tests"]
