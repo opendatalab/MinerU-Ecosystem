@@ -160,7 +160,7 @@ sdk:typescript:release:
     - cd sdk/typescript
 
     # 用 tag 版本覆盖 package.json 中的 version
-    - npm version ${VERSION} --no-git-tag-version
+    - npm version ${VERSION} --no-git-tag-version --allow-same-version
     - cat package.json | grep '"version"'
 
     # 构建 + 发布
