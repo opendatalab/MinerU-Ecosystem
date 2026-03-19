@@ -9,7 +9,6 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![MinerU](https://img.shields.io/badge/Powered%20by-MinerU-orange)](https://github.com/opendatalab/MinerU)
 [![Online](https://img.shields.io/badge/Online-mineru.net-purple)](https://mineru.net)
-[![API Docs](https://img.shields.io/badge/API%20Docs-mineru.net-green)](https://mineru.net/apiManage/docs)
 
 [English](README.md) | [中文](README.zh-CN.md)
 
@@ -32,7 +31,6 @@ MinerU-Ecosystem/
 │   ├── python/           #   Python SDK
 │   ├── go/               #   Go SDK
 │   └── typescript/       #   TypeScript SDK
-├── langchain-mineru/     # LangChain RAG 集成插件
 ├── mcp_server/           # Model Context Protocol 服务器（Python）
 └── skills/               # AI 智能体技能（Claude Code、OpenClaw 等）
 ```
@@ -62,24 +60,24 @@ MinerU-Ecosystem/
 **Windows (PowerShell)**
 
 ```powershell
-irm https://cdn-mineru.openxlab.org.cn/open-api-cli/install/install.ps1 | iex
+irm https://cdn-mineru.openxlab.org.cn/open-api-cli/install.ps1 | iex
 ```
 
 **Linux / macOS (Shell)**
 
 ```bash
-curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install/install.sh | sh
+curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
 ```
 
 #### 使用示例
 
-**1. 极速模式（Flash Extract — 免登录，极速，仅 Markdown）**
+**1. Agent 轻量解析（免登录，极速，仅 Markdown）**
 
 ```bash
 mineru-open-api flash-extract 报告.pdf
 ```
 
-**2. 全功能模式（Full Feature Extract — 需登录）**
+**2. 精准解析（需登录）**
 
 ```bash
 # 首次运行请先配置 Token（或设置 MINERU_TOKEN 环境变量）
@@ -123,7 +121,7 @@ pip install mineru-open-sdk
 
 #### 使用示例
 
-**1. 极速模式（Flash Extract — 免登录，仅 Markdown）**
+**1. Agent 轻量解析（免登录，仅 Markdown）**
 
 适合快速预览。无需配置 Token。
 
@@ -137,7 +135,7 @@ result = client.flash_extract("https://cdn-mineru.openxlab.org.cn/demo/example.p
 print(result.markdown)
 ```
 
-**2. 全功能模式（Full Feature Extract — 需登录）**
+**2. 精准解析（需登录）**
 
 支持超大文件、丰富的资产（图片/表格）及多种输出格式。
 
@@ -154,44 +152,16 @@ print(result.images)  # 获取提取出的图片列表
 
 多语言 SDK 同样可用：**[Go](sdk/go/)** | **[TypeScript](sdk/typescript/)**，详见 [`sdk/`](sdk/) 目录。
 
-### LangChain 集成 (`langchain-mineru/`)
-
-基于 MinerU 的 [LangChain](https://www.langchain.com/) 文档加载器和 RAG 插件，支持文档加载与解析、向量存储集成及无缝 RAG 工作流。
-
-#### 安装
-
-```bash
-pip install langchain-mineru
-```
-
-#### 使用示例
-
-```python
-from langchain_mineru import MinerULoader
-
-loader = MinerULoader(
-    source="report.pdf",
-    split_pages=True,
-)
-
-docs = loader.load()
-for doc in docs:
-    print(f"Page {doc.metadata['page']}: {doc.page_content[:200]}")
-```
-
-更多使用示例请参考 [`langchain-mineru/`](langchain-mineru/) 目录。
-
 ### MCP 服务器 (`mcp_server/`)
 
 基于 Python 的 [Model Context Protocol](https://modelcontextprotocol.io/) 服务器实现，允许 MCP 兼容的 AI 客户端（如 Claude）将 MinerU 文档解析作为工具使用。
 
 ### AI 智能体技能 (`skills/`)
 
-为 AI 编程智能体和平台预构建的技能：
-
-- **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** — 文档提取与分析技能
-- **[OpenClaw](https://openclawskills.org/)** — 可扩展的文档解析技能
-- 其他支持技能/工具接口的 AI 智能体
+- **[OpenClaw](https://openclaw.com)** — `在 clawhub 查看skills详情`
+- **[lobeChat](待定)** — 通过 SKILL.md 兼容
+- **[CDN Link](https://webpub.shlab.tech/MinerU/skills/api/0.1.0.zip)** — 一键下载skill资源包
+- 其他支持技能/工具接口的 AI 智能体（如 zeroclaw）
 
 ## 📚 相关文档
 
