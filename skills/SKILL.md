@@ -62,7 +62,7 @@ mineru-open-api version
 |-------|-------|
 | File size | Max **10 MB** |
 | Page count | Max **20 pages** |
-| Supported types | PDF, Images (png/jpg/jpeg/jp2/webp/gif/bmp), Doc/Docx, PPT/PPTx |
+| Supported types | PDF, Images (png/jpg/jpeg/jp2/webp/gif/bmp), Docx, PPTx |
 | IP rate limit | Per-minute and per-hour request caps (HTTP 429 when exceeded) |
 
 When any limit is exceeded, the agent should suggest switching to `extract` with a token (create at https://mineru.net/apiManage/token), which has significantly higher limits.
@@ -95,8 +95,10 @@ Token resolution order: `--token` flag > `MINERU_TOKEN` env > `~/.mineru/config.
 |--------|:-:|:-:|
 | PDF (`.pdf`) | Yes | Yes |
 | Images (`.png`, `.jpg`, `.jpeg`, `.jp2`, `.webp`, `.gif`, `.bmp`) | Yes | Yes |
-| Word (`.doc`, `.docx`) | Yes | Yes |
-| PowerPoint (`.ppt`, `.pptx`) | Yes | Yes |
+| Word (`.docx`) | Yes | Yes |
+| Word (`.doc`) | No | Yes |
+| PowerPoint (`.pptx`) | Yes | Yes |
+| PowerPoint (`.ppt`) | No | Yes |
 | HTML (`.html`) | No | Yes |
 | URLs (remote files) | Yes | Yes |
 
@@ -278,7 +280,7 @@ When using this skill on behalf of the user:
 - **Quote file paths** that contain spaces or special characters with double quotes in commands. Example: `mineru-open-api extract "report 01.pdf"`, NOT `mineru-open-api extract report 01.pdf`.
 - **Don't run commands blindly on errors** — if the user asks "提取失败了怎么办", explain the exit code and troubleshooting steps instead of re-running the command.
 - **Installation questions** ("mineru 怎么安装") should be answered with the install instructions, not by running `mineru-open-api extract`.
-- **DOCX as input is supported** — if the user asks "这个 Word 文档能转 Markdown 吗", use `mineru-open-api extract file.docx` or `mineru-open-api flash-extract file.docx`.
+- **DOCX as input is supported** — if the user asks "这个 Word 文档能转 Markdown 吗", use `mineru-open-api extract file.docx` or `mineru-open-api flash-extract file.docx`. Note: `.doc` format is only supported by `extract`, not `flash-extract`.
 - **Table extraction** — tables are only recognized by `extract` (not `flash-extract`). If the user mentions tables, use `extract`.
 - For **stdout mode** (no `-o`), only one text format can be output at a time. If the user wants multiple formats, suggest adding `-o`.
 
