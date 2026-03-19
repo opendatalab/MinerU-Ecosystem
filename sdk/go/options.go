@@ -10,6 +10,13 @@ import (
 // ---------------------------------------------------------------------------
 
 const (
+	// DefaultBaseURL is the default standard MinerU API base URL.
+	DefaultBaseURL = "https://mineru.net/api/v4"
+
+	// DefaultFlashBaseURL is the default flash MinerU API base URL.
+	// TODO(release): 上线前换回 https://mineru.net/api/v1/agent
+	DefaultFlashBaseURL = "https://staging.mineru.org.cn/api/v1/agent"
+
 	// DefaultRequestTimeout is the timeout for a single HTTP request (e.g., upload, query).
 	DefaultRequestTimeout = 60 * time.Second
 
@@ -22,7 +29,8 @@ const (
 
 func defaultClientConfig() clientConfig {
 	return clientConfig{
-		baseURL: "https://mineru.net/api/v4",
+		baseURL:      DefaultBaseURL,
+		flashBaseURL: DefaultFlashBaseURL,
 		// This is the HTTP connection timeout for single requests.
 		httpClient: &http.Client{Timeout: DefaultRequestTimeout},
 	}
@@ -33,8 +41,9 @@ func defaultClientConfig() clientConfig {
 // ---------------------------------------------------------------------------
 
 type clientConfig struct {
-	baseURL    string
-	httpClient *http.Client
+	baseURL      string
+	flashBaseURL string
+	httpClient   *http.Client
 }
 
 // ClientOption configures the [Client] constructor.
@@ -43,6 +52,11 @@ type ClientOption func(*clientConfig)
 // WithBaseURL overrides the default API base URL (for private deployments).
 func WithBaseURL(url string) ClientOption {
 	return func(c *clientConfig) { c.baseURL = url }
+}
+
+// WithFlashBaseURL overrides the default flash API base URL.
+func WithFlashBaseURL(url string) ClientOption {
+	return func(c *clientConfig) { c.flashBaseURL = url }
 }
 
 // WithHTTPClient provides a custom *http.Client for all API requests.

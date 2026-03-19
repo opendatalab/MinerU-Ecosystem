@@ -54,7 +54,7 @@ func New(token string, opts ...ClientOption) (*Client, error) {
 	}
 	return &Client{
 		api:      &apiClient{httpClient: cfg.httpClient, baseURL: cfg.baseURL, token: token, source: defaultSource},
-		flashApi: &flashApiClient{httpClient: cfg.httpClient, baseURL: defaultFlashBaseURL, source: defaultSource},
+		flashApi: &flashApiClient{httpClient: cfg.httpClient, baseURL: cfg.flashBaseURL, source: defaultSource},
 		source:   defaultSource,
 	}, nil
 }

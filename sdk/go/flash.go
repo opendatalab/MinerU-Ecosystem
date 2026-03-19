@@ -19,12 +19,8 @@ func NewFlash(opts ...ClientOption) *Client {
 	for _, opt := range opts {
 		opt(&cfg)
 	}
-	flashBase := defaultFlashBaseURL
-	if cfg.baseURL != defaultClientConfig().baseURL {
-		flashBase = cfg.baseURL
-	}
 	return &Client{
-		flashApi: &flashApiClient{httpClient: cfg.httpClient, baseURL: flashBase, source: defaultSource},
+		flashApi: &flashApiClient{httpClient: cfg.httpClient, baseURL: cfg.flashBaseURL, source: defaultSource},
 		source:   defaultSource,
 	}
 }

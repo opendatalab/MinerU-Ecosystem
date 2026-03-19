@@ -94,7 +94,7 @@ func TestNew_FlashExtractAlsoWorks(t *testing.T) {
 // ═══════════════════════════════════════════════════════════════════
 
 func newFlashTestClient() *mineru.Client {
-	return mineru.NewFlash(mineru.WithBaseURL(flashTestBaseURL))
+	return mineru.NewFlash(mineru.WithFlashBaseURL(flashTestBaseURL))
 }
 
 func flashExtractOrSkip(t *testing.T, c *mineru.Client, source string, opts ...mineru.FlashExtractOption) *mineru.ExtractResult {
