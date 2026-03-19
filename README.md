@@ -39,7 +39,7 @@ MinerU-Ecosystem/
 
 All components in this repository support **both** API modes:
 
-| Comparison | 🎯 Standard API | ⚡ Quick Parse API (Agent-Oriented) |
+| Comparison | 🎯 Precision Extract API | ⚡ Quick Parse API (Agent-Oriented) |
 |---|---|---|
 | Auth | ✅ Token required | ❌ Not required (IP rate-limited) |
 | Model Versions | `pipeline` (default) / `vlm` (recommended) / `MinerU-HTML` | Fixed lightweight pipeline model |
@@ -79,7 +79,7 @@ Great for quick previews. No Token needed. Limit: 10 MB / 20 pages per file.
 mineru-open-api flash-extract report.pdf
 ```
 
-**2. Full Feature Extract (login required)**
+**2. Precision Extract (login required)**
 
 Supports large documents (200 MB / 600 pages), preserves layout and resources, multiple output formats.
 
@@ -159,6 +159,24 @@ Multi-language SDKs are also available: **[Go](sdk/go/)** | **[TypeScript](sdk/t
 ### MCP Server (`mcp_server/`)
 
 A [Model Context Protocol](https://modelcontextprotocol.io/) server implementation in Python, allowing MCP-compatible AI clients (such as Claude) to use MinerU's document parsing as a tool.
+
+#### Configuration
+
+**Using `uvx` (recommended — always runs the latest version):**
+
+```json
+{
+  "mcpServers": {
+    "mineru": {
+      "command": "uvx",
+      "args": ["mineru-open-mcp"],
+      "env": {
+        "MINERU_API_TOKEN": "your_key_here"
+      }
+    }
+  }
+}
+```
 
 ### AI Agent Skills (`skills/`)
 

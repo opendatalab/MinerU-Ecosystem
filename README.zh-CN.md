@@ -156,6 +156,24 @@ print(result.images)  # 获取提取出的图片列表
 
 基于 Python 的 [Model Context Protocol](https://modelcontextprotocol.io/) 服务器实现，允许 MCP 兼容的 AI 客户端（如 Claude）将 MinerU 文档解析作为工具使用。
 
+#### 配置示例
+
+**使用 `uvx`（推荐 — 始终运行最新版本）：**
+
+```json
+{
+  "mcpServers": {
+    "mineru": {
+      "command": "uvx",
+      "args": ["mineru-open-mcp"],
+      "env": {
+        "MINERU_API_TOKEN": "your_key_here"
+      }
+    }
+  }
+}
+```
+
 ### AI 智能体技能 (`skills/`)
 
 - **[OpenClaw](https://openclaw.com)** — `在 clawhub 查看skills详情`
