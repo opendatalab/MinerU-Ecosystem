@@ -1,15 +1,17 @@
 FROM golang:1.21
 
-ARG SDK_REPO
 ARG LDFLAGS
 ARG TARGETS="verify"
 
 ENV GOPROXY=https://goproxy.cn,direct
 
-RUN git clone ${SDK_REPO} /mineru-open-sdk-go
+WORKDIR /workspace
 
-WORKDIR /src
-COPY . .
+# Copy the entire monorepo (sdk/go + cli)
+COPY sdk/go/ /workspace/sdk/go/
+COPY cli/    /workspace/cli/
+
+WORKDIR /workspace/cli
 
 RUN if [ "$TARGETS" = "verify" ]; then \
       go build ./... && go vet ./... ; \
