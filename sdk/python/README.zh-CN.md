@@ -1,7 +1,7 @@
 # MinerU Open API SDK (Python)
 
 [![PyPI version](https://badge.fury.io/py/mineru-open-sdk.svg)](https://badge.fury.io/py/mineru-open-sdk)
-[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/opendatalab/MinerU-Ecosystem/sdk/go-python/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/opendatalab/MinerU-Ecosystem/blob/main/LICENSE)
 
 [English README](./README.md)
 
@@ -14,7 +14,8 @@
 - **完全免费**：文档提取服务没有任何隐藏费用。
 - **极速模式 (No Auth)**：无需 API Token 即可立即提取。
 - **全功能模式**：提供完整的版式保留、图片、表格及公式支持。
-- **异步与批量**：原生支持高效处理成百上千份文档。
+- **批量与轮询原语**：既提供开箱即用的阻塞式接口，也提供适合异步工作流的 submit/query 接口。
+- **内置保存辅助方法**：可直接保存 Markdown、HTML、LaTeX、DOCX，或解压完整结果包。
 
 ---
 
@@ -55,6 +56,53 @@ print(result.images) # 获取提取出的图片列表
 
 ---
 
+## 🧩 支持的公开接口
+
+### Client 生命周期
+
+- `MinerU(token: str | None = None, base_url: str = ..., flash_base_url: str | None = None)`
+- `client.close()`
+- `client.set_source("your-app")`
+- 支持上下文管理器：`with MinerU(...) as client:`
+
+### 阻塞式解析接口
+
+- `client.extract(...) -> ExtractResult`
+- `client.extract_batch(...) -> Iterator[ExtractResult]`
+- `client.crawl(...) -> ExtractResult`
+- `client.crawl_batch(...) -> Iterator[ExtractResult]`
+- `client.flash_extract(...) -> ExtractResult`
+
+### 提交 / 查询接口
+
+- `client.submit(...) -> str`
+- `client.submit_batch(...) -> str`
+- `client.get_batch(batch_id) -> list[ExtractResult]`
+- `client.get_task(task_id) -> ExtractResult`
+
+### 结果保存辅助方法
+
+- `result.save_markdown(path, with_images=True)`
+- `result.save_docx(path)`
+- `result.save_html(path)`
+- `result.save_latex(path)`
+- `result.save_all(dir)`
+- `image.save(path)`
+
+### 常用结果字段
+
+- `result.state`
+- `result.progress`
+- `result.markdown`
+- `result.images`
+- `result.content_list`
+- `result.docx`
+- `result.html`
+- `result.latex`
+- `result.task_id`
+
+---
+
 ## 📊 模式对比
 
 | 特性 | 极速模式 (Flash) | 全功能模式 (Full Feature) |
@@ -66,6 +114,49 @@ print(result.images) # 获取提取出的图片列表
 | **支持格式** | PDF, 图片, Docx, PPTx, Excel | PDF, 图片, Doc/x, Ppt/x, Html |
 | **内容完整度** | 仅文本 (图片、表格、公式显示占位符) | 完整资源 (图片、表格、公式全部保留) |
 | **输出格式** | Markdown | MD, Docx, LaTeX, HTML, JSON |
+
+---
+
+## ⚙️ 默认行为与参数说明
+
+### `MinerU(...)`
+
+| 参数 | 默认值 | 省略时行为 |
+| :--- | :--- | :--- |
+| `token` | `None` | 若未传入，则读取环境变量 `MINERU_TOKEN` |
+| `base_url` | `https://mineru.net/api/v4` | 标准 API 的默认地址 |
+| `flash_base_url` | SDK 内置默认 flash 地址 | 可用于测试或私有部署 |
+
+如果既没有传入 `token`，环境变量 `MINERU_TOKEN` 也未设置，则 client 进入 **flash-only mode**：`flash_extract()` 可用，其他需要鉴权的方法会抛出 `NoAuthClientError`。
+
+### 全功能接口
+
+这些默认值适用于 `extract()`、`extract_batch()`、`submit()`、`submit_batch()`，`crawl()` / `crawl_batch()` 也会间接继承其中的大部分行为。
+
+| 参数 | 默认值 | 省略时行为 |
+| :--- | :--- | :--- |
+| `model` | `None` | 自动推断：`.html` / `.htm` 走 `"html"`，其余默认 `"vlm"` |
+| `ocr` | `False` | 默认关闭 OCR |
+| `formula` | `True` | 默认开启公式识别 |
+| `table` | `True` | 默认开启表格识别 |
+| `language` | `"ch"` | 默认中文；只有修改时才显式传给 API |
+| `pages` | `None` | 默认处理完整文档 |
+| `extra_formats` | `None` | 仅返回默认的 Markdown / JSON 结果 |
+| `timeout` | 单任务 `300` 秒 | `extract()` / `crawl()` 的总轮询超时 |
+| `timeout` | 批量 `1800` 秒 | `extract_batch()` / `crawl_batch()` 的总轮询超时 |
+
+### Flash 模式
+
+| 参数 | 默认值 | 省略时行为 |
+| :--- | :--- | :--- |
+| `language` | `"ch"` | 默认中文 |
+| `page_range` | `None` | 默认处理 flash API 允许的完整页范围 |
+| `timeout` | `300` 秒 | 总轮询超时 |
+
+### `crawl()` / `crawl_batch()`
+
+- `crawl()` 等价于 `extract(url, model="html", ...)`
+- `crawl_batch()` 等价于 `extract_batch(urls, model="html", ...)`
 
 ---
 
@@ -88,6 +179,15 @@ result = client.extract(
 result.save_all("./output/") # 保存 Markdown 和所有相关资源
 ```
 
+### 上下文管理器
+```python
+from mineru import MinerU
+
+with MinerU("your-api-token") as client:
+    result = client.extract("./论文.pdf")
+    print(result.markdown)
+```
+
 ### 批量处理
 ```python
 # 边处理边返回结果
@@ -103,14 +203,56 @@ print(result.markdown)
 
 ---
 
+## 🔄 `submit()` / `get_batch()` 语义说明
+
+这一组接口最容易被误用：
+
+- `submit()` 返回的是 **batch_id**
+- `submit_batch()` 返回的也是 **batch_id**
+- 因此最常见的异步流程应该是 `submit(...) -> get_batch(batch_id)`
+- `get_task(task_id)` 只适用于你已经拿到真实 `task_id` 的场景
+
+`get_task()` 更适合以下情况：
+
+- 你从其他系统拿到了 `task_id`
+- 你先调用了 `get_batch(batch_id)`，再通过其中某个 `result.task_id` 单独查询
+
+### 推荐的异步流程
+
+```python
+batch_id = client.submit("大报告.pdf")
+
+# 轮询 batch，直到第一个结果完成
+while True:
+    results = client.get_batch(batch_id)
+    result = results[0]
+    if result.state in ("done", "failed"):
+        break
+
+if result.state == "done":
+    do_something(result.markdown)
+```
+
+### 如果你确实需要 `task_id`
+
+```python
+batch_id = client.submit("大报告.pdf")
+results = client.get_batch(batch_id)
+
+task_id = results[0].task_id
+result = client.get_task(task_id)
+```
+
+---
+
 ## 🤖 AI Agent 自动化集成
 
 本 SDK 设计时充分考虑了 LLM 工作流集成。您可以通过 `result.state` 和 `result.progress` 轻松监控任务状态。
 
 ```python
-task_id = client.submit("大报告.pdf")
+batch_id = client.submit("大报告.pdf")
 # ... 稍后 ...
-result = client.get_task(task_id)
+result = client.get_batch(batch_id)[0]
 if result.state == "done":
     do_something(result.markdown)
 ```
