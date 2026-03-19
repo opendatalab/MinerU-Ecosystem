@@ -142,6 +142,7 @@ print(result.images) # 获取提取出的图片列表
 | `language` | 不设置 | 默认中文 `"ch"`（API 默认行为） |
 | `pages` | `None` | 默认处理完整文档 |
 | `extra_formats` | `None` | 仅返回默认的 Markdown / JSON 结果 |
+| `file_params` | `None` | 批量方法中的 per-file 参数覆盖。`dict[str, FileParam]`，key 为路径/URL，`FileParam` 包含 `pages`、`ocr`、`data_id` 字段 |
 | `timeout` | 单任务 `300` 秒 | `extract()` / `crawl()` 的总轮询超时 |
 | `timeout` | 批量 `1800` 秒 | `extract_batch()` / `crawl_batch()` 的总轮询超时 |
 
@@ -193,6 +194,19 @@ with MinerU("your-api-token") as client:
 # 边处理边返回结果
 for result in client.extract_batch(["a.pdf", "b.pdf", "c.pdf"]):
     print(f"{result.filename}: 已完成")
+```
+
+### 批量处理 - 为每个文件指定不同页码
+```python
+from mineru import FileParam
+
+batch_id = client.submit_batch(
+    ["a.pdf", "b.pdf"],
+    file_params={
+        "a.pdf": FileParam(pages="1-5"),
+        "b.pdf": FileParam(pages="10-20"),
+    },
+)
 ```
 
 ### 网页爬取 (Crawl)

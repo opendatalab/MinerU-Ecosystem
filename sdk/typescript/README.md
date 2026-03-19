@@ -149,6 +149,7 @@ These defaults apply to `extract()`, `submit()`, `extractBatch()`, and `submitBa
 | `language` | `undefined` | Chinese `"ch"` (API default) |
 | `pages` | `undefined` | Full document is processed. Only available on single-source `extract()` / `submit()` |
 | `extraFormats` | `undefined` | Only the default Markdown/JSON payload is returned |
+| `fileParams` | `undefined` | Per-file overrides for batch methods. Keys are paths/URLs, values are `{ pages?, ocr?, dataId? }` |
 | `timeout` | `300` seconds | Max total polling time for `extract()` / `crawl()` |
 | `timeout` | `1800` seconds | Max total polling time for `extractBatch()` / `crawlBatch()` |
 
@@ -206,6 +207,17 @@ await saveAll(result, "./output");
 for await (const result of client.extractBatch(["a.pdf", "b.pdf"])) {
   console.log(`${result.filename}: ${result.state}`);
 }
+```
+
+### Batch With Per-File Pages
+
+```typescript
+const batchId = await client.submitBatch(["a.pdf", "b.pdf"], {
+  fileParams: {
+    "a.pdf": { pages: "1-5" },
+    "b.pdf": { pages: "10-20" },
+  },
+});
 ```
 
 ### Web Crawling

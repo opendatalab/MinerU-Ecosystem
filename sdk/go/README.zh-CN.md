@@ -193,6 +193,7 @@ func main() {
 | `WithLanguage(...)` | 不设置 | 默认中文 `"ch"`（API 默认行为） |
 | `WithPages(...)` | 不设置 | 默认处理完整文档 |
 | `WithExtraFormats(...)` | 无 | 只返回默认 Markdown / JSON 结果 |
+| `WithFileParams(map)` | 无 | 批量方法中的 per-file 参数覆盖。`map[string]FileParam`，key 为路径/URL，`FileParam` 包含 `Pages`、`OCR`、`DataID` 字段 |
 
 ### `Crawl()` / `CrawlBatch()`
 
@@ -261,6 +262,17 @@ if err != nil {
 for result := range ch {
     fmt.Printf("%s: %s\n", result.Filename, result.State)
 }
+```
+
+### 批量处理 - 为每个文件指定不同页码
+
+```go
+batchID, err := client.SubmitBatch(ctx, []string{"a.pdf", "b.pdf"},
+    mineru.WithFileParams(map[string]mineru.FileParam{
+        "a.pdf": {Pages: "1-5"},
+        "b.pdf": {Pages: "10-20"},
+    }),
+)
 ```
 
 ### 网页抓取

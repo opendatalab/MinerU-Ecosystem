@@ -149,6 +149,7 @@ console.log(result.images);
 | `language` | `undefined` | 默认中文 `"ch"`（API 默认行为） |
 | `pages` | `undefined` | 默认处理完整文档。仅单任务 `extract()` / `submit()` 支持 |
 | `extraFormats` | `undefined` | 只返回默认 Markdown / JSON 结果 |
+| `fileParams` | `undefined` | 批量方法中的 per-file 参数覆盖。key 为路径/URL，value 为 `{ pages?, ocr?, dataId? }` |
 | `timeout` | `300` 秒 | `extract()` / `crawl()` 的总轮询超时 |
 | `timeout` | `1800` 秒 | `extractBatch()` / `crawlBatch()` 的总轮询超时 |
 
@@ -206,6 +207,17 @@ await saveAll(result, "./output");
 for await (const result of client.extractBatch(["a.pdf", "b.pdf"])) {
   console.log(`${result.filename}: ${result.state}`);
 }
+```
+
+### 批量处理 - 为每个文件指定不同页码
+
+```typescript
+const batchId = await client.submitBatch(["a.pdf", "b.pdf"], {
+  fileParams: {
+    "a.pdf": { pages: "1-5" },
+    "b.pdf": { pages: "10-20" },
+  },
+});
 ```
 
 ### 网页抓取
