@@ -417,4 +417,4 @@ curl -L https://example.com/report.pdf | mineru-open-api extract --stdin --stdin
 ## 🔗 相关链接
 
 - [官方网站](https://mineru.net)
-- [API 文档](https://mineru.net/docs)
+- [API 文档](https://mineru.net/apiManage/docs)

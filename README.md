@@ -9,7 +9,6 @@ Empowering developers and AI agents with seamless document parsing capabilities.
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![MinerU](https://img.shields.io/badge/Powered%20by-MinerU-orange)](https://github.com/opendatalab/MinerU)
 [![Online](https://img.shields.io/badge/Online-mineru.net-purple)](https://mineru.net)
-[![API Docs](https://img.shields.io/badge/API%20Docs-mineru.net-green)](https://mineru.net/apiManage/docs)
 
 [English](README.md) | [中文](README.zh-CN.md)
 
@@ -32,7 +31,6 @@ MinerU-Ecosystem/
 │   ├── python/           #   Python SDK
 │   ├── go/               #   Go SDK
 │   └── typescript/       #   TypeScript SDK
-├── langchain-mineru/     # LangChain RAG integration plugin
 ├── mcp_server/           # Model Context Protocol server (Python)
 └── skills/               # AI agent skills (Claude Code, OpenClaw, etc.)
 ```
@@ -62,7 +60,7 @@ A fast command-line tool for parsing documents directly from your terminal. Supp
 **Windows (PowerShell)**
 
 ```powershell
-irm https://cdn-mineru.openxlab.org.cn/open-api-cli/install/install.ps1 | iex
+irm https://cdn-mineru.openxlab.org.cn/open-api-cli/install.ps1 | iex
 ```
 
 **Linux / macOS (Shell)**
@@ -141,7 +139,7 @@ result = client.flash_extract("https://cdn-mineru.openxlab.org.cn/demo/example.p
 print(result.markdown)
 ```
 
-**2. Full Feature Extract (login required)**
+**2. Precision Extract (login required)**
 
 Supports large files, rich assets (images/tables), and multiple output formats.
 
@@ -158,44 +156,21 @@ print(result.images)  # Get the list of extracted images
 
 Multi-language SDKs are also available: **[Go](sdk/go/)** | **[TypeScript](sdk/typescript/)**. See the [`sdk/`](sdk/) directory for details.
 
-### LangChain Integration (`langchain-mineru/`)
-
-A [LangChain](https://www.langchain.com/) document loader and RAG plugin powered by MinerU, enabling document loading, vector store integration, and seamless RAG workflows.
-
-#### Installation
-
-```bash
-pip install langchain-mineru
-```
-
-#### Usage
-
-```python
-from langchain_mineru import MinerULoader
-
-loader = MinerULoader(
-    source="report.pdf",
-    split_pages=True,
-)
-
-docs = loader.load()
-for doc in docs:
-    print(f"Page {doc.metadata['page']}: {doc.page_content[:200]}")
-```
-
-For more examples, see the [`langchain-mineru/`](langchain-mineru/) directory.
-
 ### MCP Server (`mcp_server/`)
 
 A [Model Context Protocol](https://modelcontextprotocol.io/) server implementation in Python, allowing MCP-compatible AI clients (such as Claude) to use MinerU's document parsing as a tool.
 
 ### AI Agent Skills (`skills/`)
 
-Pre-built skills for AI coding agents and platforms:
+Pre-built skill for AI coding agents, enabling document extraction directly within agent workflows. The skill is wrapper by the `mineru-open-api` CLI and provides:
 
-- **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** — Document extraction and analysis skill
-- **[OpenClaw](https://openclawskills.org/)** — Extensible document parsing skill
-- Other AI agents that support skill/tool interfaces
+#### Skills Download
+
+- **[OpenClaw](https://openclaw.com)** — View skill details on ClawHub
+- **[LobeChat](TBD)** — Compatible via SKILL.md
+- **[CDN Link](https://webpub.shlab.tech/MinerU/skills/api/0.1.0.zip)** — One-click download of the skill package
+- Other AI agents that support skill/tool interfaces (e.g. ZeroClaw)
+
 
 ## 📚 Documentation
 
