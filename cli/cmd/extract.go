@@ -158,20 +158,19 @@ func runStdinExtract(client *mineru.Client, opts []mineru.ExtractOption) error {
 		return fmt.Errorf("no data received from stdin")
 	}
 
-	tmpFile, err := os.CreateTemp("", "mineru-stdin-*"+filepath.Ext(extractStdinName))
+	tmpDir, err := os.MkdirTemp("", "mineru-stdin-*")
 	if err != nil {
-		return fmt.Errorf("failed to create temp file: %w", err)
+		return fmt.Errorf("failed to create temp dir: %w", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer os.RemoveAll(tmpDir)
 
-	if _, err := tmpFile.Write(data); err != nil {
-		tmpFile.Close()
+	tmpPath := filepath.Join(tmpDir, extractStdinName)
+	if err := os.WriteFile(tmpPath, data, 0o600); err != nil {
 		return fmt.Errorf("failed to write temp file: %w", err)
 	}
-	tmpFile.Close()
 
 	formats := parseFormats(extractFormat)
-	return runSingleExtract(client, tmpFile.Name(), formats, opts)
+	return runSingleExtract(client, tmpPath, formats, opts)
 }
 
 // ── batch ──
