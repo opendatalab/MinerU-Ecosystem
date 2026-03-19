@@ -1,0 +1,173 @@
+variables:
+  BINARY_NAME: mineru-open-api-cli
+  OSS_PATH: open-api-cli
+
+stages:
+  - build
+  - test
+  - release
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  CLI
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# cli/ 或 sdk/go/ 有变更时编译验证
+cli:build:
+  stage: build
+  tags:
+    - ecs
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - changes:
+        - cli/**
+        - sdk/go/**
+  script:
+    - >
+      docker build --network host
+      --build-arg TARGETS="verify"
+      -f cli/Dockerfile.ci .
+
+# 打 cli/v* tag 时交叉编译 + 上传 OSS
+cli:release:
+  stage: release
+  tags:
+    - ecs
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^cli\/v/
+  script:
+    - export VERSION=${CI_COMMIT_TAG#cli/}
+    - >
+      export LDFLAGS="-s -w
+      -X github.com/opendatalab/MinerU-Ecosystem/cli/cmd.version=${VERSION}
+      -X github.com/opendatalab/MinerU-Ecosystem/cli/cmd.commit=${CI_COMMIT_SHORT_SHA}
+      -X github.com/opendatalab/MinerU-Ecosystem/cli/cmd.date=${CI_PIPELINE_CREATED_AT}"
+
+    # 交叉编译
+    - >
+      docker build --network host
+      --build-arg LDFLAGS="${LDFLAGS}"
+      --build-arg TARGETS="linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64"
+      -t ${BINARY_NAME}:build
+      -f cli/Dockerfile.ci .
+
+    # 提取二进制
+    - docker rm -f extract 2>/dev/null || true
+    - docker create --name extract ${BINARY_NAME}:build
+    - docker cp extract:/output/ ./output/
+    - docker rm extract
+    - ls -la ./output/
+
+    # 上传 OSS
+    - wget -qO ossutil https://gosspublic.alicdn.com/ossutil/1.7.18/ossutil64
+    - chmod +x ossutil
+    - ./ossutil config -e ${OSS_ENDPOINT} -i ${OSS_ACCESS_KEY_ID} -k ${OSS_ACCESS_KEY_SECRET}
+    - ./ossutil cp ./output/${BINARY_NAME}-linux-amd64       oss://${OSS_BUCKET}/${OSS_PATH}/${VERSION}/ -f --acl public-read
+    - ./ossutil cp ./output/${BINARY_NAME}-linux-arm64       oss://${OSS_BUCKET}/${OSS_PATH}/${VERSION}/ -f --acl public-read
+    - ./ossutil cp ./output/${BINARY_NAME}-darwin-amd64      oss://${OSS_BUCKET}/${OSS_PATH}/${VERSION}/ -f --acl public-read
+    - ./ossutil cp ./output/${BINARY_NAME}-darwin-arm64      oss://${OSS_BUCKET}/${OSS_PATH}/${VERSION}/ -f --acl public-read
+    - ./ossutil cp ./output/${BINARY_NAME}-windows-amd64.exe oss://${OSS_BUCKET}/${OSS_PATH}/${VERSION}/ -f --acl public-read
+    - ./ossutil cp ./output/${BINARY_NAME}-windows-arm64.exe oss://${OSS_BUCKET}/${OSS_PATH}/${VERSION}/ -f --acl public-read
+    - ./ossutil cp ./output/${BINARY_NAME}-linux-amd64       oss://${OSS_BUCKET}/${OSS_PATH}/latest/ -f --acl public-read
+    - ./ossutil cp ./output/${BINARY_NAME}-linux-arm64       oss://${OSS_BUCKET}/${OSS_PATH}/latest/ -f --acl public-read
+    - ./ossutil cp ./output/${BINARY_NAME}-darwin-amd64      oss://${OSS_BUCKET}/${OSS_PATH}/latest/ -f --acl public-read
+    - ./ossutil cp ./output/${BINARY_NAME}-darwin-arm64      oss://${OSS_BUCKET}/${OSS_PATH}/latest/ -f --acl public-read
+    - ./ossutil cp ./output/${BINARY_NAME}-windows-amd64.exe oss://${OSS_BUCKET}/${OSS_PATH}/latest/ -f --acl public-read
+    - ./ossutil cp ./output/${BINARY_NAME}-windows-arm64.exe oss://${OSS_BUCKET}/${OSS_PATH}/latest/ -f --acl public-read
+    - ./ossutil cp cli/install/install.sh  oss://${OSS_BUCKET}/${OSS_PATH}/install.sh  -f --acl public-read --meta Content-Type:text/plain
+    - ./ossutil cp cli/install/install.ps1 oss://${OSS_BUCKET}/${OSS_PATH}/install.ps1 -f --acl public-read --meta Content-Type:text/plain
+    - echo ${VERSION} > VERSION
+    - ./ossutil cp VERSION oss://${OSS_BUCKET}/${OSS_PATH}/VERSION -f --acl public-read --meta Content-Type:text/plain
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  Python SDK
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# sdk/python/ 有变更时运行测试
+sdk:python:test:
+  stage: test
+  tags:
+    - ecs
+  image: python:3.12-slim
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - changes:
+        - sdk/python/**
+  script:
+    - cd sdk/python
+    - pip install -e ".[dev]" 2>/dev/null || pip install -e .
+    - python -c "import mineru; print('import ok, version', mineru.__version__ if hasattr(mineru, '__version__') else 'n/a')"
+
+# 打 sdk/python/v* tag 时构建并发布到 PyPI
+sdk:python:release:
+  stage: release
+  tags:
+    - ecs
+  image: python:3.12-slim
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^sdk\/python\/v/
+  script:
+    - export VERSION=${CI_COMMIT_TAG#sdk/python/v}
+    - cd sdk/python
+
+    # 用 tag 版本覆盖 pyproject.toml 中的 version
+    - sed -i "s/^version = .*/version = \"${VERSION}\"/" pyproject.toml
+    - cat pyproject.toml | grep "^version"
+
+    # 构建
+    - pip install build twine
+    - python -m build
+    - ls -la dist/
+
+    # 发布到 PyPI
+    - twine upload dist/* --non-interactive
+  environment:
+    name: pypi
+    url: https://pypi.org/project/mineru-open-sdk/
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  TypeScript SDK
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# sdk/typescript/ 有变更时运行构建 + 类型检查
+sdk:typescript:test:
+  stage: test
+  tags:
+    - ecs
+  image: node:20-slim
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - changes:
+        - sdk/typescript/**
+  script:
+    - cd sdk/typescript
+    - npm ci
+    - npm run lint
+    - npm run build
+
+# 打 sdk/typescript/v* tag 时构建并发布到 npm
+sdk:typescript:release:
+  stage: release
+  tags:
+    - ecs
+  image: node:20-slim
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^sdk\/typescript\/v/
+  script:
+    - export VERSION=${CI_COMMIT_TAG#sdk/typescript/v}
+    - cd sdk/typescript
+
+    # 用 tag 版本覆盖 package.json 中的 version
+    - npm version ${VERSION} --no-git-tag-version
+    - cat package.json | grep '"version"'
+
+    # 构建 + 发布
+    - npm ci
+    - npm run build
+    - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+    - npm publish --access public
+  environment:
+    name: npm
+    url: https://www.npmjs.com/package/mineru-open-sdk
