@@ -16,8 +16,9 @@ It is designed for:
 ## 🚀 Key Features
 
 - **Zero dependency**: single binary, no Python/Node.js runtime required
-- **Auth and no-auth modes**: use `extract`/`crawl` with token, or `flash-extract` without token
-- **Structured automation behavior**: content goes to `stdout`, progress and errors go to `stderr`
+- **Agent Friendly**: clean stdout/stderr separation, easy to pipe and automate
+- **No Auth Extract**: use `flash-extract` for instant results without any API token
+- **Full Featured**: use `extract` and `crawl` with a token for richer outputs and larger workloads
 - **Batch input support**: positional args, `--list`, and `--stdin-list`
 - **Stdin support for file content**: pipe bytes into `extract --stdin`
 

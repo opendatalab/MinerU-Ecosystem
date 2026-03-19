@@ -15,8 +15,9 @@
 ## 🚀 核心特性
 
 - **零依赖**：单二进制文件，无需 Python/Node.js 运行时
-- **支持登录与免登录两种模式**：`extract`/`crawl` 需要 Token，`flash-extract` 不需要
-- **自动化友好**：正文输出到 `stdout`，状态和报错输出到 `stderr`
+- **Agent 友好**：严格分离 `stdout` / `stderr`，便于管道和自动化集成
+- **免登录解析**：使用 `flash-extract` 即可获得结果，无需 API Token
+- **全功能模式**：使用 `extract` 和 `crawl` 搭配 Token，获得更丰富的输出和更完整的能力
 - **批量输入**：支持位置参数、`--list` 和 `--stdin-list`
 - **支持标准输入文件流**：可通过 `extract --stdin` 从管道读取文件字节
 
