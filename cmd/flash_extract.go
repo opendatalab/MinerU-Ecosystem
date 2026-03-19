@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/OpenDataLab/mineru-open-cli/internal/output"
-	mineru "github.com/OpenDataLab/mineru-open-sdk"
+	"github.com/opendatalab/MinerU-Ecosystem/cli/internal/output"
+	mineru "github.com/opendatalab/MinerU-Ecosystem/sdk/go"
 	"github.com/spf13/cobra"
 )
 

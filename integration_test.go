@@ -304,7 +304,7 @@ func TestCrawlBatchToDir(t *testing.T) {
 	outDir := t.TempDir()
 
 	url1 := "https://mineru.net"
-	url2 := "https://opendatalab.com"
+	url2 := "https://mineru.net"
 
 	r := run(t, "crawl", url1, url2, "-o", outDir, "--token", token)
 	if r.exitCode != 0 {

@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/OpenDataLab/mineru-open-cli/internal/config"
-	"github.com/OpenDataLab/mineru-open-cli/internal/output"
+	"github.com/opendatalab/MinerU-Ecosystem/cli/internal/config"
+	"github.com/opendatalab/MinerU-Ecosystem/cli/internal/output"
 	mineru "github.com/opendatalab/MinerU-Ecosystem/sdk/go"
 	"github.com/spf13/cobra"
 )

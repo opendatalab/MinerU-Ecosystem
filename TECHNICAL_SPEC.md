@@ -166,12 +166,12 @@ Usage:
 
 Examples:
   # 内容到 stdout
-  mineru-open-api crawl https://opendatalab.com
-  mineru-open-api crawl https://opendatalab.com -f html
+  mineru-open-api crawl https://mineru.net
+  mineru-open-api crawl https://mineru.net -f html
 
   # 内容保存到文件
-  mineru-open-api crawl https://opendatalab.com -o output.md
-  mineru-open-api crawl https://opendatalab.com -o ./out/ -f md,html
+  mineru-open-api crawl https://mineru.net -o output.md
+  mineru-open-api crawl https://mineru.net -o ./out/ -f md,html
 
   # 批量抓取（必须 -o）
   mineru-open-api crawl https://a.com/1 https://a.com/2 -o ./pages/
@@ -594,7 +594,7 @@ archives:
 
 brews:
   - repository:
-      owner: OpenDataLab
+      owner: opendatalab
       name: homebrew-tap
     homepage: https://mineru.net
     description: "MinerU CLI — turn documents into Markdown"
@@ -687,12 +687,12 @@ mineru-open-api v0.1.0 (commit: a1b2c3d, built: 2026-03-15)
 ```
 mineru-open-cli 的 go.mod:
 
-module github.com/OpenDataLab/mineru-open-cli
+module github.com/opendatalab/MinerU-Ecosystem/cli
 
-require github.com/OpenDataLab/mineru-open-sdk-go v0.1.0
+require github.com/opendatalab/MinerU-Ecosystem/sdk/go v0.1.0
 
 // 开发期间用 replace 指向本地：
-// replace github.com/OpenDataLab/mineru-open-sdk-go => ../mineru-open-sdk-go
+// replace github.com/opendatalab/MinerU-Ecosystem/sdk/go => ../mineru-open-sdk-go
 ```
 
 **内网开发期间**，module 路径改为内网地址（与 SDK 发布计划一致）。正式发布前改回 GitHub 路径。
@@ -705,8 +705,8 @@ require github.com/OpenDataLab/mineru-open-sdk-go v0.1.0
 |------|----|
 | 编译产物名 | `mineru-open-api-cli-{os}-{arch}` |
 | 安装后命令名 | `mineru-open-api` |
-| Go module | `github.com/OpenDataLab/mineru-open-cli` |
-| GitHub 仓库 | `OpenDataLab/mineru-open-cli` |
+| Go module | `github.com/opendatalab/MinerU-Ecosystem/cli` |
+| GitHub 仓库 | `opendatalab/mineru-open-cli` |
 | Homebrew formula | `mineru-open-api` |
 | PyPI 无关 | CLI 是独立发布，和 Python SDK 无关联 |
 

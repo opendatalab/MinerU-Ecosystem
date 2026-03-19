@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OpenDataLab/mineru-open-cli/internal/config"
-	"github.com/OpenDataLab/mineru-open-cli/internal/output"
+	"github.com/opendatalab/MinerU-Ecosystem/cli/internal/config"
+	"github.com/opendatalab/MinerU-Ecosystem/cli/internal/output"
 	mineru "github.com/opendatalab/MinerU-Ecosystem/sdk/go"
 	"github.com/spf13/cobra"
 )
@@ -35,9 +35,9 @@ Capabilities & Limits:
   - Content: Clean Markdown or HTML extraction with layout preservation
 
 For quick, No Auth document extraction, use 'flash-extract' command.`,
-	Example: `  mineru-open-api crawl https://opendatalab.com              # markdown to stdout
-  mineru-open-api crawl https://opendatalab.com -f html       # html to stdout
-  mineru-open-api crawl https://opendatalab.com -o ./out/      # save to file
+	Example: `  mineru-open-api crawl https://mineru.net              # markdown to stdout
+  mineru-open-api crawl https://mineru.net -f html       # html to stdout
+  mineru-open-api crawl https://mineru.net -o ./out/      # save to file
   mineru-open-api crawl url1 url2 -o ./pages/                      # batch
   mineru-open-api crawl --list urls.txt -o ./pages/                # batch from file list`,
 	RunE: runCrawl,

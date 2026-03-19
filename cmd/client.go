@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/OpenDataLab/mineru-open-cli/internal/config"
+	"github.com/opendatalab/MinerU-Ecosystem/cli/internal/config"
 	mineru "github.com/opendatalab/MinerU-Ecosystem/sdk/go"
 	"github.com/spf13/cobra"
 )

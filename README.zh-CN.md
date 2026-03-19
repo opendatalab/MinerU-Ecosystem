@@ -1,6 +1,6 @@
 # MinerU Open API 命令行工具 (CLI)
 
-[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/OpenDataLab/mineru-open-cli/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/opendatalab/MinerU-Ecosystem/cli/blob/main/LICENSE)
 
 **MinerU Open API CLI** 是一个完全免费、零依赖的命令行工具，只需一条命令，即可将任何文档（PDF、图片、Word、PPT、Excel）或网页转换为高质量的 Markdown。
 

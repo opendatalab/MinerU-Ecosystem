@@ -1,7 +1,7 @@
 variables:
   BINARY_NAME: mineru-open-api-cli
   OSS_PATH: open-api-cli
-  SDK_REPO: https://oauth2:${CI_USER_TOKEN}@gitlab.pjlab.org.cn/yangqi/mineru-open-sdk-go.git
+  SDK_REPO: https://oauth2:${CI_USER_TOKEN}@gitlab.pjlab.org.cn/opendatalab/MinerU-Ecosystem/sdk/python-go.git
 
 stages:
   - build
@@ -31,7 +31,7 @@ release:
   only:
     - tags
   script:
-    - export LDFLAGS="-s -w -X github.com/OpenDataLab/mineru-open-cli/cmd.version=${CI_COMMIT_TAG} -X github.com/OpenDataLab/mineru-open-cli/cmd.commit=${CI_COMMIT_SHORT_SHA} -X github.com/OpenDataLab/mineru-open-cli/cmd.date=${CI_PIPELINE_CREATED_AT}"
+    - export LDFLAGS="-s -w -X github.com/opendatalab/MinerU-Ecosystem/cli/cmd.version=${CI_COMMIT_TAG} -X github.com/opendatalab/MinerU-Ecosystem/cli/cmd.commit=${CI_COMMIT_SHORT_SHA} -X github.com/opendatalab/MinerU-Ecosystem/cli/cmd.date=${CI_PIPELINE_CREATED_AT}"
 
     # 交叉编译 6 个平台
     - >

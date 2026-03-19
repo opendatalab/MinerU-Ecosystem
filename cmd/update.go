@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/OpenDataLab/mineru-open-cli/internal/output"
+	"github.com/opendatalab/MinerU-Ecosystem/cli/internal/output"
 	"github.com/spf13/cobra"
 )
 

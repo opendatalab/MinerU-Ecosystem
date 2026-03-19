@@ -1,7 +1,7 @@
 # MinerU Open API CLI
 
-[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/OpenDataLab/mineru-open-cli/blob/main/LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/OpenDataLab/mineru-open-cli)](https://goreportcard.com/report/github.com/OpenDataLab/mineru-open-cli)
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/opendatalab/MinerU-Ecosystem/cli/blob/main/LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/opendatalab/MinerU-Ecosystem/cli)](https://goreportcard.com/report/github.com/opendatalab/MinerU-Ecosystem/cli)
 
 **MinerU Open API CLI** is a completely free, zero-dependency command-line tool designed to turn any document (PDF, Images, Word, PPT, Excel) or Web Page into high-quality Markdown. 
 
