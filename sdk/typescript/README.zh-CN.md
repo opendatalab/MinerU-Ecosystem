@@ -1,13 +1,13 @@
 # MinerU Open API SDK (JS/TS)
 
-[![npm version](https://badge.fury.io/js/mineru.svg)](https://badge.fury.io/js/mineru)
-[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/opendatalab/MinerU-Ecosystem/sdk/go-js/blob/main/LICENSE)
+[![npm version](https://badge.fury.io/js/mineru-open-sdk.svg)](https://badge.fury.io/js/mineru-open-sdk)
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/opendatalab/MinerU-Ecosystem/blob/main/LICENSE)
 
 [English README](./README.md)
 
 **MinerU Open API SDK** 是一个完全免费的 TypeScript/JavaScript 库，用于连接 [MinerU](https://mineru.net) 文档提取服务。只需一行代码，即可将任何文档（PDF、图片、Word、PPT、Excel）或网页转换为高质量的 Markdown。
 
-支持 Node.js (18+)、Bun、Deno 以及浏览器环境。
+当前发布包的主要目标运行时是 Node.js 18+。Bun 和 Deno 在提供 Node 兼容 API 时也可以使用。浏览器并不是当前的一等支持目标，详见下方的[环境限制](#-环境限制)。
 
 ---
 
@@ -16,7 +16,8 @@
 - **完全免费**：文档提取服务没有任何隐藏费用。
 - **极速模式 (No Auth)**：无需 API Token 即可立即提取。
 - **全功能模式**：提供完整的版式保留、图片、表格及公式支持。
-- **异步与批量**：原生支持异步生成器（Async Generators），高效处理多份文档。
+- **阻塞式与异步原语并存**：简单流程直接用 `extract()`，需要自定义轮询时使用 `submit()` / `getTask()` / `getBatch()`。
+- **内置结果保存方法**：可直接保存 Markdown、HTML、LaTeX、DOCX，或解压完整结果包。
 
 ---
 
@@ -30,30 +31,82 @@ npm install mineru-open-sdk
 
 ## 🛠️ 快速上手
 
-### 1. 极速模式 (Flash Extract - 免登录，Markdown 唯一)
+### 1. 极速模式 (Flash Extract - 免登录，只支持 Markdown)
 适合快速预览。无需配置 Token。
+
 ```typescript
 import { MinerU } from "mineru-open-sdk";
 
-// 极速模式无需传入 Token
 const client = new MinerU();
-const result = await client.flashExtract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf");
+const result = await client.flashExtract(
+  "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
+);
 
 console.log(result.markdown);
 ```
 
 ### 2. 全功能模式 (Full Feature Extract - 需登录)
-支持超大文件、丰富的资产（图片/表格）及多种输出格式。
+支持大文件、丰富资产（图片/表格）以及多种输出格式。
+
 ```typescript
 import { MinerU } from "mineru-open-sdk";
 
-// 从 https://mineru.net 获取免费 Token
 const client = new MinerU("your-api-token");
-const result = await client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf");
+const result = await client.extract(
+  "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
+);
 
 console.log(result.markdown);
-console.log(result.images); // 获取提取出的图片列表
+console.log(result.images);
 ```
+
+---
+
+## 🧩 支持的公开接口
+
+### Client 生命周期
+
+- `new MinerU(token?: string, baseUrl = "https://mineru.net/api/v4", flashBaseUrl?: string)`
+- `client.setSource("your-app")`
+
+### 阻塞式解析接口
+
+- `client.extract(source, options?) -> Promise<ExtractResult>`
+- `client.extractBatch(sources, options?) -> AsyncGenerator<ExtractResult>`
+- `client.crawl(url, options?) -> Promise<ExtractResult>`
+- `client.crawlBatch(urls, options?) -> AsyncGenerator<ExtractResult>`
+- `client.flashExtract(source, options?) -> Promise<ExtractResult>`
+
+### 提交 / 查询接口
+
+- `client.submit(source, options?) -> Promise<string>`
+- `client.submitBatch(sources, options?) -> Promise<string>`
+- `client.getTask(taskId) -> Promise<ExtractResult>`
+- `client.getBatch(batchId) -> Promise<ExtractResult[]>`
+
+### 结果与保存辅助方法
+
+- `saveMarkdown(result, path, withImages = true)`
+- `saveDocx(result, path)`
+- `saveHtml(result, path)`
+- `saveLatex(result, path)`
+- `saveAll(result, dir)`
+- `progressPercent(progress)`
+- `progressToString(progress)`
+
+### 常用结果字段
+
+- `result.taskId`
+- `result.state`
+- `result.progress`
+- `result.markdown`
+- `result.images`
+- `result.contentList`
+- `result.docx`
+- `result.html`
+- `result.latex`
+- `result.filename`
+- `result.error`
 
 ---
 
@@ -71,35 +124,92 @@ console.log(result.images); // 获取提取出的图片列表
 
 ---
 
+## ⚙️ 默认行为与参数说明
+
+### `new MinerU(...)`
+
+| 参数 | 默认值 | 省略时行为 |
+| :--- | :--- | :--- |
+| `token` | `undefined` | 若运行时支持 `process.env`，则读取 `MINERU_TOKEN` |
+| `baseUrl` | `https://mineru.net/api/v4` | 标准 API 默认地址 |
+| `flashBaseUrl` | SDK 内置 flash 地址 | 可用于测试或私有部署 |
+
+如果既没有传入 `token`，运行时里也没有可用的 `process.env.MINERU_TOKEN`，则 client 进入 **flash-only mode**：`flashExtract()` 可用，其余需要鉴权的方法会抛出 `NoAuthClientError`。
+
+### 全功能接口
+
+这些默认值适用于 `extract()`、`submit()`、`extractBatch()`、`submitBatch()`，除非特别说明。
+
+| 参数 | 默认值 | 省略时行为 |
+| :--- | :--- | :--- |
+| `model` | `undefined` | 根据输入自动推断：`.html` / `.htm` 走 `"html"`（发给 API 时为 `"MinerU-HTML"`），其余默认 `"vlm"` |
+| `ocr` | `false` | 默认关闭 OCR |
+| `formula` | `true` | 默认开启公式识别 |
+| `table` | `true` | 默认开启表格识别 |
+| `language` | `"ch"` | 默认中文；只有修改时才会显式传给 API |
+| `pages` | `undefined` | 默认处理完整文档。仅单任务 `extract()` / `submit()` 支持 |
+| `extraFormats` | `undefined` | 只返回默认 Markdown / JSON 结果 |
+| `timeout` | `300` 秒 | `extract()` / `crawl()` 的总轮询超时 |
+| `timeout` | `1800` 秒 | `extractBatch()` / `crawlBatch()` 的总轮询超时 |
+
+### `crawl()` / `crawlBatch()`
+
+- `crawl()` 等价于 `extract(url, { model: "html", ... })`
+- `crawlBatch()` 等价于 `extractBatch(urls, { model: "html", ... })`
+- `crawl()` / `crawlBatch()` 只暴露 `extraFormats` 和 `timeout`，不提供 OCR / 表格 / 公式开关
+
+### Flash 模式
+
+| 参数 | 默认值 | 省略时行为 |
+| :--- | :--- | :--- |
+| `language` | `"ch"` | 默认中文 |
+| `pageRange` | `undefined` | 默认处理 flash API 允许的完整页范围 |
+| `timeout` | `300` 秒 | 总轮询超时 |
+
+---
+
+## 🌍 环境限制
+
+- `extract("./file.pdf")`、`submit("./file.pdf")`、`flashExtract("./file.pdf")` 以及所有保存辅助方法都依赖 `node:fs/promises` 和 `node:path`。这部分能力应运行在 Node.js、Bun 或启用 Node 兼容层的 Deno 中。
+- 标准浏览器运行时并不是当前的一等支持目标，因为 SDK 为本地文件和保存辅助方法直接引入了 Node 模块。如果你的工具链仍能正常打包它，也只建议处理 URL 输入和内存中的结果对象。
+- `MINERU_TOKEN` 的环境变量回退是 Node 风格能力。浏览器里请显式传入 token：`new MinerU("your-api-token")`。
+- Flash 结果只包含 Markdown。`saveDocx()`、`saveHtml()`、`saveLatex()` 和 `saveAll()` 需要使用已经完成的全功能结果。
+
+---
+
 ## 📖 详细用法
 
 ### 全功能提取选项
-```typescript
-import { saveAll } from "mineru-open-sdk";
 
-const result = await client.extract("./论文.pdf", {
+```typescript
+import { MinerU, saveAll } from "mineru-open-sdk";
+
+const client = new MinerU("your-api-token");
+
+const result = await client.extract("./paper.pdf", {
   model: "vlm",              // "vlm" | "pipeline" | "html"
-  ocr: true,                 // 启用 OCR 识别扫描件
-  formula: true,             // 公式识别
-  table: true,               // 表格识别
-  language: "en",            // "ch" | "en" | 等
-  pages: "1-20",             // 页码范围
-  extraFormats: ["docx"],    // 额外导出为 docx, html, 或 latex
+  ocr: true,
+  formula: true,
+  table: true,
+  language: "en",
+  pages: "1-20",
+  extraFormats: ["docx"],
   timeout: 600,
 });
 
-await saveAll(result, "./output/"); // 保存 Markdown 和所有相关资源
+await saveAll(result, "./output");
 ```
 
 ### 批量处理
+
 ```typescript
-// 边处理边返回结果
 for await (const result of client.extractBatch(["a.pdf", "b.pdf"])) {
-  console.log(`${result.filename}: 已完成`);
+  console.log(`${result.filename}: ${result.state}`);
 }
 ```
 
-### 网页爬取 (Crawl)
+### 网页抓取
+
 ```typescript
 const result = await client.crawl("https://www.baidu.com");
 console.log(result.markdown);
@@ -107,14 +217,80 @@ console.log(result.markdown);
 
 ---
 
-## 🤖 AI Agent 自动化集成
+## 🔄 `submit()` / `getTask()` / `getBatch()` 语义说明
 
-本 SDK 设计时充分考虑了 AI 工作流集成。您可以通过 `result.state` 和 `result.progress` 轻松监控任务状态。
+自定义异步轮询前，最需要先搞清楚这一组接口：
+
+- `getTask(taskId)` 只能查询真正的 **task ID**
+- `getBatch(batchId)` 只能查询真正的 **batch ID**
+- `submit(source)` 的返回值取决于 **source 类型**
+- `submitBatch(sources)` 永远返回 **batch ID**
+
+### `submit()` 到底返回什么
+
+- 当 `source` 是 **URL** 时，`submit(url)` 调用的是单任务接口，返回 **task ID**
+- 当 `source` 是 **本地文件** 时，`submit("./report.pdf")` 走的是上传批次流程，因此即便只有一个文件，返回的也是 **batch ID**
+
+### `submitBatch()` 返回什么
+
+- `submitBatch([...])` 永远返回 **batch ID**
+- `submitBatch()` **不支持** 在一次调用里混用 URL 和本地文件
+- `extractBatch()` 支持混合输入，是因为它会在内部拆成多个 batch，再把完成结果合并为一个异步生成器输出
+
+### 推荐轮询方式
+
+单个 URL 走 `submit(url) -> getTask(taskId)`：
 
 ```typescript
-const taskId = await client.submit("大报告.pdf");
-// ... 稍后 ...
-const result = await client.getTask(taskId);
+const taskId = await client.submit("https://example.com/report.pdf");
+
+while (true) {
+  const result = await client.getTask(taskId);
+  if (result.state === "done" || result.state === "failed") {
+    break;
+  }
+}
+```
+
+本地文件走 `submit("./local.pdf") -> getBatch(batchId)`：
+
+```typescript
+const batchId = await client.submit("./local.pdf");
+
+while (true) {
+  const [result] = await client.getBatch(batchId);
+  if (result && (result.state === "done" || result.state === "failed")) {
+    break;
+  }
+}
+```
+
+多 URL 需要统一按 batch 轮询时，走 `submitBatch(urls) -> getBatch(batchId)`：
+
+```typescript
+const batchId = await client.submitBatch([
+  "https://example.com/a.pdf",
+  "https://example.com/b.pdf",
+]);
+
+const results = await client.getBatch(batchId);
+```
+
+### 查询接口返回结果的填充时机
+
+- 当任务仍处于 pending / running 等非终态时，返回值主要包含 `state`、`progress`、`taskId` 以及可能的错误字段
+- 当任务进入 `state === "done"` 且返回 zip 地址后，`getTask()` / `getBatch()` 会自动下载并解析结果包，此时 `markdown`、`images`、`contentList`、`docx`、`html`、`latex` 等字段才会被填充
+
+---
+
+## 🤖 AI Agent 自动化集成
+
+SDK 提供了适合 Agent 循环使用的状态字段，核心就是 `result.state` 和 `result.progress`。
+
+```typescript
+const taskId = await client.submit("https://example.com/large-report.pdf");
+
+let result = await client.getTask(taskId);
 if (result.state === "done") {
   processMarkdown(result.markdown);
 }
@@ -123,8 +299,10 @@ if (result.state === "done") {
 ---
 
 ## 📄 开源协议
+
 本项目采用 Apache-2.0 协议。
 
 ## 🔗 相关链接
+
 - [官方网站](https://mineru.net)
 - [API 文档](https://mineru.net/docs)
