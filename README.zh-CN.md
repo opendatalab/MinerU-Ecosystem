@@ -10,7 +10,7 @@
 [![MinerU](https://img.shields.io/badge/Powered%20by-MinerU-orange)](https://github.com/opendatalab/MinerU)
 [![Online](https://img.shields.io/badge/Online-mineru.net-purple)](https://mineru.net)
 
-[English](README.md) | [中文](README.zh-CN.md)
+[English](README.md)
 
 </div>
 
