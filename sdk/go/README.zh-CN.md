@@ -187,10 +187,10 @@ func main() {
 | 参数 | 默认值 | 省略时行为 |
 | :--- | :--- | :--- |
 | `WithModel(...)` | 不设置 | 自动推断：`.html` / `.htm` 走 `"html"`（发给 API 时为 `"MinerU-HTML"`），其余默认 `"vlm"` |
-| `WithOCR(true)` | `false` | 默认关闭 OCR，只有启用时才发送 |
-| `WithFormula(false)` | `true` | 默认开启公式识别 |
-| `WithTable(false)` | `true` | 默认开启表格识别 |
-| `WithLanguage(...)` | `"ch"` | 默认中文；只有修改时才显式传给 API |
+| `WithOCR(true)` | 不设置 | 默认关闭 OCR（API 默认行为） |
+| `WithFormula(false)` | 不设置 | 默认开启公式识别（API 默认行为） |
+| `WithTable(false)` | 不设置 | 默认开启表格识别（API 默认行为） |
+| `WithLanguage(...)` | 不设置 | 默认中文 `"ch"`（API 默认行为） |
 | `WithPages(...)` | 不设置 | 默认处理完整文档 |
 | `WithExtraFormats(...)` | 无 | 只返回默认 Markdown / JSON 结果 |
 

@@ -187,10 +187,10 @@ These defaults apply to `Extract()`, `ExtractBatch()`, `Submit()`, and `SubmitBa
 | Option | Default | Behavior when omitted |
 | :--- | :--- | :--- |
 | `WithModel(...)` | not set | Auto-infers model: `.html` / `.htm` uses `"html"` (`"MinerU-HTML"` at the API layer), everything else uses `"vlm"` |
-| `WithOCR(true)` | `false` | OCR stays disabled unless enabled |
-| `WithFormula(false)` | `true` | Formula recognition stays enabled by default |
-| `WithTable(false)` | `true` | Table recognition stays enabled by default |
-| `WithLanguage(...)` | `"ch"` | Chinese is the default; the field is only sent when changed |
+| `WithOCR(true)` | not set | OCR is disabled (API default) |
+| `WithFormula(false)` | not set | Formula recognition is enabled (API default) |
+| `WithTable(false)` | not set | Table recognition is enabled (API default) |
+| `WithLanguage(...)` | not set | Chinese `"ch"` (API default) |
 | `WithPages(...)` | not set | Full document is processed |
 | `WithExtraFormats(...)` | none | Only the default Markdown/JSON payload is returned |
 
