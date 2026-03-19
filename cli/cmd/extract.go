@@ -427,7 +427,7 @@ func buildExtractOpts(cmd *cobra.Command) []mineru.ExtractOption {
 	if cmd.Flags().Changed("table") {
 		opts = append(opts, mineru.WithTable(extractTable))
 	}
-	if extractLanguage != "ch" {
+	if cmd.Flags().Changed("language") {
 		opts = append(opts, mineru.WithLanguage(extractLanguage))
 	}
 	if extractPages != "" {

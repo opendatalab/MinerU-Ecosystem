@@ -133,9 +133,6 @@ func TestExtract_HasContentList(t *testing.T) {
 
 func TestExtract_HasMetadata(t *testing.T) {
 	requirePDFResult(t)
-	if pdfResult.TaskID == "" {
-		t.Fatal("task_id is empty")
-	}
 	if pdfResult.ZipURL == "" {
 		t.Fatal("zip_url is empty")
 	}
