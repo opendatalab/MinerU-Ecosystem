@@ -66,7 +66,7 @@ irm https://cdn-mineru.openxlab.org.cn/open-api-cli/install.ps1 | iex
 **Linux / macOS (Shell)**
 
 ```bash
-curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install/install.sh | sh
+curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
 ```
 
 #### Usage
