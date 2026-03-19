@@ -158,20 +158,41 @@ func TestExtractNoToken(t *testing.T) {
 	}
 }
 
+func TestExtractFormulaTableFlagsAccepted(t *testing.T) {
+	// --formula and --table flags should be accepted without error (validation only, fake token)
+	r := run(t, "extract", "report.pdf", "--formula=false", "--table=false", "--token", "fake")
+	// Should fail due to fake token or file, but NOT due to unknown flag
+	if strings.Contains(r.stderr, "unknown flag") {
+		t.Errorf("--formula/--table flags not recognized: %s", r.stderr)
+	}
+}
+
+func TestExtractFormulaTableDefaultNotSent(t *testing.T) {
+	// Without explicit --formula/--table, the flags should not cause errors
+	r := run(t, "extract", "report.pdf", "--token", "fake")
+	if strings.Contains(r.stderr, "unknown flag") || strings.Contains(r.stderr, "formula") || strings.Contains(r.stderr, "table") {
+		t.Errorf("default flag behavior caused unexpected error: %s", r.stderr)
+	}
+}
+
 // ── real API tests ──
 
 func requireToken(t *testing.T) string {
 	t.Helper()
 	token := os.Getenv("MINERU_TOKEN")
 	if token == "" {
-		// Try to load from .env JSON file
-		data, err := os.ReadFile(".env")
-		if err == nil {
+		// Try to load from .env JSON file (check current dir and parent dir)
+		for _, path := range []string{".env", "../.env"} {
+			data, err := os.ReadFile(path)
+			if err != nil {
+				continue
+			}
 			var config struct {
 				Token string `json:"MINERU_TOKEN"`
 			}
 			if err := json.Unmarshal(data, &config); err == nil && config.Token != "" {
 				token = config.Token
+				break
 			}
 		}
 	}
@@ -239,6 +260,39 @@ func TestExtractURLHtmlFormat(t *testing.T) {
 	lower := strings.ToLower(r.stdout)
 	if !strings.Contains(lower, "<") {
 		t.Errorf("stdout doesn't look like HTML")
+	}
+}
+
+func TestExtractURLWithTableDisabled(t *testing.T) {
+	token := requireToken(t)
+	r := run(t, "extract", testURL, "--table=false", "--token", token)
+	if r.exitCode != 0 {
+		t.Fatalf("exit code = %d, stderr:\n%s", r.exitCode, r.stderr)
+	}
+	if len(r.stdout) == 0 {
+		t.Fatal("stdout is empty, expected markdown content")
+	}
+}
+
+func TestExtractURLWithFormulaDisabled(t *testing.T) {
+	token := requireToken(t)
+	r := run(t, "extract", testURL, "--formula=false", "--token", token)
+	if r.exitCode != 0 {
+		t.Fatalf("exit code = %d, stderr:\n%s", r.exitCode, r.stderr)
+	}
+	if len(r.stdout) == 0 {
+		t.Fatal("stdout is empty, expected markdown content")
+	}
+}
+
+func TestExtractURLWithBothDisabled(t *testing.T) {
+	token := requireToken(t)
+	r := run(t, "extract", testURL, "--table=false", "--formula=false", "--token", token)
+	if r.exitCode != 0 {
+		t.Fatalf("exit code = %d, stderr:\n%s", r.exitCode, r.stderr)
+	}
+	if len(r.stdout) == 0 {
+		t.Fatal("stdout is empty, expected markdown content")
 	}
 }
 
