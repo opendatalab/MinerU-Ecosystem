@@ -19,9 +19,6 @@ const HTML_EXTENSIONS = new Set([".html", ".htm"]);
 
 const DEFAULT_SOURCE = "open-api-sdk-js";
 
-/** Default timeout for a single HTTP request (in seconds). */
-const DEFAULT_TIMEOUT_REQUEST = 60;
-
 /** Default total business timeouts for extraction tasks (in seconds). */
 const DEFAULT_TIMEOUT_POLL_SINGLE = 300;
 const DEFAULT_TIMEOUT_POLL_BATCH = 1800;
