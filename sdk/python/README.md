@@ -210,12 +210,7 @@ This is the part most people get wrong at first:
 - `submit()` returns a **batch ID**
 - `submit_batch()` also returns a **batch ID**
 - the common async flow is therefore `submit(...) -> get_batch(batch_id)`
-- `get_task(task_id)` is only for cases where you already have a real `task_id`
-
-In practice, `get_task()` is useful when:
-
-- you obtained a `task_id` from another system
-- you first called `get_batch(batch_id)` and then want to inspect one item via its `result.task_id`
+- recommends staying on the batch-based flow for async polling
 
 ### Recommended async flow
 
@@ -231,16 +226,6 @@ while True:
 
 if result.state == "done":
     do_something(result.markdown)
-```
-
-### If you need `task_id`
-
-```python
-batch_id = client.submit("large-report.pdf")
-results = client.get_batch(batch_id)
-
-task_id = results[0].task_id
-result = client.get_task(task_id)
 ```
 
 ---

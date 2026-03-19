@@ -210,12 +210,7 @@ print(result.markdown)
 - `submit()` 返回的是 **batch_id**
 - `submit_batch()` 返回的也是 **batch_id**
 - 因此最常见的异步流程应该是 `submit(...) -> get_batch(batch_id)`
-- `get_task(task_id)` 只适用于你已经拿到真实 `task_id` 的场景
-
-`get_task()` 更适合以下情况：
-
-- 你从其他系统拿到了 `task_id`
-- 你先调用了 `get_batch(batch_id)`，再通过其中某个 `result.task_id` 单独查询
+- 对于异步轮询，建议始终沿用 batch 这一套语义
 
 ### 推荐的异步流程
 
@@ -231,16 +226,6 @@ while True:
 
 if result.state == "done":
     do_something(result.markdown)
-```
-
-### 如果你确实需要 `task_id`
-
-```python
-batch_id = client.submit("大报告.pdf")
-results = client.get_batch(batch_id)
-
-task_id = results[0].task_id
-result = client.get_task(task_id)
 ```
 
 ---
