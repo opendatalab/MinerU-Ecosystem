@@ -138,7 +138,7 @@ mineru-open-api flash-extract report.pdf --pages 1-10        # Page range
 | Flag | Short | Default | Description |
 |------|-------|---------|-------------|
 | `--output` | `-o` | _(stdout)_ | Output path (file or directory) |
-| `--language` | | `en` | Document language |
+| `--language` | | `ch` | Document language |
 | `--pages` | | _(all)_ | Page range, e.g. `1-10` |
 | `--timeout` | | `300` | Timeout in seconds |
 
@@ -245,88 +245,40 @@ mineru-open-api version    # Show version, commit, build date, Go version, OS/ar
 
 ## Supported `--language` values
 
-The `--language` flag accepts the following values (default: `ch`). Used by both `flash-extract` and `extract`.
+The `--language` flag accepts the following values (default: `ch`). Used by both `flash-extract` and `extract`. Values are organized by script/language family — each value covers all languages listed in its group.
 
-| Value | Language (EN) | 语言 (ZH) |
-|-------|--------------|-----------|
-| `ch` | Chinese (Simplified) | 中文简体 |
-| `chinese_cht` | Chinese (Traditional) | 中文繁体 |
-| `en` | English | 英文 |
-| `fr` | French | 法文 |
-| `german` | German | 德文 |
-| `japan` | Japanese | 日文 |
-| `korean` | Korean | 韩文 |
-| `it` | Italian | 意大利文 |
-| `es` | Spanish | 西班牙文 |
-| `pt` | Portuguese | 葡萄牙文 |
-| `ru` | Russian | 俄罗斯文 |
-| `ar` | Arabic | 阿拉伯文 |
-| `hi` | Hindi | 印地文 |
-| `th` | Thai | 泰文 |
-| `vi` | Vietnamese | 越南文 |
-| `el` | Greek | 希腊语 |
-| `nl` | Dutch | 荷兰文 |
-| `sv` | Swedish | 瑞典文 |
-| `da` | Danish | 丹麦文 |
-| `no` | Norwegian | 挪威文 |
-| `pl` | Polish | 波兰文 |
-| `ro` | Romanian | 罗马尼亚文 |
-| `hu` | Hungarian | 匈牙利文 |
-| `cs` | Czech | 捷克文 |
-| `sk` | Slovak | 斯洛伐克文 |
-| `sl` | Slovenian | 斯洛文尼亚文 |
-| `hr` | Croatian | 克罗地亚文 |
-| `bs` | Bosnian | 波斯尼亚文 |
-| `rs_latin` | Serbian (Latin) | 塞尔维亚文（latin) |
-| `rs_cyrillic` | Serbian (Cyrillic) | 塞尔维亚文（cyrillic) |
-| `bg` | Bulgarian | 保加利亚文 |
-| `uk` | Ukrainian | 乌克兰文 |
-| `be` | Belarusian | 白俄罗斯文 |
-| `lt` | Lithuanian | 立陶宛文 |
-| `lv` | Latvian | 拉脱维亚文 |
-| `et` | Estonian | 爱沙尼亚文 |
-| `sq` | Albanian | 阿尔巴尼亚文 |
-| `is` | Icelandic | 冰岛文 |
-| `ga` | Irish | 爱尔兰文 |
-| `cy` | Welsh | 威尔士文 |
-| `mt` | Maltese | 马耳他文 |
-| `tr` | Turkish | 土耳其文 |
-| `az` | Azerbaijani | 阿塞拜疆文 |
-| `uz` | Uzbek | 乌兹别克文 |
-| `mn` | Mongolian | 蒙古文 |
-| `fa` | Persian | 波斯文 |
-| `ur` | Urdu | 乌尔都文 |
-| `ug` | Uyghur | 维吾尔 |
-| `ku` | Kurdish | 库尔德文 |
-| `ms` | Malay | 马来文 |
-| `id` | Indonesian | 印尼文 |
-| `tl` | Tagalog | 塔加洛文 |
-| `sw` | Swahili | 西瓦希里文 |
-| `af` | Afrikaans | 南非荷兰文 |
-| `mi` | Maori | 毛利文 |
-| `oc` | Occitan | 欧西坦文 |
-| `la` | Latin | 拉丁文 |
-| `te` | Telugu | 泰卢固文 |
-| `ta` | Tamil | 泰米尔文 |
-| `mr` | Marathi | 马拉地文 |
-| `ne` | Nepali | 尼泊尔文 |
-| `sa` | Sanskrit | 沙特阿拉伯文 |
-| `bh` | Bihari | 比尔哈文 |
-| `mai` | Maithili | 迈蒂利文 |
-| `bho` | Bhojpuri | 孟加拉文 |
-| `ang` | Angika | 昂加文 |
-| `mah` | Magahi | 摩揭陀文 |
-| `sck` | Nagpuri | 那格浦尔文 |
-| `new` | Newari | 尼瓦尔文 |
-| `gom` | Goan Konkani | 果阿孔卡尼文 |
-| `abq` | Abaza | 阿巴扎文 |
-| `ava` | Avar | 阿瓦尔文 |
-| `ady` | Adyghe | 阿迪赫文 |
-| `dar` | Dargwa | 达尔瓦文 |
-| `inh` | Ingush | 因古什文 |
-| `lbe` | Lak | 拉克文 |
-| `lez` | Lezghian | 莱兹甘文 |
-| `tab` | Tabassaran | 塔巴萨兰文 |
+### Standalone language packs
+
+For specific languages or CJK combinations.
+
+| Value | Included languages | 说明 |
+|-------|-------------------|------|
+| `ch` | Chinese, English, Chinese Traditional | 中英文（默认值） |
+| `ch_lite` | Chinese, English, Chinese Traditional, Japanese | 中英日（轻量） |
+| `ch_server` | Chinese, English, Chinese Traditional, Japanese | 中英日（服务端） |
+| `en` | English | 纯英文 |
+| `japan` | Chinese, English, Chinese Traditional, Japanese | 日文为主 |
+| `korean` | Korean, English | 韩文 |
+| `chinese_cht` | Chinese, English, Chinese Traditional, Japanese | 繁体中文为主 |
+| `ta` | Tamil, English | 泰米尔文 |
+| `te` | Telugu, English | 泰卢固文 |
+| `ka` | Kannada | 卡纳达文 |
+| `el` | Greek, English | 希腊文 |
+| `th` | Thai, English | 泰文 |
+
+### Language family packs
+
+One value covers many languages sharing the same script system.
+
+| Value | Script/Family | Included languages |
+|-------|--------------|-------------------|
+| `latin` | Latin script (拉丁语系) | French, German, Afrikaans, Italian, Spanish, Bosnian, Portuguese, Czech, Welsh, Danish, Estonian, Irish, Croatian, Uzbek, Hungarian, Serbian (Latin), Indonesian, Occitan, Icelandic, Lithuanian, Maori, Malay, Dutch, Norwegian, Polish, Slovak, Slovenian, Albanian, Swedish, Swahili, Tagalog, Turkish, Latin, Azerbaijani, Kurdish, Latvian, Maltese, Pali, Romanian, Vietnamese, Finnish, Basque, Galician, Luxembourgish, Romansh, Catalan, Quechua |
+| `arabic` | Arabic script (阿拉伯语系) | Arabic, Persian, Uyghur, Urdu, Pashto, Kurdish, Sindhi, Balochi, English |
+| `cyrillic` | Cyrillic script (西里尔语系) | Russian, Belarusian, Ukrainian, Serbian (Cyrillic), Bulgarian, Mongolian, Abkhazian, Adyghe, Kabardian, Avar, Dargin, Ingush, Chechen, Lak, Lezgin, Tabasaran, Kazakh, Kyrgyz, Tajik, Macedonian, Tatar, Chuvash, Bashkir, Malian, Moldovan, Udmurt, Komi, Ossetian, Buryat, Kalmyk, Tuvan, Sakha, Karakalpak, English |
+| `east_slavic` | East Slavic (东斯拉夫语系) | Russian, Belarusian, Ukrainian, English |
+| `devanagari` | Devanagari script (天城文语系) | Hindi, Marathi, Nepali, Bihari, Maithili, Angika, Bhojpuri, Magahi, Santali, Newari, Konkani, Sanskrit, Haryanvi, English |
+
+
 
 ## Global flags
 
@@ -423,9 +375,9 @@ When `flash-extract` fails with exit code 7 (quota exceeded), the agent MUST:
 
 Example agent response:
 
-> `flash-extract` 免费额度已用完（每日有限额）。你可以：
-> 1. 等待明天额度重置后继续使用 `flash-extract`
-> 2. 前往 https://mineru.net/apiManage/token 创建 Token，运行 `mineru-open-api auth` 配置后，使用 `mineru-open-api extract` 获取独立额度（同时支持表格/公式识别和更高精度）
+> `flash-extract`限制频率。你可以：
+> 1. 可以稍等几分钟继续使用 `flash-extract`
+> 2. 或者 前往 https://mineru.net/apiManage/token 创建 Token，运行 `mineru-open-api auth` 配置后，使用 `mineru-open-api extract` 获取独立额度（同时支持表格/公式识别和更高精度）
 
 
 
@@ -474,8 +426,7 @@ echo -n "https://arxiv.org/pdf/2509.22186" | md5 | cut -c1-6
 | 3 | Authentication error | Create or refresh token at https://mineru.net/apiManage/token, then run `mineru-open-api auth` |
 | 4 | File too large or page limit exceeded | For `flash-extract`: file must be under 10 MB / 20 pages; switch to `extract` with token for higher limits. For `extract`: split the file or use `--pages` |
 | 5 | Extraction failed | The document may be corrupted or unsupported; try a different `--model` |
-| 6 | Timeout | Increase with `--timeout`; large files may need 600+ seconds |
-| 7 | Quota exceeded | For `flash-extract`: wait for daily reset or create token at https://mineru.net/apiManage/token and switch to `extract`. For `extract`: check API quota at https://mineru.net/apiManage/token |
+| 6 | Timeout | Increase with `--timeout`; large files may need 600+ seconds 
 
 ## Troubleshooting
 
@@ -486,7 +437,6 @@ echo -n "https://arxiv.org/pdf/2509.22186" | md5 | cut -c1-6
 - **Private deployment**: Use `--base-url https://your-server.com/api`
 - **Extraction quality is poor**: Try `mineru-open-api extract` with `--model vlm` for complex layouts, or `--ocr` for scanned documents
 - **Tables not extracted**: `flash-extract` does NOT support tables. Use `mineru-open-api extract` with a token.
-- **Quota exceeded on flash-extract**: Daily free limit reached. Use `mineru-open-api extract` with a token for separate quota.
 - **HTTP 429 on flash-extract**: IP rate limit hit. Wait a few minutes or switch to `mineru-open-api extract` with token.
 - **File too large for flash-extract**: Max 10 MB / 20 pages. Use `mineru-open-api extract` with token for larger files.
 
