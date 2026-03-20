@@ -6,11 +6,11 @@
 
 `langchain-mineru` 是深度集成至 LangChain 生态的文档加载器（Document Loader）。利用 MinerU 的文档解析能力将多种外部数据源转换为 LangChain 可处理的 `Document` 对象，便于直接接入 RAG 构建链路。支持单文档与多文档输入，并无缝衔接后续的 Text Splitter、Embedding 与 Vector Store 流程。
 
-- ✅ `accurate` 模式支持：.pdf、图片、.DOC、.DOCX、.PPT、.PPTX、html
-- ✅ `fast` 模式支持：.pdf、图片、DOCX、PPTX、XLS、XLSX
+- ✅ `precision` 模式支持：.pdf、图片、.DOC、.DOCX、.PPT、.PPTX、html
+- ✅ `flash` 模式支持：.pdf、图片、DOCX、PPTX、XLS、XLSX
 - ✅ 支持单文档、多文档输入与 `lazy_load` 流式加载
 - ✅ PDF 类型可选 `split_pages`，按页拆分 PDF 后输出多个 `Document`
-- ✅ 支持两种解析模式：`fast`（快速，无需 Token）与 `accurate`（精准，需 Token）
+- ✅ 支持两种解析模式：`flash`（快速，无需 Token）与 `precision`（精准，需 Token）
 - ✅ 适配 LangChain RAG Pipeline，便于后续切分、向量化与检索
 
 ### MinerU 简介
@@ -49,14 +49,14 @@ print(docs[0].page_content[:500])
 print(docs[0].metadata)
 ```
 
-默认 `mode="fast"`，无需 API Token。
+默认 `mode="flash"`，无需 API Token。
 
 ## 模式说明
 
-- `accurate`：精准解析模式，调用 MinerU 标准 `extract` 接口，需要 Token。支持格式：.pdf、图片、.DOC、.DOCX、.PPT、.PPTX、html。
-- `fast`：快速解析模式，调用 MinerU flash API，无需 Token。支持格式：.pdf、图片、DOCX、PPTX、XLS、XLSX。
+- `precision`：精准解析模式，调用 MinerU 标准 `extract` 接口，需要 Token。支持格式：.pdf、图片、.DOC、.DOCX、.PPT、.PPTX、html。
+- `flash`：快速解析模式，调用 MinerU flash API，无需 Token。支持格式：.pdf、图片、DOCX、PPTX、XLS、XLSX。
 
-`accurate` 模式 Token 申请地址：[https://mineru.net/apiManage/token](https://mineru.net/apiManage/token)。
+`precision` 模式 Token 申请地址：[https://mineru.net/apiManage/token](https://mineru.net/apiManage/token)。
 
 精准模式可通过以下两种方式提供 Token：
 
@@ -67,7 +67,7 @@ export MINERU_TOKEN="your-token"
 
 ```python
 # 方式 2：构造 Loader 时显式传入
-loader = MinerULoader(source="demo.pdf", mode="accurate", token="your-token")
+loader = MinerULoader(source="demo.pdf", mode="precision", token="your-token")
 ```
 
 ## 使用示例
@@ -89,14 +89,14 @@ for doc in docs:
 
 ### 带参数使用
 
-### Fast 模式（无需 Token）
+### Flash 模式（无需 Token）
 
 ```python
 from langchain_mineru import MinerULoader
 
 loader = MinerULoader(
     source="/path/to/demo.pdf",
-    mode="fast",
+    mode="flash",
     language="en",
     timeout=300,
 )
@@ -105,14 +105,14 @@ docs = loader.load()
 print(docs[0].page_content[:500])
 ```
 
-### Accurate 模式（需 Token）
+### Precision 模式（需 Token）
 
 ```python
 from langchain_mineru import MinerULoader
 
 loader = MinerULoader(
     source="/path/to/demo.pdf",
-    mode="accurate",
+    mode="precision",
     token="your-token",  # 或通过 MINERU_TOKEN 环境变量提供
     language="en",
     split_pages=True,
@@ -133,7 +133,7 @@ for doc in docs:
 
 ```bash
 export MINERU_TOKEN="your-token"
-uv run python mineru_example/example_accurate.py
+uv run python mineru_example/example_precision.py
 ```
 
 ### 多文件输入
@@ -156,7 +156,7 @@ for doc in docs:
 
 ### RAG Pipeline
 
-#### RAG（fast 模式，无需 Token）
+#### RAG（flash 模式，无需 Token）
 
 ```python
 from langchain_mineru import MinerULoader
@@ -164,7 +164,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 
-loader = MinerULoader(source="demo.pdf", mode="fast")
+loader = MinerULoader(source="demo.pdf", mode="flash")
 docs = loader.load()
 
 splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=200)
@@ -176,7 +176,7 @@ for r in results:
     print(r.page_content[:200])
 ```
 
-#### RAG（accurate 模式，需 Token）
+#### RAG（precision 模式，需 Token）
 
 ```python
 from langchain_mineru import MinerULoader
@@ -186,7 +186,7 @@ from langchain_community.vectorstores import FAISS
 
 loader = MinerULoader(
     source="manual.pdf",
-    mode="accurate",
+    mode="precision",
     token="your-token",  # 或设置 MINERU_TOKEN
     ocr=True,
     formula=True,
@@ -207,16 +207,16 @@ for r in results:
 
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `source` | `str \| list[str]` | *必填* | 本地文件路径或 URL，支持单个或列表。支持格式依赖 `mode`：`accurate` 支持 .pdf、图片、.DOC、.DOCX、.PPT、.PPTX、html；`fast` 支持 .pdf、图片、DOCX、PPTX、XLS、XLSX。 |
-| `mode` | `str` | `"fast"` | 解析模式。`"fast"` 为快速模式（无需 Token）；`"accurate"` 为精准模式（需 Token）。 |
-| `token` | `str \| None` | `None` | MinerU API Token。仅 `mode="accurate"` 时需要。申请地址：[https://mineru.net/apiManage/token](https://mineru.net/apiManage/token)。不传时会读取环境变量 `MINERU_TOKEN`。 |
+| `source` | `str \| list[str]` | *必填* | 本地文件路径或 URL，支持单个或列表。支持格式依赖 `mode`：`precision` 支持 .pdf、图片、.DOC、.DOCX、.PPT、.PPTX、html；`flash` 支持 .pdf、图片、DOCX、PPTX、XLS、XLSX。 |
+| `mode` | `str` | `"flash"` | 解析模式。`"flash"` 为快速模式（无需 Token）；`"precision"` 为精准模式（需 Token）。 |
+| `token` | `str \| None` | `None` | MinerU API Token。仅 `mode="precision"` 时需要。申请地址：[https://mineru.net/apiManage/token](https://mineru.net/apiManage/token)。不传时会读取环境变量 `MINERU_TOKEN`。 |
 | `language` | `str` | `"ch"` | OCR 识别语言代码。常用值：`"ch"`（中文）、`"en"`（英文）。完整列表请参考[标准 API 文档](https://mineru.net/apiManage/docs)。 |
 | `pages` | `str \| None` | `None` | 页码范围，仅对 PDF 有效，例如 `"1-5"` 或 `"3"`。`split_pages=False` 时，页码范围直接传给 API；`split_pages=True` 时，本地只拆指定页，减少 API 调用次数。 |
 | `timeout` | `int` | `1200` | 单文件最大等待时间（秒）。 |
 | `split_pages` | `bool` | `False` | 仅对 PDF 有效。为 `True` 时，按页拆分 PDF，每页生成一个 `Document`，`metadata["page"]` 可用。非 PDF 文件不受影响，始终返回一个 `Document`。 |
-| `ocr` | `bool` | `False` | 在 `mode="accurate"` 下生效并控制 OCR；在 `mode="fast"` 下 OCR 为内置能力，该参数会被忽略。 |
-| `formula` | `bool` | `True` | 仅 `mode="accurate"` 生效，是否启用公式识别。`mode="fast"` 下传非默认值会报错。 |
-| `table` | `bool` | `True` | 仅 `mode="accurate"` 生效，是否启用表格识别。`mode="fast"` 下传非默认值会报错。 |
+| `ocr` | `bool` | `False` | 在 `mode="precision"` 下生效并控制 OCR；在 `mode="flash"` 下 OCR 为内置能力，该参数会被忽略。 |
+| `formula` | `bool` | `True` | 仅 `mode="precision"` 生效，是否启用公式识别。`mode="flash"` 下传非默认值会报错。 |
+| `table` | `bool` | `True` | 仅 `mode="precision"` 生效，是否启用表格识别。`mode="flash"` 下传非默认值会报错。 |
 
 ## Document Metadata 说明
 
@@ -227,7 +227,7 @@ for r in results:
     "source": "report.pdf",          # 原始输入路径或 URL
     "loader": "mineru",
     "output_format": "markdown",
-    "mode": "fast",                  # fast / accurate
+    "mode": "flash",                  # flash / precision
     "language": "ch",
     "pages": None,
     "split_pages": True,
@@ -239,14 +239,14 @@ for r in results:
 
 ## 支持的文件格式
 
-- `accurate` 模式：.pdf、图片、.DOC、.DOCX、.PPT、.PPTX、html
-- `fast` 模式：.pdf、图片、DOCX、PPTX、XLS、XLSX
+- `precision` 模式：.pdf、图片、.DOC、.DOCX、.PPT、.PPTX、html
+- `flash` 模式：.pdf、图片、DOCX、PPTX、XLS、XLSX
 
 ## 限制
 
 - 输出格式仅支持 Markdown
-- `fast` 模式受 flash API 限制（如页数/文件大小），请以 MinerU 官方文档为准
-- `accurate` 模式需要有效 Token，且请求配额由账号策略决定
+- `flash` 模式受 flash API 限制（如页数/文件大小），请以 MinerU 官方文档为准
+- `precision` 模式需要有效 Token，且请求配额由账号策略决定
 
 ## 许可证
 

@@ -1,13 +1,12 @@
 [project]
 name = "langchain-mineru"
-version = "0.1.1"
+version = "0.1.2"
 description = "LangChain document loader powered by MinerU — turn PDFs into Markdown"
 readme = "README.md"
 
 requires-python = ">=3.10"
 dependencies = [
     "langchain-core>=1.2.18",
-    "langchain-tests>=1.1.5",
     "pypdf>=6.8.0",
     "mineru-open-sdk>=0.1.0",
 ]
