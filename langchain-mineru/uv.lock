@@ -337,7 +337,7 @@ wheels = [
 
 [[package]]
 name = "langchain-mineru"
-version = "0.1.2"
+version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "langchain-core" },
