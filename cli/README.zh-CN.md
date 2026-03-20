@@ -17,7 +17,7 @@
 - **零依赖**：单二进制文件，无需 Python/Node.js 运行时
 - **Agent 友好**：严格分离 `stdout` / `stderr`，便于管道和自动化集成
 - **免登录解析**：使用 `flash-extract` 即可获得结果，无需 API Token
-- **全功能模式**：使用 `extract` 和 `crawl` 搭配 Token，获得更丰富的输出和更完整的能力
+- **精准解析模式**：使用 `extract` 和 `crawl` 搭配 Token，获得更丰富的输出和更完整的能力
 - **批量输入**：支持位置参数、`--list` 和 `--stdin-list`
 - **支持标准输入文件流**：可通过 `extract --stdin` 从管道读取文件字节
 
@@ -44,7 +44,7 @@ curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
 | 命令 | 是否需要鉴权 | 用途 |
 |---|---|---|
 | `flash-extract` | 否 | 极速文档解析，仅输出 Markdown |
-| `extract` | 是 | 全功能文档解析 |
+| `extract` | 是 | 精准文档解析 |
 | `crawl` | 是 | 网页抓取与解析 |
 | `auth` | 可选 | 保存、查看、校验 Token 配置 |
 | `status` | 是 | 按 task ID 查询任务状态 |
@@ -181,7 +181,7 @@ mineru-open-api flash-extract 报告.pdf --language en --pages 1-5
 
 ## 📄 `extract`
 
-全功能文档解析命令，需要 Token。
+精准文档解析命令，需要 Token。
 
 ### 行为说明
 
@@ -267,7 +267,7 @@ cat report.pdf | mineru-open-api extract --stdin --stdin-name report.pdf
 
 ## 🌐 `crawl`
 
-全功能网页抓取命令，需要 Token。
+精准网页抓取命令，需要 Token。
 
 ### 行为说明
 

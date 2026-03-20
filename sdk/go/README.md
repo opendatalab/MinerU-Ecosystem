@@ -13,8 +13,8 @@
 
 - **Completely Free**: No hidden costs for document extraction.
 - **Zero Dependencies**: Uses only the Go standard library.
-- **Flash Mode (No Auth)**: Extract text instantly without an API token.
-- **Full Feature Mode**: Comprehensive extraction with layout preservation, images, and formula support.
+- **Flash Extract (No Auth)**: Extract text instantly without an API token.
+- **Precision Extract**: Comprehensive extraction with layout preservation, images, and formula support.
 - **Blocking And Async Primitives**: Use blocking helpers for simple flows, or `Submit()` / `GetBatch()` / `GetTask()` when you want your own polling.
 - **Result Save Helpers**: Save Markdown, HTML, LaTeX, DOCX, images, or the full extracted zip.
 
@@ -57,7 +57,7 @@ func main() {
 }
 ```
 
-### 2. Full Feature Extract (Auth Required)
+### 2. Precision Extract (Auth Required)
 Supports large files, rich assets (images/tables), and multiple formats.
 
 ```go
@@ -147,7 +147,7 @@ func main() {
 
 ## 📊 Mode Comparison
 
-| Feature | Flash Extract | Full Feature Extract |
+| Feature | Flash Extract | Precision Extract |
 | :--- | :--- | :--- |
 | **Auth** | **No Auth Required** | **Auth Required (Token)** |
 | **Speed** | Blazing Fast | Standard |
@@ -180,7 +180,7 @@ func main() {
 | `WithPollTimeout(...)` on `ExtractBatch()` / `CrawlBatch()` | auto-promoted to `30 * time.Minute` when left at the single-item default | Total timeout for all batch polling |
 | `WithFlashTimeout(...)` | `5 * time.Minute` | Total polling timeout for `FlashExtract()` |
 
-### Full-feature extraction options
+### Precision extraction options
 
 These defaults apply to `Extract()`, `ExtractBatch()`, `Submit()`, and `SubmitBatch()` unless noted otherwise.
 
@@ -201,7 +201,7 @@ These defaults apply to `Extract()`, `ExtractBatch()`, `Submit()`, and `SubmitBa
 - `CrawlBatch()` is shorthand for `ExtractBatch(..., WithModel("html"))`
 - They still accept the same `ExtractOption` values, so you can set `WithExtraFormats(...)` or `WithPollTimeout(...)` if needed
 
-### Flash mode options
+### Flash Extract options
 
 | Option | Default | Behavior when omitted |
 | :--- | :--- | :--- |
@@ -229,7 +229,7 @@ Use `NewFlash()` when you only need fast no-auth extraction:
 
 ## 📖 Detailed Usage
 
-### Full Feature Extraction Options
+### Precision Extraction Options
 
 ```go
 result, err := client.Extract(ctx, "./paper.pdf",

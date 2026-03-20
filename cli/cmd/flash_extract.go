@@ -31,7 +31,7 @@ Capabilities & Limits:
   - File Limits: Max 10MB and 20 pages per document
   - Content: Markdown only (Images, Tables, and Formulas are replaced with placeholders)
 
-For full layout retention and all assets (images/tables/formulas), use 'extract' command.`,
+For precise layout retention and all assets (images/tables/formulas), use 'extract' command.`,
 	Example: `  mineru-open-api flash-extract report.pdf                     # markdown to stdout
   mineru-open-api flash-extract report.pdf -o ./out/           # save to file
   mineru-open-api flash-extract https://cdn-mineru.openxlab.org.cn/demo/example.pdf    # URL mode

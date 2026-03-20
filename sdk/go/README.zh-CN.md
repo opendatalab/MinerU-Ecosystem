@@ -57,7 +57,7 @@ func main() {
 }
 ```
 
-### 2. 精准解析 (Full Feature Extract - 需登录)
+### 2. 精准解析 (Precision Extract - 需登录)
 支持大文件、丰富资产（图片/表格）及多种输出格式。
 
 ```go
@@ -147,7 +147,7 @@ func main() {
 
 ## 📊 模式对比
 
-| 特性 | Agent 轻量解析 (Flash) | 精准解析 (Full Feature) |
+| 特性 | Agent 轻量解析 (Flash) | 精准解析 (Precision) |
 | :--- | :--- | :--- |
 | **身份认证** | **免登录 (No Auth)** | **需登录 (Token)** |
 | **处理速度** | 极速 | 标准 |
@@ -201,7 +201,7 @@ func main() {
 - `CrawlBatch()` 等价于 `ExtractBatch(..., WithModel("html"))`
 - 它们仍然接受同一组 `ExtractOption`，因此也可以叠加 `WithExtraFormats(...)` 或 `WithPollTimeout(...)`
 
-### Flash 模式选项
+### Flash Extract 选项
 
 | 参数 | 默认值 | 省略时行为 |
 | :--- | :--- | :--- |

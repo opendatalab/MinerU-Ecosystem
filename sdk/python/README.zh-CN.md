@@ -41,12 +41,12 @@ result = client.flash_extract("https://cdn-mineru.openxlab.org.cn/demo/example.p
 print(result.markdown)
 ```
 
-### 2. 精准解析 (Full Feature Extract - 需登录)
+### 2. 精准解析 (Precision Extract - 需登录)
 支持超大文件、丰富的资产（图片/表格）及多种输出格式。
 ```python
 from mineru import MinerU
 
-# 从 https://mineru.net 获取免费 Token
+# 从 https://mineru.net/apiManage/token 获取免费 Token
 client = MinerU("your-api-token")
 result = client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 
@@ -105,7 +105,7 @@ print(result.images) # 获取提取出的图片列表
 
 ## 📊 模式对比
 
-| 特性 | Agent 轻量解析 (Flash) | 精准解析 (Full Feature) |
+| 特性 | Agent 轻量解析 (Flash) | 精准解析 (Precision) |
 | :--- | :--- | :--- |
 | **身份认证** | **免登录 (No Auth)** | **需登录 (Token)** |
 | **处理速度** | 极速 | 标准 |
@@ -146,7 +146,7 @@ print(result.images) # 获取提取出的图片列表
 | `timeout` | 单任务 `300` 秒 | `extract()` / `crawl()` 的总轮询超时 |
 | `timeout` | 批量 `1800` 秒 | `extract_batch()` / `crawl_batch()` 的总轮询超时 |
 
-### Flash 模式
+### Flash Extract
 
 | 参数 | 默认值 | 省略时行为 |
 | :--- | :--- | :--- |

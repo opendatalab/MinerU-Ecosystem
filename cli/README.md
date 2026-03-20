@@ -18,7 +18,7 @@ It is designed for:
 - **Zero dependency**: single binary, no Python/Node.js runtime required
 - **Agent Friendly**: clean stdout/stderr separation, easy to pipe and automate
 - **No Auth Extract**: use `flash-extract` for instant results without any API token
-- **Full Featured**: use `extract` and `crawl` with a token for richer outputs and larger workloads
+- **Precision Extraction**: use `extract` and `crawl` with a token for richer outputs and larger workloads
 - **Batch input support**: positional args, `--list`, and `--stdin-list`
 - **Stdin support for file content**: pipe bytes into `extract --stdin`
 
@@ -45,7 +45,7 @@ curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
 | Command | Auth | Purpose |
 |---|---|---|
 | `flash-extract` | No | Fast document extraction, Markdown only |
-| `extract` | Yes | Full-featured document extraction |
+| `extract` | Yes | Precision document extraction |
 | `crawl` | Yes | Web page extraction |
 | `auth` | Optional | Save, inspect, or verify token configuration |
 | `status` | Yes | Query a task status by task ID |
@@ -182,7 +182,7 @@ mineru-open-api flash-extract report.pdf --language en --pages 1-5
 
 ## 📄 `extract`
 
-Full-featured document extraction. Requires a token.
+Precision document extraction. Requires a token.
 
 ### Behavior
 
@@ -268,7 +268,7 @@ cat report.pdf | mineru-open-api extract --stdin --stdin-name report.pdf
 
 ## 🌐 `crawl`
 
-Full-featured web page extraction. Requires a token.
+Precision web page extraction. Requires a token.
 
 ### Behavior
 

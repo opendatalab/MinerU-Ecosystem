@@ -1,0 +1,23 @@
+[project]
+name = "langchain-mineru"
+version = "0.1.2"
+description = "LangChain document loader powered by MinerU — turn PDFs into Markdown"
+readme = "README.md"
+
+requires-python = ">=3.10"
+dependencies = [
+    "langchain-core>=1.2.18",
+    "pypdf>=6.8.0",
+    "mineru-open-sdk>=0.1.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.9.17,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "langchain_mineru"
+module-root = ""
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit_tests"]

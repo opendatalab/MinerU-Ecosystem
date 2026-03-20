@@ -12,8 +12,8 @@
 ## 🚀 Key Features
 
 - **Completely Free**: No hidden costs for document extraction.
-- **Flash Mode (No Auth)**: Extract text instantly without an API token.
-- **Full Feature Mode**: Comprehensive extraction with layout preservation, images, and formula support.
+- **Flash Extract (No Auth)**: Extract text instantly without an API token.
+- **Precision Extract**: Comprehensive extraction with layout preservation, images, and formula support.
 - **Batch & Polling Primitives**: Blocking methods for simple flows plus submit/query methods for asynchronous workflows.
 - **Simple Save Helpers**: Save Markdown, HTML, LaTeX, DOCX, or the full extracted zip with built-in helpers.
 
@@ -34,19 +34,19 @@ Ideal for quick previews. No token required.
 ```python
 from mineru import MinerU
 
-# No token needed for Flash Mode
+# No token needed for Flash Extract
 client = MinerU()
 result = client.flash_extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 
 print(result.markdown)
 ```
 
-### 2. Full Feature Extract (Auth Required)
+### 2. Precision Extract (Auth Required)
 Supports large files, rich assets (images/tables), and multiple formats.
 ```python
 from mineru import MinerU
 
-# Get your free token from https://mineru.net
+# Get your free token from https://mineru.net/apiManage/token
 client = MinerU("your-api-token")
 result = client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 
@@ -105,7 +105,7 @@ print(result.images) # Access extracted images
 
 ## 📊 Mode Comparison
 
-| Feature | Flash Extract | Full Feature Extract |
+| Feature | Flash Extract | Precision Extract |
 | :--- | :--- | :--- |
 | **Auth** | **No Auth Required** | **Auth Required (Token)** |
 | **Speed** | Blazing Fast | Standard |
@@ -129,7 +129,7 @@ print(result.images) # Access extracted images
 
 If neither `token` nor `MINERU_TOKEN` is set, the client works in **flash-only mode**: `flash_extract()` works, while auth-required methods raise `NoAuthClientError`.
 
-### Full-feature methods
+### Precision methods
 
 These defaults apply to `extract()`, `extract_batch()`, `submit()`, `submit_batch()`, and indirectly to `crawl()` / `crawl_batch()` unless noted otherwise.
 
@@ -146,7 +146,7 @@ These defaults apply to `extract()`, `extract_batch()`, `submit()`, `submit_batc
 | `timeout` | `300` seconds for single-item methods | Max total polling time for `extract()` / `crawl()` |
 | `timeout` | `1800` seconds for batch methods | Max total polling time for `extract_batch()` / `crawl_batch()` |
 
-### Flash mode
+### Flash Extract
 
 | Option | Default | Behavior when omitted |
 | :--- | :--- | :--- |
@@ -163,7 +163,7 @@ These defaults apply to `extract()`, `extract_batch()`, `submit()`, `submit_batc
 
 ## 📖 Detailed Usage
 
-### Full Feature Extraction Options
+### Precision Extraction Options
 ```python
 result = client.extract(
     "./paper.pdf",
