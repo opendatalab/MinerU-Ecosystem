@@ -37,15 +37,15 @@ var (
 
 var extractCmd = &cobra.Command{
 	Use:   "extract <file-or-url> [...]",
-	Short: "Full-featured document extraction (Auth Required)",
-	Long: `Full Feature Extract provides the most comprehensive way to convert documents.
+	Short: "Precision document extraction (Auth Required)",
+	Long: `Precision Extract provides the most comprehensive way to convert documents.
 Perfect for high-quality extraction with layout preservation and asset retrieval.
 
 Capabilities & Limits:
   - Auth Required (API Token)
   - Supports: PDF, Images (png, jpg, etc.), Doc, Docx, Ppt, Pptx, Html
   - File Limits: Max 200MB and 600 pages per document
-  - Content: Full extraction with all assets (Images, Tables, Formulas) in multiple formats (Markdown, Docx, LaTeX, etc.)
+  - Content: Precision extraction with all assets (Images, Tables, Formulas) in multiple formats (Markdown, Docx, LaTeX, etc.)
 
 For quick, No Auth, Markdown-only extraction, use 'flash-extract' command.`,
 	Example: `  mineru-open-api extract report.pdf                         # markdown to stdout

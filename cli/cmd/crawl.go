@@ -25,9 +25,9 @@ var (
 
 var crawlCmd = &cobra.Command{
 	Use:   "crawl <url> [...]",
-	Short: "Full-featured web page extraction (Auth Required)",
+	Short: "Precision web page extraction (Auth Required)",
 	Long: `Fetch web content and convert it to high-quality Markdown or HTML.
-Full Feature Extract provides the most comprehensive way to crawl web pages.
+Precision Extract provides the most comprehensive way to crawl web pages.
 
 Capabilities & Limits:
   - Auth Required (API Token)

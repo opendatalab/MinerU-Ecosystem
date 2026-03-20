@@ -20,12 +20,12 @@ var rootCmd = &cobra.Command{
   # Flash Extract (Fast, No Auth, Markdown-only)
   mineru-open-api flash-extract report.pdf            # print markdown to stdout
 
-  # Full Feature (Auth Required)
+  # Precision Extraction (Auth Required)
   mineru-open-api extract report.pdf                  # print markdown to stdout
   mineru-open-api extract report.pdf -o ./out/        # save all assets to directory
   mineru-open-api crawl https://mineru.net   # web page to stdout
 
-Authenticate for Full Feature:
+Authenticate for Precision Extraction:
 
   mineru-open-api auth
 

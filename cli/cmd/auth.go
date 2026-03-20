@@ -19,9 +19,9 @@ var (
 
 var authCmd = &cobra.Command{
 	Use:   "auth",
-	Short: "Configure API token for Full Feature extraction",
+	Short: "Configure API token for precision extraction",
 	Long: `Authenticate with your MinerU API token. 
-This is required to access Full Feature extraction (large files, multi-format, rich assets).
+This is required to access precision extraction (large files, multi-format, rich assets).
 Get your free token at https://mineru.net/apiManage/token`,
 	Example: `  mineru-open-api auth              # Interactive token setup
   mineru-open-api auth --verify     # Verify current token

@@ -15,7 +15,7 @@ The published package targets Node.js 18+. Bun and Deno can also work when Node-
 
 - **Completely Free**: No hidden costs for document extraction.
 - **Flash Mode (No Auth)**: Extract text instantly without an API token.
-- **Full Feature Mode**: Comprehensive extraction with layout preservation, images, and formula support.
+- **Precision Mode**: Comprehensive extraction with layout preservation, images, and formula support.
 - **Blocking And Async Primitives**: Use `extract()` for simple flows, or `submit()` / `getTask()` / `getBatch()` for your own polling logic.
 - **Built-in Save Helpers**: Save Markdown, HTML, LaTeX, DOCX, or the full extracted zip with exported helpers.
 
@@ -45,7 +45,7 @@ const result = await client.flashExtract(
 console.log(result.markdown);
 ```
 
-### 2. Full Feature Extract (Auth Required)
+### 2. Precision Extract (Auth Required)
 Supports large files, rich assets (images/tables), and multiple formats.
 
 ```typescript
@@ -112,7 +112,7 @@ console.log(result.images);
 
 ## 📊 Mode Comparison
 
-| Feature | Flash Extract | Full Feature Extract |
+| Feature | Flash Extract | Precision Extract |
 | :--- | :--- | :--- |
 | **Auth** | **No Auth Required** | **Auth Required (Token)** |
 | **Speed** | Blazing Fast | Standard |
@@ -136,7 +136,7 @@ console.log(result.images);
 
 If neither `token` nor `process.env.MINERU_TOKEN` is available, the client works in **flash-only mode**: `flashExtract()` works, while auth-required methods throw `NoAuthClientError`.
 
-### Full-feature methods
+### Precision methods
 
 These defaults apply to `extract()`, `submit()`, `extractBatch()`, and `submitBatch()` unless noted otherwise.
 
@@ -174,13 +174,13 @@ These defaults apply to `extract()`, `submit()`, `extractBatch()`, and `submitBa
 - `extract("./file.pdf")`, `submit("./file.pdf")`, `flashExtract("./file.pdf")`, and all save helpers rely on `node:fs/promises` and `node:path`. Use them in Node.js, Bun, or Deno with Node compatibility.
 - Standard browser runtimes are not a first-class target today because the SDK imports Node modules for local-file and save helpers. If your toolchain can bundle it anyway, stick to URL-based inputs and in-memory results.
 - The `MINERU_TOKEN` fallback is Node-style. In browsers, pass the token explicitly: `new MinerU("your-api-token")`.
-- Flash results only contain Markdown. `saveDocx()`, `saveHtml()`, `saveLatex()`, and `saveAll()` require a full-feature result that has already reached `state === "done"`.
+- Flash results only contain Markdown. `saveDocx()`, `saveHtml()`, `saveLatex()`, and `saveAll()` require a precision result that has already reached `state === "done"`.
 
 ---
 
 ## 📖 Detailed Usage
 
-### Full Feature Extraction Options
+### Precision Extraction Options
 
 ```typescript
 import { MinerU, saveAll } from "mineru-open-sdk";

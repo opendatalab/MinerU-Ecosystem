@@ -13,7 +13,7 @@
 
 - **Completely Free**: No hidden costs for document extraction.
 - **Flash Mode (No Auth)**: Extract text instantly without an API token.
-- **Full Feature Mode**: Comprehensive extraction with layout preservation, images, and formula support.
+- **Precision Mode**: Comprehensive extraction with layout preservation, images, and formula support.
 - **Batch & Polling Primitives**: Blocking methods for simple flows plus submit/query methods for asynchronous workflows.
 - **Simple Save Helpers**: Save Markdown, HTML, LaTeX, DOCX, or the full extracted zip with built-in helpers.
 
@@ -41,7 +41,7 @@ result = client.flash_extract("https://cdn-mineru.openxlab.org.cn/demo/example.p
 print(result.markdown)
 ```
 
-### 2. Full Feature Extract (Auth Required)
+### 2. Precision Extract (Auth Required)
 Supports large files, rich assets (images/tables), and multiple formats.
 ```python
 from mineru import MinerU
@@ -105,7 +105,7 @@ print(result.images) # Access extracted images
 
 ## 📊 Mode Comparison
 
-| Feature | Flash Extract | Full Feature Extract |
+| Feature | Flash Extract | Precision Extract |
 | :--- | :--- | :--- |
 | **Auth** | **No Auth Required** | **Auth Required (Token)** |
 | **Speed** | Blazing Fast | Standard |
@@ -129,7 +129,7 @@ print(result.images) # Access extracted images
 
 If neither `token` nor `MINERU_TOKEN` is set, the client works in **flash-only mode**: `flash_extract()` works, while auth-required methods raise `NoAuthClientError`.
 
-### Full-feature methods
+### Precision methods
 
 These defaults apply to `extract()`, `extract_batch()`, `submit()`, `submit_batch()`, and indirectly to `crawl()` / `crawl_batch()` unless noted otherwise.
 
@@ -163,7 +163,7 @@ These defaults apply to `extract()`, `extract_batch()`, `submit()`, `submit_batc
 
 ## 📖 Detailed Usage
 
-### Full Feature Extraction Options
+### Precision Extraction Options
 ```python
 result = client.extract(
     "./paper.pdf",

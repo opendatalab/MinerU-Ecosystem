@@ -41,7 +41,7 @@ result = client.flash_extract("https://cdn-mineru.openxlab.org.cn/demo/example.p
 print(result.markdown)
 ```
 
-### 2. 精准解析 (Full Feature Extract - 需登录)
+### 2. 精准解析 (Precision Extract - 需登录)
 支持超大文件、丰富的资产（图片/表格）及多种输出格式。
 ```python
 from mineru import MinerU
@@ -105,7 +105,7 @@ print(result.images) # 获取提取出的图片列表
 
 ## 📊 模式对比
 
-| 特性 | Agent 轻量解析 (Flash) | 精准解析 (Full Feature) |
+| 特性 | Agent 轻量解析 (Flash) | 精准解析 (Precision) |
 | :--- | :--- | :--- |
 | **身份认证** | **免登录 (No Auth)** | **需登录 (Token)** |
 | **处理速度** | 极速 | 标准 |
