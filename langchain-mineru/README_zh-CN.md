@@ -6,7 +6,8 @@
 
 `langchain-mineru` 是深度集成至 LangChain 生态的文档加载器（Document Loader）。利用 MinerU 的文档解析能力将多种外部数据源转换为 LangChain 可处理的 `Document` 对象，便于直接接入 RAG 构建链路。支持单文档与多文档输入，并无缝衔接后续的 Text Splitter、Embedding 与 Vector Store 流程。
 
-- ✅ 支持 PDF / 图片 / DOCX / PPTx / XLS / XLSX / 在线 URL 
+- ✅ `fast` 模式支持：PDF、图片（png/jpg/jpeg/jp2/webp/gif/bmp）、DOCX、PPTX、XLS、XLSX
+- ✅ `accurate` 模式支持：.pdf、.doc、.docx、.ppt、.pptx、.png、.jpg、.jpeg、.html
 - ✅ 支持单文档、多文档输入与 `lazy_load` 流式加载
 - ✅ PDF 类型可选 `split_pages`，按页拆分 PDF 后输出多个 `Document`
 - ✅ 支持两种解析模式：`fast`（快速，无需 Token）与 `accurate`（精准，需 Token）
@@ -52,8 +53,10 @@ print(docs[0].metadata)
 
 ## 模式说明
 
-- `fast`：快速解析模式，调用 MinerU flash API，无需 Token，支持文档与 HTML 输入。
-- `accurate`：精准解析模式，调用 MinerU 标准 `extract` 接口，需要申请 Token。
+- `fast`：快速解析模式，调用 MinerU flash API，无需 Token。支持格式：PDF、图片（png/jpg/jpeg/jp2/webp/gif/bmp）、DOCX、PPTX、XLS、XLSX。
+- `accurate`：精准解析模式，调用 MinerU 标准 `extract` 接口，需要 Token。支持格式：.pdf、.doc、.docx、.ppt、.pptx、.png、.jpg、.jpeg、.html。
+
+`accurate` 模式 Token 申请地址：[https://mineru.net/apiManage/token](https://mineru.net/apiManage/token)。
 
 精准模式可通过以下两种方式提供 Token：
 
@@ -204,10 +207,10 @@ for r in results:
 
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `source` | `str \| list[str]` | *必填* | 本地文件路径或 URL，支持单个或列表。支持 PDF、DOCX、PPTX、图片及在线 URL。 |
+| `source` | `str \| list[str]` | *必填* | 本地文件路径或 URL，支持单个或列表。支持格式依赖 `mode`：`fast` 支持 PDF、图片（png/jpg/jpeg/jp2/webp/gif/bmp）、DOCX、PPTX、XLS、XLSX；`accurate` 支持 .pdf、.doc、.docx、.ppt、.pptx、.png、.jpg、.jpeg、.html。 |
 | `mode` | `str` | `"fast"` | 解析模式。`"fast"` 为快速模式（无需 Token）；`"accurate"` 为精准模式（需 Token）。 |
-| `token` | `str \| None` | `None` | MinerU API Token。仅 `mode="accurate"` 时需要。不传时会读取环境变量 `MINERU_TOKEN`。 |
-| `language` | `str` | `"ch"` | OCR 识别语言代码。常用值：`"ch"`（中文）、`"en"`（英文）、`"auto"`（自动检测）。完整列表请参考[标准 API 文档](https://mineru.net/apiManage/docs)。 |
+| `token` | `str \| None` | `None` | MinerU API Token。仅 `mode="accurate"` 时需要。申请地址：[https://mineru.net/apiManage/token](https://mineru.net/apiManage/token)。不传时会读取环境变量 `MINERU_TOKEN`。 |
+| `language` | `str` | `"ch"` | OCR 识别语言代码。常用值：`"ch"`（中文）、`"en"`（英文）。完整列表请参考[标准 API 文档](https://mineru.net/apiManage/docs)。 |
 | `pages` | `str \| None` | `None` | 页码范围，仅对 PDF 有效，例如 `"1-5"` 或 `"3"`。`split_pages=False` 时，页码范围直接传给 API；`split_pages=True` 时，本地只拆指定页，减少 API 调用次数。 |
 | `timeout` | `int` | `1200` | 单文件最大等待时间（秒）。 |
 | `split_pages` | `bool` | `False` | 仅对 PDF 有效。为 `True` 时，按页拆分 PDF，每页生成一个 `Document`，`metadata["page"]` 可用。非 PDF 文件不受影响，始终返回一个 `Document`。 |
@@ -227,7 +230,7 @@ for r in results:
     "mode": "fast",                  # fast / accurate
     "language": "ch",
     "pages": None,
-    "split_pages": False,
+    "split_pages": True,
     "filename": "report.pdf",        # MinerU 返回的文件名
     "page": 1,                       # 仅 split_pages=True 时存在
     "page_source": "report.pdf",     # 仅 split_pages=True 时存在
@@ -236,7 +239,8 @@ for r in results:
 
 ## 支持的文件格式
 
-PDF、DOC、DOCX、PPT、PPTX、PNG、JPG、JPEG
+- `accurate` 模式：.pdf、.doc、.docx、.ppt、.pptx、.png、.jpg、.jpeg、.html
+- `fast` 模式：PDF、图片（png/jpg/jpeg/jp2/webp/gif/bmp）、DOCX、PPTX、XLS、XLSX
 
 ## 限制
 

@@ -1,6 +1,6 @@
 [project]
 name = "langchain-mineru"
-version = "0.1.0"
+version = "0.1.1"
 description = "LangChain document loader powered by MinerU — turn PDFs into Markdown"
 readme = "README.md"
 
