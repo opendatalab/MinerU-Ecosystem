@@ -201,7 +201,7 @@ func main() {
 - `CrawlBatch()` 等价于 `ExtractBatch(..., WithModel("html"))`
 - 它们仍然接受同一组 `ExtractOption`，因此也可以叠加 `WithExtraFormats(...)` 或 `WithPollTimeout(...)`
 
-### Flash 模式选项
+### Flash Extract 选项
 
 | 参数 | 默认值 | 省略时行为 |
 | :--- | :--- | :--- |

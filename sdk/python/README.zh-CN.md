@@ -146,7 +146,7 @@ print(result.images) # 获取提取出的图片列表
 | `timeout` | 单任务 `300` 秒 | `extract()` / `crawl()` 的总轮询超时 |
 | `timeout` | 批量 `1800` 秒 | `extract_batch()` / `crawl_batch()` 的总轮询超时 |
 
-### Flash 模式
+### Flash Extract
 
 | 参数 | 默认值 | 省略时行为 |
 | :--- | :--- | :--- |

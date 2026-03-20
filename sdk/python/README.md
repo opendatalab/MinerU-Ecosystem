@@ -12,8 +12,8 @@
 ## 🚀 Key Features
 
 - **Completely Free**: No hidden costs for document extraction.
-- **Flash Mode (No Auth)**: Extract text instantly without an API token.
-- **Precision Mode**: Comprehensive extraction with layout preservation, images, and formula support.
+- **Flash Extract (No Auth)**: Extract text instantly without an API token.
+- **Precision Extract**: Comprehensive extraction with layout preservation, images, and formula support.
 - **Batch & Polling Primitives**: Blocking methods for simple flows plus submit/query methods for asynchronous workflows.
 - **Simple Save Helpers**: Save Markdown, HTML, LaTeX, DOCX, or the full extracted zip with built-in helpers.
 
@@ -34,7 +34,7 @@ Ideal for quick previews. No token required.
 ```python
 from mineru import MinerU
 
-# No token needed for Flash Mode
+# No token needed for Flash Extract
 client = MinerU()
 result = client.flash_extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 
@@ -146,7 +146,7 @@ These defaults apply to `extract()`, `extract_batch()`, `submit()`, `submit_batc
 | `timeout` | `300` seconds for single-item methods | Max total polling time for `extract()` / `crawl()` |
 | `timeout` | `1800` seconds for batch methods | Max total polling time for `extract_batch()` / `crawl_batch()` |
 
-### Flash mode
+### Flash Extract
 
 | Option | Default | Behavior when omitted |
 | :--- | :--- | :--- |

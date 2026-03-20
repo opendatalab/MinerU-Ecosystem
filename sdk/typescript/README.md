@@ -14,8 +14,8 @@ The published package targets Node.js 18+. Bun and Deno can also work when Node-
 ## 🚀 Key Features
 
 - **Completely Free**: No hidden costs for document extraction.
-- **Flash Mode (No Auth)**: Extract text instantly without an API token.
-- **Precision Mode**: Comprehensive extraction with layout preservation, images, and formula support.
+- **Flash Extract (No Auth)**: Extract text instantly without an API token.
+- **Precision Extract**: Comprehensive extraction with layout preservation, images, and formula support.
 - **Blocking And Async Primitives**: Use `extract()` for simple flows, or `submit()` / `getTask()` / `getBatch()` for your own polling logic.
 - **Built-in Save Helpers**: Save Markdown, HTML, LaTeX, DOCX, or the full extracted zip with exported helpers.
 
@@ -159,7 +159,7 @@ These defaults apply to `extract()`, `submit()`, `extractBatch()`, and `submitBa
 - `crawlBatch()` is shorthand for `extractBatch(urls, { model: "html", ... })`
 - `crawl()` / `crawlBatch()` only expose `extraFormats` and `timeout`, not OCR/table/formula switches
 
-### Flash mode
+### Flash Extract
 
 | Option | Default | Behavior when omitted |
 | :--- | :--- | :--- |

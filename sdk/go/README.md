@@ -13,8 +13,8 @@
 
 - **Completely Free**: No hidden costs for document extraction.
 - **Zero Dependencies**: Uses only the Go standard library.
-- **Flash Mode (No Auth)**: Extract text instantly without an API token.
-- **Precision Mode**: Comprehensive extraction with layout preservation, images, and formula support.
+- **Flash Extract (No Auth)**: Extract text instantly without an API token.
+- **Precision Extract**: Comprehensive extraction with layout preservation, images, and formula support.
 - **Blocking And Async Primitives**: Use blocking helpers for simple flows, or `Submit()` / `GetBatch()` / `GetTask()` when you want your own polling.
 - **Result Save Helpers**: Save Markdown, HTML, LaTeX, DOCX, images, or the full extracted zip.
 
@@ -201,7 +201,7 @@ These defaults apply to `Extract()`, `ExtractBatch()`, `Submit()`, and `SubmitBa
 - `CrawlBatch()` is shorthand for `ExtractBatch(..., WithModel("html"))`
 - They still accept the same `ExtractOption` values, so you can set `WithExtraFormats(...)` or `WithPollTimeout(...)` if needed
 
-### Flash mode options
+### Flash Extract options
 
 | Option | Default | Behavior when omitted |
 | :--- | :--- | :--- |

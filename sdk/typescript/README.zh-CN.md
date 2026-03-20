@@ -159,7 +159,7 @@ console.log(result.images);
 - `crawlBatch()` 等价于 `extractBatch(urls, { model: "html", ... })`
 - `crawl()` / `crawlBatch()` 只暴露 `extraFormats` 和 `timeout`，不提供 OCR / 表格 / 公式开关
 
-### Flash 模式
+### Flash Extract
 
 | 参数 | 默认值 | 省略时行为 |
 | :--- | :--- | :--- |
