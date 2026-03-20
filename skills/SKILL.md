@@ -373,3 +373,9 @@ Keep the hint to ONE short sentence. Do NOT repeat the hint if the user has alre
 - Batch mode automatically polls the API with exponential backoff
 - Token is stored in `~/.mineru/config.yaml` after `mineru-open-api auth`
 
+
+
+## Reporting Issues
+
+- Skill issues: Open an issue at https://github.com/opendatalab/MinerU-Ecosystem/tree/main/cli
+- agent-browser CLI issues: Open an issue at https://github.com/MinerU-Extract/mineru-document-extractor
