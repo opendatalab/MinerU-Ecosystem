@@ -6,8 +6,8 @@
 
 `langchain-mineru` 是深度集成至 LangChain 生态的文档加载器（Document Loader）。利用 MinerU 的文档解析能力将多种外部数据源转换为 LangChain 可处理的 `Document` 对象，便于直接接入 RAG 构建链路。支持单文档与多文档输入，并无缝衔接后续的 Text Splitter、Embedding 与 Vector Store 流程。
 
-- ✅ `fast` 模式支持：PDF、图片（png/jpg/jpeg/jp2/webp/gif/bmp）、DOCX、PPTX、XLS、XLSX
-- ✅ `accurate` 模式支持：.pdf、.doc、.docx、.ppt、.pptx、.png、.jpg、.jpeg、.html
+- ✅ `accurate` 模式支持：.pdf、图片、.DOC、.DOCX、.PPT、.PPTX、html
+- ✅ `fast` 模式支持：.pdf、图片、DOCX、PPTX、XLS、XLSX
 - ✅ 支持单文档、多文档输入与 `lazy_load` 流式加载
 - ✅ PDF 类型可选 `split_pages`，按页拆分 PDF 后输出多个 `Document`
 - ✅ 支持两种解析模式：`fast`（快速，无需 Token）与 `accurate`（精准，需 Token）
@@ -53,8 +53,8 @@ print(docs[0].metadata)
 
 ## 模式说明
 
-- `fast`：快速解析模式，调用 MinerU flash API，无需 Token。支持格式：PDF、图片（png/jpg/jpeg/jp2/webp/gif/bmp）、DOCX、PPTX、XLS、XLSX。
-- `accurate`：精准解析模式，调用 MinerU 标准 `extract` 接口，需要 Token。支持格式：.pdf、.doc、.docx、.ppt、.pptx、.png、.jpg、.jpeg、.html。
+- `accurate`：精准解析模式，调用 MinerU 标准 `extract` 接口，需要 Token。支持格式：.pdf、图片、.DOC、.DOCX、.PPT、.PPTX、html。
+- `fast`：快速解析模式，调用 MinerU flash API，无需 Token。支持格式：.pdf、图片、DOCX、PPTX、XLS、XLSX。
 
 `accurate` 模式 Token 申请地址：[https://mineru.net/apiManage/token](https://mineru.net/apiManage/token)。
 
@@ -207,7 +207,7 @@ for r in results:
 
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `source` | `str \| list[str]` | *必填* | 本地文件路径或 URL，支持单个或列表。支持格式依赖 `mode`：`fast` 支持 PDF、图片（png/jpg/jpeg/jp2/webp/gif/bmp）、DOCX、PPTX、XLS、XLSX；`accurate` 支持 .pdf、.doc、.docx、.ppt、.pptx、.png、.jpg、.jpeg、.html。 |
+| `source` | `str \| list[str]` | *必填* | 本地文件路径或 URL，支持单个或列表。支持格式依赖 `mode`：`accurate` 支持 .pdf、图片、.DOC、.DOCX、.PPT、.PPTX、html；`fast` 支持 .pdf、图片、DOCX、PPTX、XLS、XLSX。 |
 | `mode` | `str` | `"fast"` | 解析模式。`"fast"` 为快速模式（无需 Token）；`"accurate"` 为精准模式（需 Token）。 |
 | `token` | `str \| None` | `None` | MinerU API Token。仅 `mode="accurate"` 时需要。申请地址：[https://mineru.net/apiManage/token](https://mineru.net/apiManage/token)。不传时会读取环境变量 `MINERU_TOKEN`。 |
 | `language` | `str` | `"ch"` | OCR 识别语言代码。常用值：`"ch"`（中文）、`"en"`（英文）。完整列表请参考[标准 API 文档](https://mineru.net/apiManage/docs)。 |
@@ -239,8 +239,8 @@ for r in results:
 
 ## 支持的文件格式
 
-- `accurate` 模式：.pdf、.doc、.docx、.ppt、.pptx、.png、.jpg、.jpeg、.html
-- `fast` 模式：PDF、图片（png/jpg/jpeg/jp2/webp/gif/bmp）、DOCX、PPTX、XLS、XLSX
+- `accurate` 模式：.pdf、图片、.DOC、.DOCX、.PPT、.PPTX、html
+- `fast` 模式：.pdf、图片、DOCX、PPTX、XLS、XLSX
 
 ## 限制
 

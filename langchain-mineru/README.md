@@ -6,8 +6,8 @@ LangChain document loader powered by [MinerU](https://mineru.net) — turn PDFs 
 
 `langchain-mineru` is a LangChain Document Loader deeply integrated into the LangChain ecosystem. It leverages MinerU's document parsing capabilities to convert diverse external data sources into LangChain-compatible `Document` objects, ready to plug into RAG pipelines. It supports both single-document and multi-document input, and integrates seamlessly with downstream Text Splitter, Embedding, and Vector Store workflows.
 
-- ✅ `fast` mode supports: PDF, images (png/jpg/jpeg/jp2/webp/gif/bmp), DOCX, PPTX, XLS, XLSX
-- ✅ `accurate` mode supports: .pdf, .doc, .docx, .ppt, .pptx, .png, .jpg, .jpeg, .html
+- ✅ `accurate` mode supports: .pdf, images, .DOC, .DOCX, .PPT, .PPTX, html
+- ✅ `fast` mode supports: .pdf, images, DOCX, PPTX, XLS, XLSX
 - ✅ Supports single and multi-document input with `lazy_load` streaming
 - ✅ Optional `split_pages` mode for PDFs — splits into one `Document` per page
 - ✅ Two parsing modes: `fast` (no token) and `accurate` (token required)
@@ -53,8 +53,8 @@ Default is `mode="fast"` and no API token is required.
 
 ## Mode Selection
 
-- `fast`: Calls MinerU flash API, optimized for speed, no token required. Supported formats: PDF, images (png/jpg/jpeg/jp2/webp/gif/bmp), DOCX, PPTX, XLS, XLSX.
-- `accurate`: Calls MinerU standard `extract` API. Token required. Supported formats: .pdf, .doc, .docx, .ppt, .pptx, .png, .jpg, .jpeg, .html.
+- `accurate`: Calls MinerU standard `extract` API. Token required. Supported formats: .pdf, images, .DOC, .DOCX, .PPT, .PPTX, html.
+- `fast`: Calls MinerU flash API, optimized for speed, no token required. Supported formats: .pdf, images, DOCX, PPTX, XLS, XLSX.
 
 Apply for an `accurate` mode token here: [https://mineru.net/apiManage/token](https://mineru.net/apiManage/token).
 
@@ -207,7 +207,7 @@ for r in results:
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `source` | `str \| list[str]` | *required* | Local file path(s) or URL(s). Supported formats depend on `mode`: `fast` supports PDF, images (png/jpg/jpeg/jp2/webp/gif/bmp), DOCX, PPTX, XLS, XLSX; `accurate` supports .pdf, .doc, .docx, .ppt, .pptx, .png, .jpg, .jpeg, .html. |
+| `source` | `str \| list[str]` | *required* | Local file path(s) or URL(s). Supported formats depend on `mode`: `accurate` supports .pdf, images, .DOC, .DOCX, .PPT, .PPTX, html; `fast` supports .pdf, images, DOCX, PPTX, XLS, XLSX. |
 | `mode` | `str` | `"fast"` | Parsing mode. `"fast"` is speed-first and token-free; `"accurate"` uses standard API and requires token. |
 | `token` | `str \| None` | `None` | MinerU API token. Required for `mode="accurate"`. Apply at [https://mineru.net/apiManage/token](https://mineru.net/apiManage/token). If omitted, `MINERU_TOKEN` environment variable is used. |
 | `language` | `str` | `"ch"` | Document language code for OCR. Common values: `"ch"` (Chinese), `"en"` (English). For the complete list, refer to the [standard API documentation](https://mineru.net/apiManage/docs). |
@@ -239,8 +239,8 @@ Each returned `Document` includes the following metadata:
 
 ## Supported File Formats
 
-- `accurate` mode: .pdf, .doc, .docx, .ppt, .pptx, .png, .jpg, .jpeg, .html
-- `fast` mode: PDF, images (png/jpg/jpeg/jp2/webp/gif/bmp), DOCX, PPTX, XLS, XLSX
+- `accurate` mode: .pdf, images, .DOC, .DOCX, .PPT, .PPTX, html
+- `fast` mode: .pdf, images, DOCX, PPTX, XLS, XLSX
 
 ## Limitations
 
