@@ -218,3 +218,52 @@ mcp:release:
   environment:
     name: pypi
     url: https://pypi.org/project/mineru-open-mcp/
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  LangChain MinerU
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# langchain-mineru/ 有变更时验证构建和导入
+langchain:test:
+  stage: test
+  tags:
+    - ecs
+  image: python:3.12-slim
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - changes:
+        - langchain-mineru/**
+  script:
+    - pip install uv
+    - cd langchain-mineru
+    - uv build
+    - pip install dist/*.whl
+    - python -c "from langchain_mineru import document_loaders; print('import ok')"
+
+# 打 langchain-mineru/v* tag 时构建并发布到 PyPI
+langchain:release:
+  stage: release
+  tags:
+    - ecs
+  image: python:3.12-slim
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^langchain-mineru\/v/
+  script:
+    - export VERSION=${CI_COMMIT_TAG#langchain-mineru/v}
+    - cd langchain-mineru
+
+    # 用 tag 版本覆盖 pyproject.toml 中的 version
+    - sed -i "s/^version = .*/version = \"${VERSION}\"/" pyproject.toml
+    - cat pyproject.toml | grep "^version"
+
+    # 构建（uv_build 后端）
+    - pip install uv twine
+    - uv build
+    - ls -la dist/
+
+    # 发布到 PyPI
+    - twine upload dist/* --non-interactive
+  environment:
+    name: pypi
+    url: https://pypi.org/project/langchain-mineru/
