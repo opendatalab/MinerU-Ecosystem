@@ -6,7 +6,8 @@ LangChain document loader powered by [MinerU](https://mineru.net) — turn PDFs 
 
 `langchain-mineru` is a LangChain Document Loader deeply integrated into the LangChain ecosystem. It leverages MinerU's document parsing capabilities to convert diverse external data sources into LangChain-compatible `Document` objects, ready to plug into RAG pipelines. It supports both single-document and multi-document input, and integrates seamlessly with downstream Text Splitter, Embedding, and Vector Store workflows.
 
-- ✅ Supports PDF / Image / DOCX / PPTx / XLS / XLSX / online URL 
+- ✅ `accurate` mode supports: .pdf, images, .DOC, .DOCX, .PPT, .PPTX, html
+- ✅ `fast` mode supports: .pdf, images, DOCX, PPTX, XLS, XLSX
 - ✅ Supports single and multi-document input with `lazy_load` streaming
 - ✅ Optional `split_pages` mode for PDFs — splits into one `Document` per page
 - ✅ Two parsing modes: `fast` (no token) and `accurate` (token required)
@@ -52,8 +53,10 @@ Default is `mode="fast"` and no API token is required.
 
 ## Mode Selection
 
-- `fast`: Calls MinerU flash API, optimized for speed, no token required, and supports both document and HTML input.
-- `accurate`: Calls MinerU standard `extract` API, token required.
+- `accurate`: Calls MinerU standard `extract` API. Token required. Supported formats: .pdf, images, .DOC, .DOCX, .PPT, .PPTX, html.
+- `fast`: Calls MinerU flash API, optimized for speed, no token required. Supported formats: .pdf, images, DOCX, PPTX, XLS, XLSX.
+
+Apply for an `accurate` mode token here: [https://mineru.net/apiManage/token](https://mineru.net/apiManage/token).
 
 You can provide token in two ways:
 
@@ -204,10 +207,10 @@ for r in results:
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `source` | `str \| list[str]` | *required* | Local file path(s) or URL(s). Supports PDF, DOCX, PPTX, images, and online URLs. |
+| `source` | `str \| list[str]` | *required* | Local file path(s) or URL(s). Supported formats depend on `mode`: `accurate` supports .pdf, images, .DOC, .DOCX, .PPT, .PPTX, html; `fast` supports .pdf, images, DOCX, PPTX, XLS, XLSX. |
 | `mode` | `str` | `"fast"` | Parsing mode. `"fast"` is speed-first and token-free; `"accurate"` uses standard API and requires token. |
-| `token` | `str \| None` | `None` | MinerU API token. Required for `mode="accurate"`. If omitted, `MINERU_TOKEN` environment variable is used. |
-| `language` | `str` | `"ch"` | Document language code for OCR. Common values: `"ch"` (Chinese), `"en"` (English), `"auto"` (auto-detect). For the complete list, refer to the [standard API documentation](https://mineru.net/apiManage/docs). |
+| `token` | `str \| None` | `None` | MinerU API token. Required for `mode="accurate"`. Apply at [https://mineru.net/apiManage/token](https://mineru.net/apiManage/token). If omitted, `MINERU_TOKEN` environment variable is used. |
+| `language` | `str` | `"ch"` | Document language code for OCR. Common values: `"ch"` (Chinese), `"en"` (English). For the complete list, refer to the [standard API documentation](https://mineru.net/apiManage/docs). |
 | `pages` | `str \| None` | `None` | Page range to extract, e.g. `"1-5"` or `"3"`. Only applies to PDF files. When `split_pages=False`, the range is forwarded to the API. When `split_pages=True`, only the specified pages are split and parsed locally — reducing API calls and processing time. |
 | `timeout` | `int` | `1200` | Maximum seconds to wait for extraction per file. |
 | `split_pages` | `bool` | `False` | PDF only. When `True`, splits the PDF into one `Document` per page. Each page is parsed independently, so `metadata["page"]` is available. Non-PDF files are unaffected — they always produce one `Document`. |
@@ -227,7 +230,7 @@ Each returned `Document` includes the following metadata:
     "mode": "fast",                  # fast / accurate
     "language": "ch",
     "pages": None,
-    "split_pages": False,
+    "split_pages": True,
     "filename": "report.pdf",
     "page": 1,                       # only present when split_pages=True
     "page_source": "report.pdf",     # only present when split_pages=True
@@ -236,7 +239,8 @@ Each returned `Document` includes the following metadata:
 
 ## Supported File Formats
 
-PDF, DOC, DOCX, PPT, PPTX, PNG, JPG, JPEG
+- `accurate` mode: .pdf, images, .DOC, .DOCX, .PPT, .PPTX, html
+- `fast` mode: .pdf, images, DOCX, PPTX, XLS, XLSX
 
 ## Limitations
 
