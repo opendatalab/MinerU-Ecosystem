@@ -46,7 +46,7 @@ Supports large files, rich assets (images/tables), and multiple formats.
 ```python
 from mineru import MinerU
 
-# Get your free token from https://mineru.net
+# Get your free token from https://mineru.net/apiManage/token
 client = MinerU("your-api-token")
 result = client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 

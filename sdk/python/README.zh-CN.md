@@ -46,7 +46,7 @@ print(result.markdown)
 ```python
 from mineru import MinerU
 
-# 从 https://mineru.net 获取免费 Token
+# 从 https://mineru.net/apiManage/token 获取免费 Token
 client = MinerU("your-api-token")
 result = client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 
