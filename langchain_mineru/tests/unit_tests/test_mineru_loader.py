@@ -67,33 +67,33 @@ class TestValidation:
         assert loader.source == ["a.pdf", "b.pdf"]
 
     def test_invalid_mode_raises(self):
-        with pytest.raises(ValueError, match="mode must be 'fast' or 'accurate'"):
+        with pytest.raises(ValueError, match="mode must be 'flash' or 'precision'"):
             _make_loader(source="a.pdf", mode="invalid")
 
-    def test_accurate_mode_without_token_raises(self, monkeypatch):
+    def test_precision_mode_without_token_raises(self, monkeypatch):
         monkeypatch.delenv("MINERU_TOKEN", raising=False)
-        with pytest.raises(ValueError, match="accurate mode requires token"):
-            _make_loader(source="a.pdf", mode="accurate")
+        with pytest.raises(ValueError, match="precision mode requires token"):
+            _make_loader(source="a.pdf", mode="precision")
 
-    def test_accurate_mode_with_explicit_token_ok(self):
-        loader = _make_loader(source="a.pdf", mode="accurate", token="test-token")
-        assert loader.mode == "accurate"
+    def test_precision_mode_with_explicit_token_ok(self):
+        loader = _make_loader(source="a.pdf", mode="precision", token="test-token")
+        assert loader.mode == "precision"
         assert loader.token == "test-token"
 
     @pytest.mark.parametrize(
         ("kwargs", "match"),
         [
-            ({"formula": False}, "formula/table are only supported in accurate mode"),
-            ({"table": False}, "formula/table are only supported in accurate mode"),
+            ({"formula": False}, "formula/table are only supported in precision mode"),
+            ({"table": False}, "formula/table are only supported in precision mode"),
         ],
     )
-    def test_fast_mode_rejects_accurate_only_options(self, kwargs, match):
+    def test_flash_mode_rejects_precision_only_options(self, kwargs, match):
         with pytest.raises(ValueError, match=match):
-            _make_loader(source="a.pdf", mode="fast", **kwargs)
+            _make_loader(source="a.pdf", mode="flash", **kwargs)
 
-    def test_fast_mode_accepts_ocr_option(self):
-        loader = _make_loader(source="a.pdf", mode="fast", ocr=True)
-        assert loader.mode == "fast"
+    def test_flash_mode_accepts_ocr_option(self):
+        loader = _make_loader(source="a.pdf", mode="flash", ocr=True)
+        assert loader.mode == "flash"
         assert loader.ocr is True
 
 
@@ -356,7 +356,7 @@ class TestMetadata:
         assert meta["source"] == "report.pdf"
         assert meta["loader"] == "mineru"
         assert meta["output_format"] == "markdown"
-        assert meta["mode"] == "fast"
+        assert meta["mode"] == "flash"
         assert meta["language"] == "en"
         assert meta["pages"] == "1-3"
         assert meta["split_pages"] is False
@@ -483,15 +483,15 @@ class TestFlashExtractCall:
 
 
 # ---------------------------------------------------------------------------
-# Accurate extract call verification
+# Precision extract call verification
 # ---------------------------------------------------------------------------
 
 
-class TestAccurateExtractCall:
+class TestPrecisionExtractCall:
     def test_calls_extract(self):
         loader = _make_loader(
             source="test.pdf",
-            mode="accurate",
+            mode="precision",
             token="token-123",
             language="en",
             pages="2-5",
@@ -514,7 +514,7 @@ class TestAccurateExtractCall:
     def test_calls_extract_with_ocr_formula_table(self):
         loader = _make_loader(
             source="test.pdf",
-            mode="accurate",
+            mode="precision",
             token="token-123",
             ocr=True,
             formula=False,
@@ -540,7 +540,7 @@ class TestAccurateExtractCall:
 
             loader = _make_loader(
                 source=str(pdf_path),
-                mode="accurate",
+                mode="precision",
                 token="token-123",
                 pages="1-2",
                 split_pages=True,
