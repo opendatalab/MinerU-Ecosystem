@@ -41,14 +41,14 @@ python -c "from langchain_mineru import MinerULoader; print('OK')"
 ```python
 from langchain_mineru import MinerULoader
 
-loader = MinerULoader(source="report.pdf")
+loader = MinerULoader(source="demo.pdf")
 docs = loader.load()
 
 print(docs[0].page_content[:500])
 print(docs[0].metadata)
 ```
 
-默认 `model="fast"`，无需 API Token。
+默认 `mode="fast"`，无需 API Token。
 
 ## 模式说明
 
@@ -64,7 +64,7 @@ export MINERU_TOKEN="your-token"
 
 ```python
 # 方式 2：构造 Loader 时显式传入
-loader = MinerULoader(source="report.pdf", model="accurate", token="your-token")
+loader = MinerULoader(source="demo.pdf", mode="accurate", token="your-token")
 ```
 
 ## 使用示例
@@ -75,7 +75,7 @@ loader = MinerULoader(source="report.pdf", model="accurate", token="your-token")
 from langchain_mineru import MinerULoader
 
 loader = MinerULoader(
-    source="report.pdf",
+    source="demo.pdf",
     split_pages=True,
 )
 
@@ -84,16 +84,17 @@ for doc in docs:
     print(f"第 {doc.metadata['page']} 页: {doc.page_content[:200]}")
 ```
 
-### 自定义参数
+### 带参数使用
+
+### Fast 模式（无需 Token）
 
 ```python
 from langchain_mineru import MinerULoader
 
 loader = MinerULoader(
     source="/path/to/demo.pdf",
-    model="fast",
+    mode="fast",
     language="en",
-    pages="1-10",
     timeout=300,
 )
 
@@ -101,17 +102,18 @@ docs = loader.load()
 print(docs[0].page_content[:500])
 ```
 
-### 精准模式（需 Token）
+### Accurate 模式（需 Token）
 
 ```python
 from langchain_mineru import MinerULoader
 
 loader = MinerULoader(
     source="/path/to/demo.pdf",
-    model="accurate",
+    mode="accurate",
     token="your-token",  # 或通过 MINERU_TOKEN 环境变量提供
     language="en",
-    pages="1-10",
+    split_pages=True,
+    pages="1-5",
     timeout=300,
     ocr=True,
     formula=True,
@@ -119,7 +121,9 @@ loader = MinerULoader(
 )
 
 docs = loader.load()
-print(docs[0].page_content[:500])
+for doc in docs:
+    print("-"*100)
+    print(f"Page {doc.metadata['page']}: \n {doc.page_content[:200]}")
 ```
 
 也可以直接运行示例脚本：
@@ -136,9 +140,9 @@ from langchain_mineru import MinerULoader
 
 loader = MinerULoader(
     source=[
-        "/path/to/a.pdf",
-        "/path/to/b.pdf",
-        "https://example.com/demo.pdf",
+        "/path/to/demo_a.pdf",
+        "/path/to/demo_b.pdf",
+        "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
     ],
 )
 
@@ -147,7 +151,7 @@ for doc in docs:
     print(doc.metadata["source"], "-", doc.page_content[:100])
 ```
 
-### RAG
+### RAG Pipeline
 
 #### RAG（fast 模式，无需 Token）
 
@@ -157,7 +161,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 
-loader = MinerULoader(source="manual.pdf", model="fast")
+loader = MinerULoader(source="demo.pdf", mode="fast")
 docs = loader.load()
 
 splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=200)
@@ -179,7 +183,7 @@ from langchain_community.vectorstores import FAISS
 
 loader = MinerULoader(
     source="manual.pdf",
-    model="accurate",
+    mode="accurate",
     token="your-token",  # 或设置 MINERU_TOKEN
     ocr=True,
     formula=True,
@@ -201,15 +205,15 @@ for r in results:
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | `source` | `str \| list[str]` | *必填* | 本地文件路径或 URL，支持单个或列表。支持 PDF、DOCX、PPTX、图片及在线 URL。 |
-| `model` | `str` | `"fast"` | 解析模式。`"fast"` 为快速模式（无需 Token）；`"accurate"` 为精准模式（需 Token）。 |
-| `token` | `str \| None` | `None` | MinerU API Token。仅 `model="accurate"` 时需要。不传时会读取环境变量 `MINERU_TOKEN`。 |
+| `mode` | `str` | `"fast"` | 解析模式。`"fast"` 为快速模式（无需 Token）；`"accurate"` 为精准模式（需 Token）。 |
+| `token` | `str \| None` | `None` | MinerU API Token。仅 `mode="accurate"` 时需要。不传时会读取环境变量 `MINERU_TOKEN`。 |
 | `language` | `str` | `"ch"` | OCR 识别语言代码。常用值：`"ch"`（中文）、`"en"`（英文）、`"auto"`（自动检测）。完整列表请参考[标准 API 文档](https://mineru.net/apiManage/docs)。 |
 | `pages` | `str \| None` | `None` | 页码范围，仅对 PDF 有效，例如 `"1-5"` 或 `"3"`。`split_pages=False` 时，页码范围直接传给 API；`split_pages=True` 时，本地只拆指定页，减少 API 调用次数。 |
 | `timeout` | `int` | `1200` | 单文件最大等待时间（秒）。 |
 | `split_pages` | `bool` | `False` | 仅对 PDF 有效。为 `True` 时，按页拆分 PDF，每页生成一个 `Document`，`metadata["page"]` 可用。非 PDF 文件不受影响，始终返回一个 `Document`。 |
-| `ocr` | `bool` | `False` | 仅 `model="accurate"` 生效，是否启用 OCR。`model="fast"` 下传非默认值会报错。 |
-| `formula` | `bool` | `True` | 仅 `model="accurate"` 生效，是否启用公式识别。`model="fast"` 下传非默认值会报错。 |
-| `table` | `bool` | `True` | 仅 `model="accurate"` 生效，是否启用表格识别。`model="fast"` 下传非默认值会报错。 |
+| `ocr` | `bool` | `False` | 在 `mode="accurate"` 下生效并控制 OCR；在 `mode="fast"` 下 OCR 为内置能力，该参数会被忽略。 |
+| `formula` | `bool` | `True` | 仅 `mode="accurate"` 生效，是否启用公式识别。`mode="fast"` 下传非默认值会报错。 |
+| `table` | `bool` | `True` | 仅 `mode="accurate"` 生效，是否启用表格识别。`mode="fast"` 下传非默认值会报错。 |
 
 ## Document Metadata 说明
 
@@ -220,7 +224,7 @@ for r in results:
     "source": "report.pdf",          # 原始输入路径或 URL
     "loader": "mineru",
     "output_format": "markdown",
-    "model": "fast",                 # fast / accurate
+    "mode": "fast",                  # fast / accurate
     "language": "ch",
     "pages": None,
     "split_pages": False,

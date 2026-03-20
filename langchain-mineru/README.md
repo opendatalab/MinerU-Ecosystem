@@ -41,14 +41,14 @@ python -c "from langchain_mineru import MinerULoader; print('OK')"
 ```python
 from langchain_mineru import MinerULoader
 
-loader = MinerULoader(source="report.pdf")
+loader = MinerULoader(source="demo.pdf")
 docs = loader.load()
 
 print(docs[0].page_content[:500])
 print(docs[0].metadata)
 ```
 
-Default is `model="fast"` and no API token is required.
+Default is `mode="fast"` and no API token is required.
 
 ## Mode Selection
 
@@ -64,7 +64,7 @@ export MINERU_TOKEN="your-token"
 
 ```python
 # Option 2: pass token directly
-loader = MinerULoader(source="report.pdf", model="accurate", token="your-token")
+loader = MinerULoader(source="demo.pdf", mode="accurate", token="your-token")
 ```
 
 ## Usage Examples
@@ -75,7 +75,7 @@ loader = MinerULoader(source="report.pdf", model="accurate", token="your-token")
 from langchain_mineru import MinerULoader
 
 loader = MinerULoader(
-    source="report.pdf",
+    source="demo.pdf",
     split_pages=True,
 )
 
@@ -86,14 +86,15 @@ for doc in docs:
 
 ### With Parameters
 
+### Fast Mode (Token Free)
+
 ```python
 from langchain_mineru import MinerULoader
 
 loader = MinerULoader(
     source="/path/to/demo.pdf",
-    model="fast",
+    mode="fast",
     language="en",
-    pages="1-10",
     timeout=300,
 )
 
@@ -108,10 +109,11 @@ from langchain_mineru import MinerULoader
 
 loader = MinerULoader(
     source="/path/to/demo.pdf",
-    model="accurate",
+    mode="accurate",
     token="your-token",  # or set MINERU_TOKEN
     language="en",
-    pages="1-10",
+    split_pages=True,
+    pages="1-5",
     timeout=300,
     ocr=True,
     formula=True,
@@ -119,7 +121,9 @@ loader = MinerULoader(
 )
 
 docs = loader.load()
-print(docs[0].page_content[:500])
+for doc in docs:
+    print("-"*100)
+    print(f"Page {doc.metadata['page']}: \n {doc.page_content[:200]}")
 ```
 
 Or run the dedicated example script directly:
@@ -136,9 +140,9 @@ from langchain_mineru import MinerULoader
 
 loader = MinerULoader(
     source=[
-        "/path/to/a.pdf",
-        "/path/to/b.pdf",
-        "https://example.com/demo.pdf",
+        "/path/to/demo_a.pdf",
+        "/path/to/demo_b.pdf",
+        "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
     ],
 )
 
@@ -157,7 +161,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 
-loader = MinerULoader(source="manual.pdf", model="fast")
+loader = MinerULoader(source="demo.pdf", mode="fast")
 docs = loader.load()
 
 splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=200)
@@ -179,7 +183,7 @@ from langchain_community.vectorstores import FAISS
 
 loader = MinerULoader(
     source="manual.pdf",
-    model="accurate",
+    mode="accurate",
     token="your-token",  # or set MINERU_TOKEN
     ocr=True,
     formula=True,
@@ -201,15 +205,15 @@ for r in results:
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `source` | `str \| list[str]` | *required* | Local file path(s) or URL(s). Supports PDF, DOCX, PPTX, images, and online URLs. |
-| `model` | `str` | `"fast"` | Parsing mode. `"fast"` is speed-first and token-free; `"accurate"` uses standard API and requires token. |
-| `token` | `str \| None` | `None` | MinerU API token. Required for `model="accurate"`. If omitted, `MINERU_TOKEN` environment variable is used. |
+| `mode` | `str` | `"fast"` | Parsing mode. `"fast"` is speed-first and token-free; `"accurate"` uses standard API and requires token. |
+| `token` | `str \| None` | `None` | MinerU API token. Required for `mode="accurate"`. If omitted, `MINERU_TOKEN` environment variable is used. |
 | `language` | `str` | `"ch"` | Document language code for OCR. Common values: `"ch"` (Chinese), `"en"` (English), `"auto"` (auto-detect). For the complete list, refer to the [standard API documentation](https://mineru.net/apiManage/docs). |
 | `pages` | `str \| None` | `None` | Page range to extract, e.g. `"1-5"` or `"3"`. Only applies to PDF files. When `split_pages=False`, the range is forwarded to the API. When `split_pages=True`, only the specified pages are split and parsed locally — reducing API calls and processing time. |
 | `timeout` | `int` | `1200` | Maximum seconds to wait for extraction per file. |
 | `split_pages` | `bool` | `False` | PDF only. When `True`, splits the PDF into one `Document` per page. Each page is parsed independently, so `metadata["page"]` is available. Non-PDF files are unaffected — they always produce one `Document`. |
-| `ocr` | `bool` | `False` | Effective only when `model="accurate"`. Enables OCR. Passing non-default value in `model="fast"` raises an error. |
-| `formula` | `bool` | `True` | Effective only when `model="accurate"`. Enables formula recognition. Passing non-default value in `model="fast"` raises an error. |
-| `table` | `bool` | `True` | Effective only when `model="accurate"`. Enables table recognition. Passing non-default value in `model="fast"` raises an error. |
+| `ocr` | `bool` | `False` | Effective when `mode="accurate"`. In `mode="fast"`, OCR is built in and this parameter is ignored. |
+| `formula` | `bool` | `True` | Effective only when `mode="accurate"`. Enables formula recognition. Passing non-default value in `mode="fast"` raises an error. |
+| `table` | `bool` | `True` | Effective only when `mode="accurate"`. Enables table recognition. Passing non-default value in `mode="fast"` raises an error. |
 
 ## Document Metadata
 
@@ -220,7 +224,7 @@ Each returned `Document` includes the following metadata:
     "source": "report.pdf",          # original source path or URL
     "loader": "mineru",
     "output_format": "markdown",
-    "model": "fast",                 # fast / accurate
+    "mode": "fast",                  # fast / accurate
     "language": "ch",
     "pages": None,
     "split_pages": False,
