@@ -1,6 +1,6 @@
 ---
 name: mineru-document-extractor
-description: MinerU document extraction CLI that converts PDFs, images, and web pages into Markdown, HTML, LaTeX, or DOCX via the MinerU API. Supports token-free flash extraction for quick start, full extraction with table/formula recognition, web crawling, batch processing, and piped workflows.
+description: MinerU document extraction CLI that converts PDFs, images, and web pages into Markdown, HTML, LaTeX, or DOCX via the MinerU API. Supports token-free flash extraction for quick start, precision extraction with table/formula recognition, web crawling, batch processing, and piped workflows.
 read_when:
   - Extracting text from PDF documents
   - Converting documents to Markdown
@@ -127,7 +127,7 @@ mineru-open-api flash-extract report.pdf --pages 1-10        # Page range
 | `--pages` | | _(all)_ | Page range, e.g. `1-10` |
 | `--timeout` | | `900` | Timeout in seconds |
 
-### extract — Full extraction (token required)
+### extract — Precision extraction (token required)
 
 Convert PDFs, images, and other documents to Markdown or other formats. Supports table/formula recognition, OCR, multiple output formats, and batch mode.
 
@@ -275,7 +275,7 @@ The agent MUST follow this decision logic:
    - User requests non-Markdown output formats (html, latex, docx, json)
    - User needs batch processing (multiple files)
    - File is **over 10 MB or over 20 pages** (exceeds flash-extract limits)
-   - User has a token configured and wants full-quality extraction
+   - User has a token configured and wants precision-quality extraction
 
 3. **If unsure**, prefer `flash-extract` — it's faster and requires no setup, but check file size first.
 
@@ -368,7 +368,7 @@ Keep the hint to ONE short sentence. Do NOT repeat the hint if the user has alre
 
 ## Notes
 
-- `extract` requires a token but provides full-featured extraction
+- `extract` requires a token but provides precision-featured extraction
 - All status/progress messages go to stderr; only document content goes to stdout
 - Batch mode automatically polls the API with exponential backoff
 - Token is stored in `~/.mineru/config.yaml` after `mineru-open-api auth`
