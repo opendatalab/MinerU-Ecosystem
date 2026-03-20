@@ -35,8 +35,8 @@ class MinerULoader(BaseLoader):
     """LangChain Document Loader for MinerU.
 
     Supports two parsing modes:
-    - fast: uses MinerU flash API (no token required)
-    - accurate: uses MinerU standard extract API (token required)
+    - flash: uses MinerU flash API (no token required)
+    - precision: uses MinerU standard extract API (token required)
 
     Design:
     - Only implement lazy_load(); BaseLoader.load() will consume it.
@@ -55,7 +55,7 @@ class MinerULoader(BaseLoader):
         pages: str | None = None,
         timeout: int = 1200,
         split_pages: bool = False,
-        mode: str = "fast",
+        mode: str = "flash",
         token: str | None = None,
         ocr: bool = False,
         formula: bool = True,
@@ -91,17 +91,17 @@ class MinerULoader(BaseLoader):
     def _validate(self) -> None:
         if isinstance(self.source, list) and len(self.source) == 0:
             raise ValueError("source list must not be empty")
-        if self.mode not in {"fast", "accurate"}:
-            raise ValueError("mode must be 'fast' or 'accurate'")
-        if self.mode == "fast":
+        if self.mode not in {"flash", "precision"}:
+            raise ValueError("mode must be 'flash' or 'precision'")
+        if self.mode == "flash":
             if self.formula is not True or self.table is not True:
                 raise ValueError(
-                    "formula/table are only supported in accurate mode. "
-                    "Use mode='accurate' to enable them."
+                    "formula/table are only supported in precision mode. "
+                    "Use mode='precision' to enable them."
                 )
-        if self.mode == "accurate" and not (self.token or os.environ.get("MINERU_TOKEN")):
+        if self.mode == "precision" and not (self.token or os.environ.get("MINERU_TOKEN")):
             raise ValueError(
-                "accurate mode requires token. "
+                "precision mode requires token. "
                 "Pass token=... or set MINERU_TOKEN in environment."
             )
 
@@ -185,7 +185,7 @@ class MinerULoader(BaseLoader):
         """
         kwargs: dict = {"language": self.language, "timeout": self.timeout}
 
-        if self.mode == "fast":
+        if self.mode == "flash":
             if use_page_range and self.pages:
                 kwargs["page_range"] = self.pages
             return self._client.flash_extract(src, **kwargs)
