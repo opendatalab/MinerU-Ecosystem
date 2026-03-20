@@ -1,6 +1,6 @@
 # MinerU Open API 命令行工具 (CLI)
 
-[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/opendatalab/MinerU-Ecosystem/cli/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/opendatalab/MinerU-Ecosystem/blob/main/LICENSE)
 
 **MinerU Open API CLI** 是一个零依赖的命令行工具，用于文档解析和网页抓取。
 
@@ -200,7 +200,7 @@ mineru-open-api flash-extract 报告.pdf --language en --pages 1-5
 | `--ocr` | `false` | OCR 默认关闭 |
 | `--formula` | `true` | 启用/禁用公式识别 |
 | `--table` | `true` | 启用/禁用表格识别 |
-| `--language` | `ch` | 只有改动时才会显式传给 API |
+| `-l`, `--language` | `ch` | 只有改动时才会显式传给 API |
 | `--pages` | 未设置 | 默认处理完整文档 |
 | `--timeout` | 单文件 `300` / 批量 `1800` 秒 | 轮询等待总时长 |
 | `--stdin` | `false` | 从 `stdin` 读取文件字节流 |
@@ -229,7 +229,7 @@ mineru-open-api flash-extract 报告.pdf --language en --pages 1-5
 | `--ocr` | 启用 OCR |
 | `--formula=false` | 关闭公式识别 |
 | `--table=false` | 关闭表格识别 |
-| `--language` | 文档语言 |
+| `-l`, `--language` | 文档语言 |
 | `--pages` | 页码范围，例如 `1-10,15` |
 | `--timeout` | 轮询超时时间，单位秒 |
 | `--list` | 从文件读取输入 |
@@ -417,4 +417,4 @@ curl -L https://example.com/report.pdf | mineru-open-api extract --stdin --stdin
 ## 🔗 相关链接
 
 - [官方网站](https://mineru.net)
-- [API 文档](https://mineru.net/docs)
+- [API 文档](https://mineru.net/apiManage/docs)
