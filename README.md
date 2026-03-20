@@ -31,7 +31,8 @@ MinerU-Ecosystem/
 │   ├── python/           #   Python SDK
 │   ├── go/               #   Go SDK
 │   └── typescript/       #   TypeScript SDK
-├── mcp/           # Model Context Protocol server (Python)
+├── langchain_mineru/     # LangChain document loader integration
+├── mcp/                  # Model Context Protocol server (Python)
 └── skills/               # AI agent skills (Claude Code, OpenClaw, etc.)
 ```
 
@@ -156,6 +157,16 @@ print(result.images)  # Get the list of extracted images
 
 Multi-language SDKs are also available: **[Go](sdk/go/)** | **[TypeScript](sdk/typescript/)**. See the [`sdk/`](sdk/) directory for details.
 
+### AI Agent Skills (`skills/`)
+
+Pre-built skill for AI coding agents, enabling document extraction directly within agent workflows. The skill is wrapper by the `mineru-open-api` CLI and provides:
+
+#### Skills Download
+
+- **[OpenClaw](https://clawhub.ai/MinerU-Extract/mineru-document-extractor)** — `View skill details on ClawHub`
+- **[CDN Link](https://webpub.shlab.tech/MinerU/skills/api/10..0.zip)** — One-click download skill package
+- Other AI agents like zeroclaw that also support skill/tool interfaces
+
 ### MCP Server (`mcp/`)
 
 A [Model Context Protocol](https://modelcontextprotocol.io/) server implementation in Python, allowing MCP-compatible AI clients (such as Claude) to use MinerU's document parsing as a tool.
@@ -178,15 +189,34 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) server implementati
 }
 ```
 
-### AI Agent Skills (`skills/`)
+### LangChain Integration (`langchain_mineru/`)
 
-Pre-built skill for AI coding agents, enabling document extraction directly within agent workflows. The skill is wrapper by the `mineru-open-api` CLI and provides:
+A LangChain Document Loader that turns PDFs and documents into LangChain-compatible `Document` objects with one line of code — ready to plug into RAG pipelines.
 
-#### Skills Download
+#### Installation
 
-- **[OpenClaw](https://clawhub.ai/MinerU-Extract/mineru-document-extractor)** — `View skill details on ClawHub`
-- **[CDN Link](https://webpub.shlab.tech/MinerU/skills/api/10..0.zip)** — One-click download skill package
-- Other AI agents like zeroclaw that also support skill/tool interfaces
+```bash
+pip install langchain-mineru
+```
+
+#### Usage
+
+```python
+from langchain_mineru import MinerULoader
+
+loader = MinerULoader(source="demo.pdf")
+docs = loader.load()
+
+print(docs[0].page_content[:500])
+print(docs[0].metadata)
+```
+
+Default is `mode="flash"` (no API token required). Switch to `mode="precision"` for higher fidelity with token auth.
+
+Two parsing modes are available:
+
+See the full documentation and RAG pipeline examples in [`langchain_mineru/`](langchain_mineru/).
+
 
 
 ## 📚 Documentation

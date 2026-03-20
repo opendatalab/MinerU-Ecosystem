@@ -31,6 +31,7 @@ MinerU-Ecosystem/
 │   ├── python/           #   Python SDK
 │   ├── go/               #   Go SDK
 │   └── typescript/       #   TypeScript SDK
+├── langchain_mineru/     # LangChain 文档加载器集成
 ├── mcp/           # Model Context Protocol 服务器（Python）
 └── skills/               # AI 智能体技能（Claude Code、OpenClaw 等）
 ```
@@ -152,6 +153,12 @@ print(result.images)  # 获取提取出的图片列表
 
 多语言 SDK 同样可用：**[Go](sdk/go/)** | **[TypeScript](sdk/typescript/)**，详见 [`sdk/`](sdk/) 目录。
 
+### AI 智能体技能 (`skills/`)
+
+- **[OpenClaw](https://clawhub.ai/MinerU-Extract/mineru-document-extractor)** — `在 clawhub 查看skills详情`
+- **[CDN Link](https://webpub.shlab.tech/MinerU/skills/api/1.0.0.zip)** — 一键下载skill资源包
+- 其他支持技能/工具接口的 AI 智能体（如 zeroclaw）
+
 ### MCP 服务器 (`mcp/`)
 
 基于 Python 的 [Model Context Protocol](https://modelcontextprotocol.io/) 服务器实现，允许 MCP 兼容的 AI 客户端（如 Claude）将 MinerU 文档解析作为工具使用。
@@ -174,11 +181,29 @@ print(result.images)  # 获取提取出的图片列表
 }
 ```
 
-### AI 智能体技能 (`skills/`)
+### LangChain 集成 (`langchain_mineru/`)
 
-- **[OpenClaw](https://clawhub.ai/MinerU-Extract/mineru-document-extractor)** — `在 clawhub 查看skills详情`
-- **[CDN Link](https://webpub.shlab.tech/MinerU/skills/api/1.0.0.zip)** — 一键下载skill资源包
-- 其他支持技能/工具接口的 AI 智能体（如 zeroclaw）
+一个 LangChain 文档加载器，一行代码即可将 PDF 等文档转换为 LangChain 兼容的 `Document` 对象，直接接入 RAG 流水线。
+
+#### 安装
+
+```bash
+pip install langchain-mineru
+```
+
+#### 使用
+
+```python
+from langchain_mineru import MinerULoader
+
+loader = MinerULoader(source="demo.pdf")
+docs = loader.load()
+
+print(docs[0].page_content[:500])
+print(docs[0].metadata)
+```
+
+默认使用 `mode="flash"`（无需 API Token）。切换到 `mode="precision"` 可获得更高精度的解析结果（需要 Token 认证）。
 
 ## 📚 相关文档
 
