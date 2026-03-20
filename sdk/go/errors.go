@@ -34,7 +34,7 @@ type (
 type (
 	FlashFileTooLargeError    struct{ APIError } // -30001: file > 10MB
 	FlashUnsupportedTypeError struct{ APIError } // -30002: unsupported file type
-	FlashPageLimitError       struct{ APIError } // -30003: file > 50 pages
+	FlashPageLimitError       struct{ APIError } // -30003: file > 20 pages
 	FlashParamError           struct{ APIError } // -30004: bad request params
 )
 

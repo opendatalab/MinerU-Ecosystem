@@ -12,8 +12,8 @@
 ## 🚀 核心特性
 
 - **完全免费**：文档提取服务没有任何隐藏费用。
-- **极速模式 (No Auth)**：无需 API Token 即可立即提取。
-- **全功能模式**：提供完整的版式保留、图片、表格及公式支持。
+- **Agent 轻量解析 (No Auth)**：无需 API Token 即可立即提取。
+- **精准解析**：提供完整的版式保留、图片、表格及公式支持。
 - **批量与轮询原语**：既提供开箱即用的阻塞式接口，也提供适合异步工作流的 submit/query 接口。
 - **内置保存辅助方法**：可直接保存 Markdown、HTML、LaTeX、DOCX，或解压完整结果包。
 
@@ -29,19 +29,19 @@ pip install mineru-open-sdk
 
 ## 🛠️ 快速上手
 
-### 1. 极速模式 (Flash Extract - 免登录，只支持Markdown)
+### 1. Agent 轻量解析 (Flash Extract - 免登录，只支持Markdown)
 适合快速预览。无需配置 Token。
 ```python
 from mineru import MinerU
 
-# 极速模式无需传入 Token
+# Agent 轻量解析无需传入 Token
 client = MinerU()
 result = client.flash_extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
 
 print(result.markdown)
 ```
 
-### 2. 全功能模式 (Full Feature Extract - 需登录)
+### 2. 精准解析 (Full Feature Extract - 需登录)
 支持超大文件、丰富的资产（图片/表格）及多种输出格式。
 ```python
 from mineru import MinerU
@@ -105,7 +105,7 @@ print(result.images) # 获取提取出的图片列表
 
 ## 📊 模式对比
 
-| 特性 | 极速模式 (Flash) | 全功能模式 (Full Feature) |
+| 特性 | Agent 轻量解析 (Flash) | 精准解析 (Full Feature) |
 | :--- | :--- | :--- |
 | **身份认证** | **免登录 (No Auth)** | **需登录 (Token)** |
 | **处理速度** | 极速 | 标准 |
@@ -263,4 +263,4 @@ if result.state == "done":
 
 ## 🔗 相关链接
 - [官方网站](https://mineru.net)
-- [API 文档](https://mineru.net/docs)
+- [API 文档](https://mineru.net/apiManage/docs)

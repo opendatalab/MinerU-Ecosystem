@@ -60,7 +60,7 @@ class FlashUnsupportedTypeError(MinerUError):
 
 
 class FlashPageLimitError(MinerUError):
-    """File exceeds 50 page limit (-30003)."""
+    """File exceeds 20 page limit (-30003)."""
 
 
 class FlashParamError(MinerUError):
