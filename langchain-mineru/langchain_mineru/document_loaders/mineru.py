@@ -55,7 +55,7 @@ class MinerULoader(BaseLoader):
         pages: str | None = None,
         timeout: int = 1200,
         split_pages: bool = False,
-        model: str = "fast",
+        mode: str = "fast",
         token: str | None = None,
         ocr: bool = False,
         formula: bool = True,
@@ -66,7 +66,7 @@ class MinerULoader(BaseLoader):
         self.pages = pages
         self.timeout = timeout
         self.split_pages = split_pages
-        self.model = model
+        self.mode = mode
         self.token = token
         self.ocr = ocr
         self.formula = formula
@@ -91,15 +91,15 @@ class MinerULoader(BaseLoader):
     def _validate(self) -> None:
         if isinstance(self.source, list) and len(self.source) == 0:
             raise ValueError("source list must not be empty")
-        if self.model not in {"fast", "accurate"}:
-            raise ValueError("model must be 'fast' or 'accurate'")
-        if self.model == "fast":
-            if self.ocr is not False or self.formula is not True or self.table is not True:
+        if self.mode not in {"fast", "accurate"}:
+            raise ValueError("mode must be 'fast' or 'accurate'")
+        if self.mode == "fast":
+            if self.formula is not True or self.table is not True:
                 raise ValueError(
-                    "ocr/formula/table are only supported in accurate mode. "
-                    "Use model='accurate' to enable them."
+                    "formula/table are only supported in accurate mode. "
+                    "Use mode='accurate' to enable them."
                 )
-        if self.model == "accurate" and not (self.token or os.environ.get("MINERU_TOKEN")):
+        if self.mode == "accurate" and not (self.token or os.environ.get("MINERU_TOKEN")):
             raise ValueError(
                 "accurate mode requires token. "
                 "Pass token=... or set MINERU_TOKEN in environment."
@@ -185,7 +185,7 @@ class MinerULoader(BaseLoader):
         """
         kwargs: dict = {"language": self.language, "timeout": self.timeout}
 
-        if self.model == "fast":
+        if self.mode == "fast":
             if use_page_range and self.pages:
                 kwargs["page_range"] = self.pages
             return self._client.flash_extract(src, **kwargs)
@@ -219,7 +219,7 @@ class MinerULoader(BaseLoader):
             "source": original_source,
             "loader": "mineru",
             "output_format": "markdown",
-            "model": self.model,
+            "mode": self.mode,
             "language": self.language,
             "pages": self.pages,
             "split_pages": self.split_pages,

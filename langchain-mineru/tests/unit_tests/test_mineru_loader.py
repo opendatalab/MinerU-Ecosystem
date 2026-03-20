@@ -66,31 +66,35 @@ class TestValidation:
         loader = _make_loader(source=["a.pdf", "b.pdf"])
         assert loader.source == ["a.pdf", "b.pdf"]
 
-    def test_invalid_model_raises(self):
-        with pytest.raises(ValueError, match="model must be 'fast' or 'accurate'"):
-            _make_loader(source="a.pdf", model="invalid")
+    def test_invalid_mode_raises(self):
+        with pytest.raises(ValueError, match="mode must be 'fast' or 'accurate'"):
+            _make_loader(source="a.pdf", mode="invalid")
 
     def test_accurate_mode_without_token_raises(self, monkeypatch):
         monkeypatch.delenv("MINERU_TOKEN", raising=False)
         with pytest.raises(ValueError, match="accurate mode requires token"):
-            _make_loader(source="a.pdf", model="accurate")
+            _make_loader(source="a.pdf", mode="accurate")
 
     def test_accurate_mode_with_explicit_token_ok(self):
-        loader = _make_loader(source="a.pdf", model="accurate", token="test-token")
-        assert loader.model == "accurate"
+        loader = _make_loader(source="a.pdf", mode="accurate", token="test-token")
+        assert loader.mode == "accurate"
         assert loader.token == "test-token"
 
     @pytest.mark.parametrize(
         ("kwargs", "match"),
         [
-            ({"ocr": True}, "ocr/formula/table are only supported in accurate mode"),
-            ({"formula": False}, "ocr/formula/table are only supported in accurate mode"),
-            ({"table": False}, "ocr/formula/table are only supported in accurate mode"),
+            ({"formula": False}, "formula/table are only supported in accurate mode"),
+            ({"table": False}, "formula/table are only supported in accurate mode"),
         ],
     )
     def test_fast_mode_rejects_accurate_only_options(self, kwargs, match):
         with pytest.raises(ValueError, match=match):
-            _make_loader(source="a.pdf", model="fast", **kwargs)
+            _make_loader(source="a.pdf", mode="fast", **kwargs)
+
+    def test_fast_mode_accepts_ocr_option(self):
+        loader = _make_loader(source="a.pdf", mode="fast", ocr=True)
+        assert loader.mode == "fast"
+        assert loader.ocr is True
 
 
 # ---------------------------------------------------------------------------
@@ -352,7 +356,7 @@ class TestMetadata:
         assert meta["source"] == "report.pdf"
         assert meta["loader"] == "mineru"
         assert meta["output_format"] == "markdown"
-        assert meta["model"] == "fast"
+        assert meta["mode"] == "fast"
         assert meta["language"] == "en"
         assert meta["pages"] == "1-3"
         assert meta["split_pages"] is False
@@ -487,7 +491,7 @@ class TestAccurateExtractCall:
     def test_calls_extract(self):
         loader = _make_loader(
             source="test.pdf",
-            model="accurate",
+            mode="accurate",
             token="token-123",
             language="en",
             pages="2-5",
@@ -510,7 +514,7 @@ class TestAccurateExtractCall:
     def test_calls_extract_with_ocr_formula_table(self):
         loader = _make_loader(
             source="test.pdf",
-            model="accurate",
+            mode="accurate",
             token="token-123",
             ocr=True,
             formula=False,
@@ -536,7 +540,7 @@ class TestAccurateExtractCall:
 
             loader = _make_loader(
                 source=str(pdf_path),
-                model="accurate",
+                mode="accurate",
                 token="token-123",
                 pages="1-2",
                 split_pages=True,
