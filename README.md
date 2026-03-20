@@ -164,7 +164,7 @@ Pre-built skill for AI coding agents, enabling document extraction directly with
 #### Skills Download
 
 - **[OpenClaw](https://clawhub.ai/MinerU-Extract/mineru-document-extractor)** — `View skill details on ClawHub`
-- **[CDN Link](https://webpub.shlab.tech/MinerU/skills/api/10..0.zip)** — One-click download skill package
+- **[CDN Link](https://cdn-mineru.openxlab.org.cn/open-api-cli/skill.zip)** — One-click download skill package
 - Other AI agents like zeroclaw that also support skill/tool interfaces
 
 ### MCP Server (`mcp/`)
