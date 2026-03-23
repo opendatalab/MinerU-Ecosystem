@@ -155,7 +155,7 @@ print(result.images)  # 获取提取出的图片列表
 
 ### AI 智能体技能 (`skills/`)
 
-- **[OpenClaw](https://clawhub.ai/MinerU-Extract/mineru-document-extractor)** — `在 clawhub 查看skills详情`
+- **[OpenClaw](https://clawhub.ai/MinerU-Extract/mineru-ai)** — `在 clawhub 查看skills详情`
 - **[CDN Link](https://cdn-mineru.openxlab.org.cn/open-api-cli/skill.zip)** — 一键下载skill资源包
 - 其他支持技能/工具接口的 AI 智能体（如 zeroclaw）
 
