@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/opendatalab/MinerU-Ecosystem/cli/internal/config"
-	"github.com/opendatalab/MinerU-Ecosystem/cli/internal/output"
+	"github.com/opendatalab/MinerU-Ecosystem/cli/mineru-open-api/internal/config"
+	"github.com/opendatalab/MinerU-Ecosystem/cli/mineru-open-api/internal/output"
 	"github.com/spf13/cobra"
 )
 

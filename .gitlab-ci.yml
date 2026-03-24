@@ -20,13 +20,13 @@ cli:build:
     - if: $CI_COMMIT_TAG
       when: never
     - changes:
-        - cli/**
+        - cli/mineru-open-api/**
         - sdk/go/**
   script:
     - >
       docker build --network host
       --build-arg TARGETS="verify"
-      -f cli/Dockerfile.ci .
+      -f cli/mineru-open-api/Dockerfile.ci .
 
 # 打 cli/v* tag 时交叉编译 + 上传 OSS
 cli:release:
@@ -39,9 +39,9 @@ cli:release:
     - export VERSION=${CI_COMMIT_TAG#cli/}
     - >
       export LDFLAGS="-s -w
-      -X github.com/opendatalab/MinerU-Ecosystem/cli/cmd.version=${VERSION}
-      -X github.com/opendatalab/MinerU-Ecosystem/cli/cmd.commit=${CI_COMMIT_SHORT_SHA}
-      -X github.com/opendatalab/MinerU-Ecosystem/cli/cmd.date=${CI_PIPELINE_CREATED_AT}"
+      -X github.com/opendatalab/MinerU-Ecosystem/cli/mineru-open-api/cmd.version=${VERSION}
+      -X github.com/opendatalab/MinerU-Ecosystem/cli/mineru-open-api/cmd.commit=${CI_COMMIT_SHORT_SHA}
+      -X github.com/opendatalab/MinerU-Ecosystem/cli/mineru-open-api/cmd.date=${CI_PIPELINE_CREATED_AT}"
 
     # 交叉编译
     - >
@@ -49,7 +49,7 @@ cli:release:
       --build-arg LDFLAGS="${LDFLAGS}"
       --build-arg TARGETS="linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64"
       -t ${BINARY_NAME}:build
-      -f cli/Dockerfile.ci .
+      -f cli/mineru-open-api/Dockerfile.ci .
 
     # 提取二进制
     - docker rm -f extract 2>/dev/null || true
@@ -74,8 +74,8 @@ cli:release:
     - ./ossutil cp ./output/${BINARY_NAME}-darwin-arm64      oss://${OSS_BUCKET}/${OSS_PATH}/latest/ -f --acl public-read
     - ./ossutil cp ./output/${BINARY_NAME}-windows-amd64.exe oss://${OSS_BUCKET}/${OSS_PATH}/latest/ -f --acl public-read
     - ./ossutil cp ./output/${BINARY_NAME}-windows-arm64.exe oss://${OSS_BUCKET}/${OSS_PATH}/latest/ -f --acl public-read
-    - ./ossutil cp cli/install/install.sh  oss://${OSS_BUCKET}/${OSS_PATH}/install.sh  -f --acl public-read --meta Content-Type:text/plain
-    - ./ossutil cp cli/install/install.ps1 oss://${OSS_BUCKET}/${OSS_PATH}/install.ps1 -f --acl public-read --meta Content-Type:text/plain
+    - ./ossutil cp cli/mineru-open-api/install/install.sh  oss://${OSS_BUCKET}/${OSS_PATH}/install.sh  -f --acl public-read --meta Content-Type:text/plain
+    - ./ossutil cp cli/mineru-open-api/install/install.ps1 oss://${OSS_BUCKET}/${OSS_PATH}/install.ps1 -f --acl public-read --meta Content-Type:text/plain
     - echo ${VERSION} > VERSION
     - ./ossutil cp VERSION oss://${OSS_BUCKET}/${OSS_PATH}/VERSION -f --acl public-read --meta Content-Type:text/plain
 

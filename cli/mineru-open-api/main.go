@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/opendatalab/MinerU-Ecosystem/cli/cmd"
+	"github.com/opendatalab/MinerU-Ecosystem/cli/mineru-open-api/cmd"
 )
 
 func main() {
