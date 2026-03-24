@@ -1,4 +1,4 @@
-module github.com/opendatalab/MinerU-Ecosystem/cli
+module github.com/opendatalab/MinerU-Ecosystem/cli/mineru-open-api
 
 go 1.21
 
