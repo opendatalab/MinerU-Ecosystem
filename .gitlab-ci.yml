@@ -235,9 +235,9 @@ llama-index-readers:test:
     - changes:
         - llama-index-readers-mineru/**
   script:
-    - pip install uv
     - cd llama-index-readers-mineru
-    - uv build
+    - pip install build
+    - python -m build
     - pip install dist/*.whl --find-links dist/
     - python -c "from llama_index.readers.mineru import MinerUReader; print('import ok')"
 
@@ -258,8 +258,8 @@ llama-index-readers:release:
     - cat pyproject.toml | grep "^version"
 
     # 构建
-    - pip install uv twine
-    - uv build
+    - pip install build twine
+    - python -m build
     - ls -la dist/
 
     # 发布到 PyPI
@@ -284,9 +284,9 @@ langchain:test:
     - changes:
         - langchain_mineru/**
   script:
-    - pip install uv
     - cd langchain_mineru
-    - uv build
+    - pip install build
+    - python -m build
     - pip install dist/*.whl
     - python -c "from langchain_mineru import document_loaders; print('import ok')"
 
@@ -306,9 +306,9 @@ langchain:release:
     - sed -i "s/^version = .*/version = \"${VERSION}\"/" pyproject.toml
     - cat pyproject.toml | grep "^version"
 
-    # 构建（uv_build 后端）
-    - pip install uv twine
-    - uv build
+    # 构建（build 后端）
+    - pip install build twine
+    - python -m build
     - ls -la dist/
 
     # 发布到 PyPI
