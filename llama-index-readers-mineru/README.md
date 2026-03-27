@@ -12,7 +12,7 @@ This reader uses the [MinerU](https://mineru.net) document parsing API to extrac
 | **Speed**                 | Blazing fast      | Standard                                   |
 | **File size**             | Max 10 MB         | Max 200 MB                                 |
 | **Page limit**            | Max 20 pages      | Max 600 pages                              |
-| **OCR / Formula / Table** | Disabled          | Configurable                               |
+| **Formula / Table** | Disabled          | Configurable                               |
 | **Output in this Reader** | Markdown only     | Markdown only                              |
 
 > Note: MinerU Python SDK precision mode supports extra output formats
