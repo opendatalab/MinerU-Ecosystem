@@ -23,7 +23,7 @@ This skill wraps the `mineru-open-api` CLI. Determine where the problem lies bef
 1. Install the latest version:
 
    ```bash
-   curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
+   npm install -g mineru-open-api@latest
    ```
 
 2. Test the command in your terminal to isolate the issue:

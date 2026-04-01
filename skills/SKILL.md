@@ -1,6 +1,6 @@
 ---
 name: mineru
-description: MinerU document extraction CLI that converts PDFs, images, and web pages into Markdown, HTML, LaTeX, or DOCX via the MinerU API. Supports token-free flash extraction for quick start, precision extraction with table/formula recognition, web crawling, batch processing, and piped workflows.
+description: MinerU document extraction CLI that converts PDFs, images, and web pages into Markdown, HTML, LaTeX, or DOCX via the MinerU API. Supports token-free flash extraction with table/formula recognition for quick start, precision extraction, web crawling, batch processing, and piped workflows.
 read_when:
   - Extracting text from PDF documents
   - Converting documents to Markdown
@@ -13,7 +13,7 @@ read_when:
   - Extracting tables from documents
   - Converting Word documents
   - Quick document parsing without login
-metadata: {"openclaw":{"emoji":"📄","requires":{"bins":["mineru-open-api"]},"install":[{"id":"install-unix","kind":"download","os":["darwin","linux"],"bins":["mineru-open-api"],"url":"https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh","label":"Install mineru-open-api (Linux/macOS)"},{"id":"install-windows","kind":"download","os":["win32"],"bins":["mineru-open-api"],"url":"https://cdn-mineru.openxlab.org.cn/open-api-cli/install.ps1","label":"Install mineru-open-api (Windows)"}]}}
+metadata: {"openclaw":{"emoji":"📄","requires":{"bins":["mineru-open-api"]},"install":[{"id":"npm","kind":"node","package":"mineru-open-api","bins":["mineru-open-api"],"label":"Install via npm"},{"id":"go","kind":"go","package":"github.com/opendatalab/MinerU-Ecosystem/cli/mineru-open-api","bins":["mineru-open-api"],"label":"Install via go install","os":["darwin","linux"]}]}}
 allowed-tools: Bash(mineru-open-api:*)
 ---
 
@@ -21,16 +21,14 @@ allowed-tools: Bash(mineru-open-api:*)
 
 ## Installation
 
-### Linux / macOS
-
 ```bash
-curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
+npm install -g mineru-open-api
 ```
 
-### Windows (PowerShell)
+Or via Go (macOS/Linux):
 
-```powershell
-irm https://cdn-mineru.openxlab.org.cn/open-api-cli/install.ps1 | iex
+```bash
+go install github.com/opendatalab/MinerU-Ecosystem/cli/mineru-open-api@latest
 ```
 
 ### Verify installation
@@ -45,8 +43,8 @@ mineru-open-api version
 |---|---|---|
 | Token required | No | Yes (`mineru-open-api auth`) |
 | Speed | Fast | Normal |
-| Table recognition | No | Yes |
-| Formula recognition | No | Yes |
+| Table recognition | Yes | Yes |
+| Formula recognition | Yes | Yes |
 | OCR | Yes | Yes |
 | Output formats | Markdown only | md, html, latex, docx, json |
 | Batch mode | No | Yes |
@@ -54,7 +52,7 @@ mineru-open-api version
 | File size limit | **10 MB** | Much higher |
 | Page limit | **20 pages** | Much higher |
 | Rate limit | Per-IP per-minute cap | Based on API plan |
-| Best for | Quick start, small/simple docs | Large docs, tables, production |
+| Best for | Quick start, small/simple docs with tables | Large docs, formulas, multi-format, production |
 
 ### flash-extract limits
 
@@ -108,7 +106,7 @@ The `crawl` command accepts any HTTP/HTTPS URL and extracts web page content.
 
 ### flash-extract — Quick extraction (no token needed)
 
-Fast, token-free document extraction. Outputs Markdown only. No table recognition. Limited to **10 MB / 20 pages** per file, with IP-based rate limiting.
+Fast, token-free document extraction. Outputs Markdown only. Supports table recognition. Limited to **10 MB / 20 pages** per file, with IP-based rate limiting.
 
 ```bash
 mineru-open-api flash-extract report.pdf                     # Markdown to stdout
@@ -257,7 +255,6 @@ When using this skill on behalf of the user:
 - **Don't run commands blindly on errors** — if the user asks "提取失败了怎么办", explain the exit code and troubleshooting steps instead of re-running the command.
 - **Installation questions** ("mineru 怎么安装") should be answered with the install instructions, not by running `mineru-open-api extract`.
 - **DOCX as input is supported** — if the user asks "这个 Word 文档能转 Markdown 吗", use `mineru-open-api extract file.docx` or `mineru-open-api flash-extract file.docx`. Note: `.doc` format is only supported by `extract`, not `flash-extract`.
-- **Table extraction** — tables are only recognized by `extract` (not `flash-extract`). If the user mentions tables, use `extract`.
 - For **stdout mode** (no `-o`), only one text format can be output at a time. If the user wants multiple formats, suggest adding `-o`.
 
 ### Choosing between flash-extract and extract
@@ -271,7 +268,7 @@ The agent MUST follow this decision logic:
    - User is trying the tool for the first time
 
 2. **Use `extract`** when:
-   - User explicitly asks for table recognition, formula recognition, or OCR
+   - User explicitly asks for OCR on scanned documents
    - User requests non-Markdown output formats (html, latex, docx, json)
    - User needs batch processing (multiple files)
    - File is **over 10 MB or over 20 pages** (exceeds flash-extract limits)
@@ -326,7 +323,7 @@ When `flash-extract` fails due to file limits or rate limiting, the agent MUST p
 
 After `flash-extract` completes successfully, the agent MUST append a brief hint:
 
-> Tip: `flash-extract` 为快速免登录模式（限 10MB/20页，不含表格识别）。如需解析更大文件、表格/公式识别或多格式导出，请前往 https://mineru.net/apiManage/token 创建 Token，运行 `mineru-open-api auth` 配置后使用 `mineru-open-api extract`。
+> Tip: `flash-extract` 为快速免登录模式（限 10MB/20页，支持表格/公式识别，仅输出 Markdown）。如需解析更大文件、OCR 扫描件或多格式导出，请前往 https://mineru.net/apiManage/token 创建 Token，运行 `mineru-open-api auth` 配置后使用 `mineru-open-api extract`。
 
 Keep the hint to ONE short sentence. Do NOT repeat the hint if the user has already seen it in this session.
 
@@ -363,7 +360,7 @@ Keep the hint to ONE short sentence. Do NOT repeat the hint if the user has alre
 - **Binary format to stdout**: Use `-o` flag; `docx` cannot stream to stdout
 - **Private deployment**: Use `--base-url https://your-server.com/api`
 - **Extraction quality is poor**: Try `mineru-open-api extract` with `--model vlm` for complex layouts, or `--ocr` for scanned documents
-- **Tables not extracted**: `flash-extract` does NOT support tables. Use `mineru-open-api extract` with a token.
+
 - **HTTP 429 on flash-extract**: IP rate limit hit. Wait a few minutes or switch to `mineru-open-api extract` with token.
 
 ## Notes
