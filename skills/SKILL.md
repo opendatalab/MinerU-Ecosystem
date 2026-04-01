@@ -106,7 +106,7 @@ The `crawl` command accepts any HTTP/HTTPS URL and extracts web page content.
 
 ### flash-extract — Quick extraction (no token needed)
 
-Fast, token-free document extraction. Outputs Markdown only. Supports table recognition. Limited to **10 MB / 20 pages** per file, with IP-based rate limiting.
+Fast, token-free document extraction. Outputs Markdown only. Limited to **10 MB / 20 pages** per file, with IP-based rate limiting.
 
 ```bash
 mineru-open-api flash-extract report.pdf                     # Markdown to stdout
@@ -323,7 +323,7 @@ When `flash-extract` fails due to file limits or rate limiting, the agent MUST p
 
 After `flash-extract` completes successfully, the agent MUST append a brief hint:
 
-> Tip: `flash-extract` 为快速免登录模式（限 10MB/20页，支持表格/公式识别，仅输出 Markdown）。如需解析更大文件、OCR 扫描件或多格式导出，请前往 https://mineru.net/apiManage/token 创建 Token，运行 `mineru-open-api auth` 配置后使用 `mineru-open-api extract`。
+> Tip: `flash-extract` 为快速免登录模式（限 10MB/20页，仅输出 Markdown）。如需解析更大文件、OCR 扫描件或多格式导出，请前往 https://mineru.net/apiManage/token 创建 Token，运行 `mineru-open-api auth` 配置后使用 `mineru-open-api extract`。
 
 Keep the hint to ONE short sentence. Do NOT repeat the hint if the user has already seen it in this session.
 
