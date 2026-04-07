@@ -1,4 +1,3 @@
-[中文文档](./README.zh-CN.md)
 # MinerU Open MCP
 
 An Official Mineru  MCP server that exposes [MinerU](https://mineru.net)'s document parsing as MCP tools. Connect any MCP-compatible AI client to convert PDFs, Word docs, PowerPoint files, spreadsheets, and images into Markdown, Word (docx), HTML, or LaTeX.
@@ -38,6 +37,42 @@ The MCP client launches `mineru-open-mcp` as a subprocess automatically.
 
 > **`mineru-open-mcp` not on PATH?** Use the full path: `"/Users/you/.local/bin/mineru-open-mcp"`, or use the `uvx` approach above which handles this automatically.
 
+## Usage Examples
+
+### Example 1: Parse a local PDF document with target page ranges
+**User prompt:** "Parse the 3rd-5th pages of this PDF into markdown: \<your_path_to_file\>"
+**What happens:**
+- MinerU uploads and parses the PDF
+- Returns clean Markdown (if you configured MINERU_API_TOKEN, you can also
+prompt word, html, latex as the output) with tables (HTML) and formulas (Latex) preserved
+- Returns markdown texts in the chat if length permitted along with the output path, and the zip url if you prefer
+- Claude summarizes the content
+
+### Example 2: Parse a remote url hosting a file
+**User prompt:** "Extract contents from this paper: https://arxiv.org/pdf/2509.22186"
+**What happens:**
+- MinerU parses the paper into markdown
+- Claude formats and explains the tables
+
+### Example 3:  Parse local PDF files with independent page ranges 
+**User prompt:** "Parse \<file1\> page 1-5, \<file2\> page 2-9, \<file3\> page 3 into markdown/word "
+**What happens:**
+- MinerU uploads and parses the files separatedly
+- Returns target format ouputs, the zip url for you to download, markdown abstract, the directory you 
+want to save the output to
+- Claude uses the content for further analysis
+
+### Example 4: Advanced custom preferences
+**User prompt1:** "use pipeline model to parse this Korean file your_path_here"
+**User prompt2:** "parse your_path_here and save the markdown to your_output_dir"
+**What happends:**
+- Pipeline model is another model provided by MinerU service (BTW, vlm model is the default choice)
+- You are allowed to specify a model, an ocr language, or even an independent output dir 
+different from OUTPUT_DIR by structuring your prompt
+- Your requests are parameterized into parse_documents tool and MinerU will handle the rest. 
+
+
+
 #### streamable-http — web-based MCP clients
 
 Start the server manually, then point your client at it:
@@ -57,33 +92,14 @@ MINERU_API_TOKEN=your_key mineru-open-mcp --transport streamable-http --port 800
 }
 ```
 
-
-
-
 ## Features
 
-- **`parse_documents`** — convert local files and/or remote URLs to Markdown; supports PDF, DOCX, PPTX, JPG, PNG, HTML; optional extra output formats (Word, HTML, LaTeX). Flash Mode also supports xls and xlsx.
+- **`parse_documents`** ? convert local files and/or remote URLs to Markdown; supports PDF, DOCX, PPTX, JPG, PNG, HTML. Flash Mode also supports xlsx.
 - **`get_ocr_languages`** — list all OCR languages supported by MinerU
-- **`clean_logs`** — delete old server log files (only available when `ENABLE_LOG=true`)
 - **Flash mode** — works without an API key (free, markdown-only, 20 pages / 10 MB per file, supports PDF/images/Docx/PPTx/xls/xlsx); For full features, please provide `MINERU_API_TOKEN`, which will quit flash mode.
-- **Three transport modes** — `stdio`, `sse`, `streamable-http`
+- **Output behavior** ? single-file parses return inline Markdown by default; batch parses save results to disk and return file metadata. Oversized inline content is also saved locally and returned via `extract_path`.
+- **Two transport modes** ? `stdio`, `streamable-http`
 
----
-
-## Run from Source (Development)
-
-```bash
-git clone <repository-url>
-cd mineru-mcp-server
-
-uv pip install -e .
-
-# stdio
-uv run mineru-open-mcp
-
-# streamable-http
-uv run mineru-open-mcp --transport streamable-http --port 8001
-```
 
 ---
 
@@ -91,25 +107,18 @@ uv run mineru-open-mcp --transport streamable-http --port 8001
 
 | Variable | Description | Default |
 |---|---|---|
-| `MINERU_API_TOKEN` | MinerU cloud API token | — |
-| `OUTPUT_DIR` | Directory for saved Markdown (and extra format) output | `~/mineru-downloads` |
-| `ENABLE_LOG` | Set to `true` to write timestamped log files | disabled |
-| `MINERU_LOG_DIR` | Override directory for log files | workspace `logs/` or `~/.mineru-open-mcp/logs/` |
+| `MINERU_API_TOKEN` | MinerU API token, apply on [MinerU](https://mineru.net) for full capability. If not provided, flash mode is enabled. | — |
+| `OUTPUT_DIR` | Directory used when parsed results need to be saved locally, such as batch parsing or oversized inline content | `~/mineru-downloads` |
 
-**Log file location:** when `ENABLE_LOG=true`, logs are written to `~/.mineru-open-mcp/logs/log_<timestamp>.txt` (when installed) or `logs/` in the workspace root (when running from source). Override with `MINERU_LOG_DIR`:
 
-```json
-{
-  "mcpServers": {
-    "mineru": {
-      "command": "mineru-open-mcp",
-      "env": {
-        "MINERU_API_TOKEN": "your_key_here",
-        "ENABLE_LOG": "true",
-        "MINERU_LOG_DIR": "/Users/you/mineru-logs"
-      }
-    }
-  }
-}
-```
 
+
+## Privacy Policy
+
+`mineru-open-mcp` connects to the official MinerU API (mineru.net) to parse documents.
+
+- **Data sent**: Document content (files or URLs you provide for parsing)
+- **Data storage**: Parsed results are temporarily cached by MinerU servers; not used for training
+- **Third-party**: MinerU API (mineru.net) — see [MinerU Privacy Policy](https://mineru.net/privacyPolicy)
+- **Local data**: Parsed results will be saved to target output directory. Log files (only when ENABLE_LOG=true), saved to MINERU_LOG_DIR;
+- **Contact**: OpenDataLab@pjlab.org.cn (or raise an issue at [MinerU-Ecosystem](https://github.com/opendatalab/MinerU-Ecosystem) )
