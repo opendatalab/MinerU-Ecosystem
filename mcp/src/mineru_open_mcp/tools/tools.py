@@ -105,9 +105,16 @@ def _apply_content_limits(results: List[Dict[str, Any]], output_dir: str = "") -
     return normalized
 
 
-def _format_results(results: List[Dict[str, Any]], output_dir: str = "") -> Dict[str, Any]:
+def _format_results(
+    results: List[Dict[str, Any]],
+    output_dir: str = "",
+    include_content: bool = True,
+) -> Dict[str, Any]:
     """Collapse raw result entries into the standard tool response shape."""
-    results = _apply_content_limits(results, output_dir=output_dir)
+    if include_content:
+        results = _apply_content_limits(results, output_dir=output_dir)
+    else:
+        results = [{k: v for k, v in r.items() if k != "content"} for r in results]
 
     # Strip zip_url — not exposed to the user
     results = [{k: v for k, v in r.items() if k != "zip_url"} for r in results]
@@ -202,7 +209,7 @@ async def _parse(
         )
         all_results.extend(sdk_results)
 
-    return _format_results(all_results, output_dir=output_dir)
+    return _format_results(all_results, output_dir=output_dir, include_content=not save_to_file)
 
 
 _FILE_SOURCES_FIELD = Field(
