@@ -10,7 +10,7 @@ from .tools.tools import register_tools
 
 
 _INSTRUCTIONS = """
-You are connected to MinerU, a document-to-Markdown (also word, html, latex, etc.) conversion service.
+You are connected to MinerU Open MCP Server, a document-to-Markdown conversion service.
 
 ## When to call parse_documents
 
@@ -18,7 +18,7 @@ Call parse_documents immediately, without asking for confirmation, whenever:
 - The user provides any local file path (for example `/Users/...`, `~/...`, `C:\\...`)
 - The user provides any URL pointing to a document or image
 - The user says "parse", "convert", "read", "extract text from", or "summarize" a file
-- The user attaches or mentions a PDF, Word (`.doc`/`.docx`), PPT (`.ppt`/`.pptx`), image (`jpg`/`jpeg`/`png`), or spreadsheet (`xls`/`xlsx`)
+- The user attaches or mentions a PDF, Word (`.doc`/`.docx`), PPT (`.ppt`/`.pptx`), images (`png`/`jpg`/`jpeg`/`jp2`/`webp`/`gif`/`bmp`), or spreadsheet (`xls`/`xlsx`)
 
 ## How to call it
 
@@ -30,7 +30,7 @@ Call parse_documents immediately, without asking for confirmation, whenever:
 
 ## Flash mode
 
-When no `MINERU_API_TOKEN` is set, Flash mode is used automatically: free, no token required, the output format is markdown only.
+When no `MINERU_API_TOKEN` is set, Flash mode is used automatically: free, no token required.
 Limits: 20 pages / 10 MB per file. Supported input formats: PDF, images (`png`/`jpg`/`jpeg`/`jp2`/`webp`/`gif`/`bmp`), Docx, PPTx, xls, xlsx.
 
 ## After calling parse_documents

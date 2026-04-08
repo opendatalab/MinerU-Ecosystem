@@ -1,6 +1,6 @@
 # MinerU Open MCP
 
-An Official Mineru  MCP server that exposes [MinerU](https://mineru.net)'s document parsing as MCP tools. Connect any MCP-compatible AI client to convert PDFs, Word docs, PowerPoint files, and images into Markdown, Word (docx), HTML, or LaTeX.
+An Official Mineru  MCP server that exposes [MinerU](https://mineru.net)'s document parsing as MCP tools. Connect any MCP-compatible AI client to convert PDFs, Word docs, PowerPoint files, and images into Markdown.
 
 **No API key required** — Flash mode works out of the box, free with no sign-up, for files up to 20 pages / 10 MB. Set `MINERU_API_TOKEN` to unlock higher limits and extra output formats.
 
@@ -43,8 +43,7 @@ The MCP client launches `mineru-open-mcp` as a subprocess automatically.
 **User prompt:** "Parse the 3rd-5th pages of this PDF into markdown: \<your_path_to_file\>"
 **What happens:**
 - MinerU uploads and parses the PDF
-- Returns clean Markdown (if you configured MINERU_API_TOKEN, you can also
-prompt word, html, latex as the output) with tables (HTML) and formulas (Latex) preserved
+- Returns clean Markdown with tables (HTML) and formulas (Latex) preserved
 - Returns markdown texts in the chat if length permitted along with the output path, and the zip url if you prefer
 - Claude summarizes the content
 
@@ -55,7 +54,7 @@ prompt word, html, latex as the output) with tables (HTML) and formulas (Latex) 
 - Claude formats and explains the tables
 
 ### Example 3:  Parse local PDF files with independent page ranges 
-**User prompt:** "Parse \<file1\> page 1-5, \<file2\> page 2-9, \<file3\> page 3 into markdown/word "
+**User prompt:** "Parse \<file1\> page 1-5, \<file2\> page 2-9, \<file3\> page 3 into markdown"
 **What happens:**
 - MinerU uploads and parses the files separatedly
 - Returns target format ouputs, the zip url for you to download, markdown abstract, the directory you 

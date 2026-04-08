@@ -2,7 +2,7 @@
 
 # MinerU Open MCP
 
-MinerU 官方 MCP 服务器，将 [MinerU](https://mineru.net) 的文档解析能力以 MCP 工具形式对外提供。连接任何 MCP 兼容的 AI 客户端，即可将 PDF、Word 文档、PowerPoint 演示文稿、图片转换为 Markdown、Word (docx)、HTML 或 LaTeX。
+MinerU 官方 MCP 服务器，将 [MinerU](https://mineru.net) 的文档解析能力以 MCP 工具形式对外提供。连接任何 MCP 兼容的 AI 客户端，即可将 PDF、Word 文档、PowerPoint 演示文稿、图片转换为 Markdown。
 
 **无需 API 密钥** — Flash 模式开箱即用，免费无需注册，支持 20 页 / 10 MB 以内的文件。设置 `MINERU_API_TOKEN` 可解锁更高限制和更多输出格式。
 
@@ -47,7 +47,7 @@ MCP 客户端会自动以子进程方式启动 `mineru-open-mcp`。
 **执行过程：**
 
 - MinerU 上传并解析该 PDF
-- 返回整洁的 Markdown（若已配置 `MINERU_API_TOKEN`，还可提示输出 Word、HTML、LaTeX 格式），表格（HTML）和公式（LaTeX）均完整保留
+- 返回整洁的 Markdown，表格（HTML）和公式（LaTeX）均完整保留
 - 若内容长度允许，在对话中直接返回 Markdown 文本，同时附上输出路径和 zip 下载链接
 - Claude 对内容进行摘要
 
@@ -62,7 +62,7 @@ MCP 客户端会自动以子进程方式启动 `mineru-open-mcp`。
 
 ### 示例 3：解析多个本地 PDF 文件并分别指定页面范围
 
-**用户提示：** "将 \<file1\> 第 1–5 页、\<file2\> 第 2–9 页、\<file3\> 第 3 页解析为 Markdown/Word"
+**用户提示：** "将 \<file1\> 第 1–5 页、\<file2\> 第 2–9 页、\<file3\> 第 3 页解析为 Markdown"
 
 **执行过程：**
 

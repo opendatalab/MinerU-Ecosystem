@@ -44,37 +44,23 @@ _ALL_LANGUAGES: List[str] = [
     ),
 ]
 
-_BRAND_MESSAGE_FILE = (
-    "Parsing complete!\n"
-    "FILES SAVED TO: {output_dir}\n"
-    "Visit https://mineru.net/ for more details."
-)
-_BRAND_MESSAGE_INLINE = (
-    "Parsing complete!\n"
-    "Visit https://mineru.net/ for more details."
-)
-_ZIP_URL_HEADER = "Download links for the full results (with images):"
-
 _CONTENT_MAX_PER_FILE = 20_000
 _CONTENT_MAX_TOTAL = 60_000
 
 
-def _brand_message(
-    output_dir: str,
-    zip_entries: Optional[List[tuple[str, str]]] = None,
-    saved_to_file: bool = True,
-) -> str:
+def _brand_message(saved_paths: Optional[List[tuple[str, str]]] = None) -> str:
     """Build the user-facing completion message."""
-    if saved_to_file:
-        msg = _BRAND_MESSAGE_FILE.format(output_dir=str(Path(output_dir).resolve()))
-    else:
-        msg = _BRAND_MESSAGE_INLINE
-    # if zip_entries:
-    #     lines = [_ZIP_URL_HEADER]
-    #     for index, (filename, url) in enumerate(zip_entries, 1):
-    #         lines.append(f"  {index}. {filename}: {url}")
-    #     msg += "\n" + "\n".join(lines)
-    return msg
+    footer = "Visit https://mineru.net/ for more details."
+    if not saved_paths:
+        return f"Parsing complete!\n{footer}"
+    if len(saved_paths) == 1:
+        _, path = saved_paths[0]
+        return f"Parsing complete!\nSaved to: {path}\n{footer}"
+    lines = ["Parsing complete!", "Files saved to:"]
+    for i, (filename, path) in enumerate(saved_paths, 1):
+        lines.append(f"  [{i}] {filename} → {path}")
+    lines.append(footer)
+    return "\n".join(lines)
 
 
 def _save_full_markdown(entry: Dict[str, Any], content: str, out_dir: Path) -> None:
@@ -119,33 +105,19 @@ def _apply_content_limits(results: List[Dict[str, Any]], output_dir: str = "") -
     return normalized
 
 
-def _strip_content(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Remove inline markdown content from successful entries."""
-    stripped: List[Dict[str, Any]] = []
-    for result in results:
-        if result.get("status") == "success" and "content" in result:
-            result = {key: value for key, value in result.items() if key != "content"}
-        stripped.append(result)
-    return stripped
-
-
-def _format_results(
-    results: List[Dict[str, Any]],
-    output_dir: str = "",
-    return_content: bool = True,
-    save_to_file: bool = True,
-) -> Dict[str, Any]:
+def _format_results(results: List[Dict[str, Any]], output_dir: str = "") -> Dict[str, Any]:
     """Collapse raw result entries into the standard tool response shape."""
     results = _apply_content_limits(results, output_dir=output_dir)
-    if not return_content:
-        results = _strip_content(results)
 
-    success_count = sum(1 for result in results if result.get("status") == "success")
+    # Strip zip_url — not exposed to the user
+    results = [{k: v for k, v in r.items() if k != "zip_url"} for r in results]
+
+    success_count = sum(1 for r in results if r.get("status") == "success")
     error_count = len(results) - success_count
-    zip_entries = [
-        (result.get("filename", ""), result["zip_url"])
-        for result in results
-        if result.get("status") == "success" and result.get("zip_url")
+    saved_paths = [
+        (r.get("filename", ""), r["extract_path"])
+        for r in results
+        if r.get("status") == "success" and r.get("extract_path")
     ]
 
     response: Dict[str, Any] = {
@@ -158,11 +130,7 @@ def _format_results(
         },
     }
     if success_count > 0:
-        response["message"] = _brand_message(
-            output_dir,
-            zip_entries=zip_entries,
-            saved_to_file=save_to_file,
-        )
+        response["message"] = _brand_message(saved_paths=saved_paths or None)
     return response
 
 
@@ -200,17 +168,10 @@ async def _parse(
     ctx: Context,
     token: Optional[str] = None,
     model: Optional[str] = None,
-    return_content: bool = True,
-    save_to_file: bool = False,
 ) -> Dict[str, Any]:
     """Parse files using the MinerU SDK."""
     if not file_sources:
-        return _format_results(
-            [],
-            output_dir=output_dir,
-            return_content=return_content,
-            save_to_file=save_to_file,
-        )
+        return _format_results([], output_dir=output_dir)
 
     valid_sources, pre_errors = await _validate_sources(file_sources, ctx)
 
@@ -236,16 +197,11 @@ async def _parse(
             output_dir=output_dir,
             ctx=ctx,
             token=token,
-            save_to_file=save_to_file,
+            save_to_file=True,
         )
         all_results.extend(sdk_results)
 
-    return _format_results(
-        all_results,
-        output_dir=output_dir,
-        return_content=return_content,
-        save_to_file=save_to_file,
-    )
+    return _format_results(all_results, output_dir=output_dir)
 
 
 _FILE_SOURCES_FIELD = Field(
@@ -332,12 +288,6 @@ def _normalize_file_sources(
     return sources, page_ranges_map or None
 
 
-def _resolve_output_mode(sources: List[str]) -> tuple[bool, bool]:
-    """Resolve whether to return inline content and whether to save files locally."""
-    is_batch_parse = len(sources) > 1
-    return (not is_batch_parse, is_batch_parse)
-
-
 def register_tools(mcp: FastMCP, get_output_dir) -> None:
     """Register all MCP tools onto the given FastMCP instance."""
 
@@ -355,7 +305,6 @@ def register_tools(mcp: FastMCP, get_output_dir) -> None:
         """Parse local files or URLs into Markdown."""
         sources, page_ranges_map = _normalize_file_sources(file_sources)
         resolved_output_dir = output_dir or get_output_dir()
-        return_content, save_to_file = _resolve_output_mode(sources)
         return await _parse(
             sources,
             enable_ocr,
@@ -365,8 +314,6 @@ def register_tools(mcp: FastMCP, get_output_dir) -> None:
             ctx,
             token=_extract_request_token(),
             model=model,
-            return_content=return_content,
-            save_to_file=save_to_file,
         )
 
     @mcp.tool(
