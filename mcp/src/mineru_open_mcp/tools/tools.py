@@ -168,6 +168,7 @@ async def _parse(
     ctx: Context,
     token: Optional[str] = None,
     model: Optional[str] = None,
+    save_to_file: bool = False,
 ) -> Dict[str, Any]:
     """Parse files using the MinerU SDK."""
     if not file_sources:
@@ -197,7 +198,7 @@ async def _parse(
             output_dir=output_dir,
             ctx=ctx,
             token=token,
-            save_to_file=True,
+            save_to_file=save_to_file,
         )
         all_results.extend(sdk_results)
 
@@ -314,6 +315,7 @@ def register_tools(mcp: FastMCP, get_output_dir) -> None:
             ctx,
             token=_extract_request_token(),
             model=model,
+            save_to_file=len(sources) > 1,
         )
 
     @mcp.tool(
