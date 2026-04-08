@@ -2,7 +2,7 @@
 
 # MinerU Open MCP
 
-MinerU 官方 MCP 服务器，将 [MinerU](https://mineru.net) 的文档解析能力以 MCP 工具形式对外提供。连接任何 MCP 兼容的 AI 客户端，即可将 PDF、Word 文档、PowerPoint 演示文稿、电子表格和图片转换为 Markdown、Word (docx)、HTML 或 LaTeX。
+MinerU 官方 MCP 服务器，将 [MinerU](https://mineru.net) 的文档解析能力以 MCP 工具形式对外提供。连接任何 MCP 兼容的 AI 客户端，即可将 PDF、Word 文档、PowerPoint 演示文稿、图片转换为 Markdown、Word (docx)、HTML 或 LaTeX。
 
 **无需 API 密钥** — Flash 模式开箱即用，免费无需注册，支持 20 页 / 10 MB 以内的文件。设置 `MINERU_API_TOKEN` 可解锁更高限制和更多输出格式。
 
@@ -103,7 +103,7 @@ MINERU_API_TOKEN=your_key mineru-open-mcp --transport streamable-http --port 800
 
 ## 功能特性
 
-- **`parse_documents`** — 将本地文件和/或远程 URL 转换为 Markdown；支持 PDF、DOCX、PPTX、JPG、PNG、HTML。Flash 模式还支持 xlsx。
+- **`parse_documents`** — 将本地文件和/或远程 URL 转换为 Markdown；支持PDF、图片（png/jpg/jpeg/jp2/webp/gif/bmp）、Doc、Docx、Ppt、PPTx。Flash 模式还支持 xlsx。
 - **`get_ocr_languages`** — 列出 MinerU 支持的所有 OCR 语言
 - **Flash 模式** — 无需 API 密钥即可使用（免费，仅输出 Markdown，单文件限制 20 页 / 10 MB，支持 PDF/图片/Docx/PPTx/xls/xlsx）；如需完整功能，请提供 `MINERU_API_TOKEN`，将自动退出 Flash 模式。
 - **输出行为** — 单文件解析默认以内联 Markdown 形式返回；批量解析将结果保存至磁盘并返回文件元数据。超大内联内容也会自动保存至本地，并通过 `extract_path` 返回路径。

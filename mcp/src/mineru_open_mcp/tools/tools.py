@@ -69,11 +69,11 @@ def _brand_message(
         msg = _BRAND_MESSAGE_FILE.format(output_dir=str(Path(output_dir).resolve()))
     else:
         msg = _BRAND_MESSAGE_INLINE
-    if zip_entries:
-        lines = [_ZIP_URL_HEADER]
-        for index, (filename, url) in enumerate(zip_entries, 1):
-            lines.append(f"  {index}. {filename}: {url}")
-        msg += "\n" + "\n".join(lines)
+    # if zip_entries:
+    #     lines = [_ZIP_URL_HEADER]
+    #     for index, (filename, url) in enumerate(zip_entries, 1):
+    #         lines.append(f"  {index}. {filename}: {url}")
+    #     msg += "\n" + "\n".join(lines)
     return msg
 
 

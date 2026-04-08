@@ -1,6 +1,6 @@
 # MinerU Open MCP
 
-An Official Mineru  MCP server that exposes [MinerU](https://mineru.net)'s document parsing as MCP tools. Connect any MCP-compatible AI client to convert PDFs, Word docs, PowerPoint files, spreadsheets, and images into Markdown, Word (docx), HTML, or LaTeX.
+An Official Mineru  MCP server that exposes [MinerU](https://mineru.net)'s document parsing as MCP tools. Connect any MCP-compatible AI client to convert PDFs, Word docs, PowerPoint files, and images into Markdown, Word (docx), HTML, or LaTeX.
 
 **No API key required** — Flash mode works out of the box, free with no sign-up, for files up to 20 pages / 10 MB. Set `MINERU_API_TOKEN` to unlock higher limits and extra output formats.
 
@@ -94,9 +94,9 @@ MINERU_API_TOKEN=your_key mineru-open-mcp --transport streamable-http --port 800
 
 ## Features
 
-- **`parse_documents`** ? convert local files and/or remote URLs to Markdown; supports PDF, DOCX, PPTX, JPG, PNG, HTML. Flash Mode also supports xlsx.
+- **`parse_documents`** ? convert local files and/or remote URLs to Markdown; Input supports PDF, images（png/jpg/jpeg/jp2/webp/gif/bmp, Doc, Docx, Ppt, PPTx. Flash Mode also supports xlsx.
 - **`get_ocr_languages`** — list all OCR languages supported by MinerU
-- **Flash mode** — works without an API key (free, markdown-only, 20 pages / 10 MB per file, supports PDF/images/Docx/PPTx/xls/xlsx); For full features, please provide `MINERU_API_TOKEN`, which will quit flash mode.
+- **Flash mode** — works without an API key (free, markdown output only, 20 pages / 10 MB per file, supports PDF/images/Docx/PPTx/xls/xlsx); For full features, please provide `MINERU_API_TOKEN`, which will disable flash mode.
 - **Output behavior** ? single-file parses return inline Markdown by default; batch parses save results to disk and return file metadata. Oversized inline content is also saved locally and returned via `extract_path`.
 - **Two transport modes** ? `stdio`, `streamable-http`
 
