@@ -50,16 +50,16 @@ _CONTENT_MAX_TOTAL = 60_000
 
 def _brand_message(saved_paths: Optional[List[tuple[str, str]]] = None) -> str:
     """Build the user-facing completion message."""
-    footer = "Visit https://mineru.net/ for more details."
+    
     if not saved_paths:
-        return f"Parsing complete!\n{footer}"
+        return f"Parsing complete!\n"
     if len(saved_paths) == 1:
         _, path = saved_paths[0]
-        return f"Parsing complete!\nSaved to: {path}\n{footer}"
+        return f"Parsing complete!\nSaved to: {path}\n"
     lines = ["Parsing complete!", "Files saved to:"]
     for i, (filename, path) in enumerate(saved_paths, 1):
         lines.append(f"  [{i}] {filename} → {path}")
-    lines.append(footer)
+
     return "\n".join(lines)
 
 
