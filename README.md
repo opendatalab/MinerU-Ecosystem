@@ -4,7 +4,7 @@
 
 **The official ecosystem toolkit for [MinerU](https://github.com/opendatalab/MinerU) Open API**
 
-Empowering developers and AI agents with seamless document parsing capabilities.
+Empowering developers and AI agents with seamless document parsing capabilities — PDF · Word · PPT · Images · Web pages → Markdown / JSON · VLM+OCR dual engine · 109 languages · MCP Server · LangChain / RAGFlow / Dify / FastGPT native integration.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![MinerU](https://img.shields.io/badge/Powered%20by-MinerU-orange)](https://github.com/opendatalab/MinerU)
@@ -20,7 +20,15 @@ Empowering developers and AI agents with seamless document parsing capabilities.
 
 **MinerU-Ecosystem** provides a full suite of tools, SDKs, and integrations built on top of the [MinerU Open API](https://mineru.net/apiManage/docs). Whether you're building production pipelines, integrating with LangChain for RAG, or enabling AI agents to parse documents on the fly — this repository has you covered.
 
-[MinerU](https://github.com/opendatalab/MinerU) is an open-source, high-quality document extraction tool that converts unstructured documents (PDFs, images, Office files, etc.) into machine-readable Markdown and JSON.
+[MinerU](https://github.com/opendatalab/MinerU) is an open-source, high-accuracy document parsing engine that converts unstructured documents (PDFs, images, Office files, etc.) into machine-readable Markdown and JSON, purpose-built for LLM pre-training, RAG, and agentic workflows.
+
+**Core capabilities:**
+- Formulas → LaTeX · Tables → HTML, accurate complex layout reconstruction
+- Supports scanned docs, handwriting, multi-column layouts, cross-page table merging
+- Output follows human reading order with automatic header/footer removal
+- VLM + OCR dual engine, 109-language OCR recognition
+
+---
 
 ## 🏗️ Repository Structure
 
@@ -37,9 +45,11 @@ MinerU-Ecosystem/
 └── skills/               # AI agent skills (Claude Code, OpenClaw, etc.)
 ```
 
+---
+
 ## 🔑 Supported APIs
 
-All components in this repository support **both** API modes:
+All components support both API modes:
 
 | Comparison      | 🎯 Precision Extract API                                    | ⚡ Quick Parse API (Agent-Oriented) |
 | --------------- | ----------------------------------------------------------- | ----------------------------------- |
@@ -80,75 +90,67 @@ I want to...
 │       precision mode: OCR, tables, formulas, and higher fidelity
 ```
 
-If you just want to validate the parsing quality, start with the Web App or `flash` mode. If you are moving into a production integration and need OCR, table extraction, or formula recognition, use `precision` mode.
+---
 
 ## 🚀 Quick Start
 
-### CLI (`cli/`)
+### 💻 CLI (`cli/`)
 
-A fast command-line tool for parsing documents directly from your terminal. Supports both Standard API and Quick Parse API.
+A fast command-line tool for parsing documents directly from your terminal.
 
 #### Installation
 
-**Windows (PowerShell)**
-
-```powershell
-irm https://cdn-mineru.openxlab.org.cn/open-api-cli/install.ps1 | iex
-```
-
-**Linux / macOS (Shell)**
-
 ```bash
+# Linux / macOS
 curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
 ```
 
-#### Usage
+```powershell
+# Windows (PowerShell)
+irm https://cdn-mineru.openxlab.org.cn/open-api-cli/install.ps1 | iex
+```
 
-**1. Flash Extract (no login, fast, Markdown only)**
-
-Great for quick previews. No Token needed. Limit: 10 MB / 20 pages per file.
+**Flash Extract (no login, Markdown only)**
 
 ```bash
 mineru-open-api flash-extract report.pdf
 ```
 
-**2. Precision Extract (login required)**
-
-Supports large documents (200 MB / 600 pages), preserves layout and resources, multiple output formats.
+**Precision Extract (login required)**
 
 ```bash
-# First-time setup: configure Token (or set MINERU_TOKEN env var)
+# First-time setup
 mineru-open-api auth
 
-# Extract and print Markdown to stdout
+# Extract to stdout
 mineru-open-api extract paper.pdf
 
-# Extract and save all resources (images/tables) to a directory
+# Save all resources (images/tables) to directory
 mineru-open-api extract report.pdf -o ./output/
 
-# Export to other formats
+# Export to multiple formats
 mineru-open-api extract report.pdf -f docx,latex,html -o ./results/
 ```
 
-**3. Web Crawl**
-
-Convert web pages into high-quality Markdown.
+**Web Crawl**
 
 ```bash
 mineru-open-api crawl https://www.example.com
 ```
 
-**4. Batch Processing**
+**Batch Processing**
 
 ```bash
-# Batch process all PDFs in the current directory
+# All PDFs in current directory
 mineru-open-api extract *.pdf -o ./results/
 
-# Batch process from a file list
+# From a file list
 mineru-open-api extract --list filelist.txt -o ./results/
 ```
 
-### Python SDK
+---
+
+### 🐍 Python SDK
 
 #### Installation
 
@@ -156,56 +158,199 @@ mineru-open-api extract --list filelist.txt -o ./results/
 pip install mineru-open-sdk
 ```
 
-#### Usage
-
-**1. Flash Extract (no login, Markdown only)**
-
-Great for quick previews. No Token needed.
+**Flash Extract (no token)**
 
 ```python
 from mineru import MinerU
 
-# Flash mode requires no Token
 client = MinerU()
 result = client.flash_extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
-
 print(result.markdown)
 ```
 
-**2. Precision Extract (login required)**
-
-Supports large files, rich assets (images/tables), and multiple output formats.
+**Precision Extract (token required)**
 
 ```python
 from mineru import MinerU
 
-# Get a free Token from https://mineru.net
 client = MinerU("your-api-token")
 result = client.extract("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
-
 print(result.markdown)
-print(result.images)  # Get the list of extracted images
+print(result.images)  # extracted image list
 ```
 
-Multi-language SDKs are also available: **[Go](sdk/go/)** | **[TypeScript](sdk/typescript/)**. See the [`sdk/`](sdk/) directory for details.
+---
 
-### AI Agent Skills (`skills/`)
+### 🐹 Go SDK
 
-Pre-built skill for AI coding agents, enabling document extraction directly within agent workflows. The skill is wrapper by the `mineru-open-api` CLI and provides:
+#### Installation
 
-#### Skills Download
+```bash
+go get github.com/opendatalab/MinerU-Ecosystem/sdk/go@latest
+```
 
-- **[OpenClaw](https://clawhub.ai/MinerU-Extract/mineru-ai)** — `View skill details on ClawHub`
-- **[CDN Link](https://cdn-mineru.openxlab.org.cn/open-api-cli/skill.zip)** — One-click download skill package
-- Other AI agents like zeroclaw that also support skill/tool interfaces
+**Flash Extract**
 
-### MCP Server (`mcp/`)
+```go
+package main
 
-A [Model Context Protocol](https://modelcontextprotocol.io/) server implementation in Python, allowing MCP-compatible AI clients (such as Claude) to use MinerU's document parsing as a tool.
+import (
+    "context"
+    "fmt"
+    mineru "github.com/opendatalab/MinerU-Ecosystem/sdk/go"
+)
 
-#### Configuration
+func main() {
+    client := mineru.NewFlash()
+    result, err := client.FlashExtract(
+        context.Background(),
+        "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
+    )
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(result.Markdown)
+}
+```
 
-**Using `uvx` (recommended — always runs the latest version):**
+**Precision Extract**
+
+```go
+client, err := mineru.New("your-api-token")
+if err != nil {
+    panic(err)
+}
+result, err := client.Extract(
+    context.Background(),
+    "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
+)
+if err != nil {
+    panic(err)
+}
+fmt.Println(result.Markdown)
+```
+
+**Precision Extract with options**
+
+```go
+result, err := client.Extract(ctx, "./paper.pdf",
+    mineru.WithModel("vlm"),
+    mineru.WithOCR(true),
+    mineru.WithFormula(true),
+    mineru.WithTable(true),
+    mineru.WithLanguage("en"),
+    mineru.WithPages("1-20"),
+    mineru.WithExtraFormats("docx"),
+    mineru.WithPollTimeout(10*time.Minute),
+)
+if err != nil {
+    panic(err)
+}
+if err := result.SaveAll("./output"); err != nil {
+    panic(err)
+}
+```
+
+**Batch Processing**
+
+```go
+ch, err := client.ExtractBatch(ctx, []string{"a.pdf", "b.pdf"})
+if err != nil {
+    panic(err)
+}
+for result := range ch {
+    fmt.Printf("%s: %s\n", result.Filename, result.State)
+}
+```
+
+**Web Crawling**
+
+```go
+result, err := client.Crawl(ctx, "https://www.example.com")
+if err != nil {
+    panic(err)
+}
+fmt.Println(result.Markdown)
+```
+
+---
+
+### 🟦 TypeScript / JavaScript SDK
+
+#### Installation
+
+```bash
+npm install mineru-open-sdk
+```
+
+**Flash Extract**
+
+```typescript
+import { MinerU } from "mineru-open-sdk";
+
+const client = new MinerU();
+const result = await client.flashExtract(
+  "https://cdn-mineru.openxlab.org.cn/demo/example.pdf"
+);
+console.log(result.markdown);
+```
+
+**Precision Extract**
+
+```typescript
+import { MinerU } from "mineru-open-sdk";
+
+const client = new MinerU("your-api-token");
+const result = await client.extract(
+  "https://cdn-mineru.openxlab.org.cn/demo/example.pdf"
+);
+console.log(result.markdown);
+console.log(result.images);
+```
+
+**Precision Extract with options**
+
+```typescript
+import { MinerU, saveAll } from "mineru-open-sdk";
+
+const client = new MinerU("your-api-token");
+const result = await client.extract("./paper.pdf", {
+  model: "vlm",       // "vlm" | "pipeline" | "html"
+  ocr: true,
+  formula: true,
+  table: true,
+  language: "en",
+  pages: "1-20",
+  extraFormats: ["docx"],
+  timeout: 600,
+});
+await saveAll(result, "./output");
+```
+
+**Batch Processing**
+
+```typescript
+for await (const result of client.extractBatch(["a.pdf", "b.pdf"])) {
+  console.log(`${result.filename}: ${result.state}`);
+}
+```
+
+**Web Crawling**
+
+```typescript
+const result = await client.crawl("https://www.example.com");
+console.log(result.markdown);
+```
+
+---
+
+## 🤖 Use with Claude / Cursor (MCP Server)
+
+MinerU provides an official MCP Server allowing Claude Desktop, Cursor, Windsurf, and any MCP-compatible AI client to parse documents as a native tool.
+
+> No API key needed — Flash mode works out of the box, free, up to 20 pages / 10 MB per file.
+
+**Configure: `claude_desktop_config.json` / `.cursor/mcp.json`**
 
 ```json
 {
@@ -221,9 +366,45 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) server implementati
 }
 ```
 
-### LangChain Integration (`langchain_mineru/`)
+**Streamable HTTP mode (web-based MCP clients)**
 
-A LangChain Document Loader that converts PDFs, Word files, PPTs, images, and other documents into LangChain-compatible `Document` objects, ready for splitting, embedding, and retrieval.
+```bash
+MINERU_API_TOKEN=your_key mineru-open-mcp --transport streamable-http --port 8001
+```
+
+```json
+{
+  "mcpServers": {
+    "mineru": {
+      "type": "streamableHttp",
+      "url": "http://127.0.0.1:8001/mcp"
+    }
+  }
+}
+```
+
+**Tools exposed via MCP:**
+
+| Tool | Description |
+|---|---|
+| `parse_documents` | Convert PDF, DOCX, PPTX, images, HTML to Markdown |
+| `get_ocr_languages` | List all 109 supported OCR languages |
+| `clean_logs` | Delete old server log files (when `ENABLE_LOG=true`) |
+
+**Environment Variables:**
+
+| Variable | Description | Default |
+|---|---|---|
+| `MINERU_API_TOKEN` | MinerU cloud API token | — |
+| `OUTPUT_DIR` | Directory for saved output | `~/mineru-downloads` |
+| `ENABLE_LOG` | Set `true` to write log files | disabled |
+| `MINERU_LOG_DIR` | Override log file directory | `~/.mineru-open-mcp/logs/` |
+
+---
+
+## 🦜 Use in RAG with LangChain
+
+`langchain-mineru` is an official LangChain Document Loader — parse any document into LangChain `Document` objects with one line of code.
 
 #### Installation
 
@@ -231,16 +412,15 @@ A LangChain Document Loader that converts PDFs, Word files, PPTs, images, and ot
 pip install langchain-mineru
 ```
 
-#### Usage
+**Minimal example (no token)**
 
 **1. Basic usage (`flash` mode by default, no token required)**
 
 ```python
 from langchain_mineru import MinerULoader
 
-loader = MinerULoader(source="demo.pdf")
+loader = MinerULoader(source="demo.pdf")   # flash mode, no token needed
 docs = loader.load()
-
 print(docs[0].page_content[:500])
 print(docs[0].metadata)
 ```
@@ -260,9 +440,6 @@ loader = MinerULoader(
     token="your-api-token",  # or set MINERU_TOKEN
     split_pages=True,
     pages="1-5",
-    ocr=True,
-    formula=True,
-    table=True,
 )
 
 docs = loader.load()
@@ -270,25 +447,7 @@ for doc in docs:
     print(doc.metadata.get("page"), doc.page_content[:200])
 ```
 
-**3. Mixed local and remote sources**
-
-```python
-from langchain_mineru import MinerULoader
-
-loader = MinerULoader(
-    source=[
-        "/path/to/demo_a.pdf",
-        "/path/to/demo_b.docx",
-        "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
-    ]
-)
-
-docs = loader.load()
-for doc in docs:
-    print(doc.metadata["source"], "-", doc.page_content[:100])
-```
-
-**4. Use it in a LangChain RAG pipeline**
+**3. Use it in a LangChain RAG pipeline**
 
 ```python
 from langchain_mineru import MinerULoader
@@ -304,13 +463,14 @@ chunks = splitter.split_documents(docs)
 
 vs = FAISS.from_documents(chunks, OpenAIEmbeddings())
 results = vs.similarity_search("What are the key conclusions in this document?", k=3)
+
 for r in results:
     print(r.page_content[:200])
 ```
 
 Default is `mode="flash"` (no API token required). Switch to `mode="precision"` for higher fidelity with token auth. For RAG use cases, `split_pages=True` is usually a better default for PDFs because it gives you page-level `Document` granularity.
 
-### LlamaIndex Integration (`llama-index-readers-mineru/`)
+### ## Use in RAG with LlamaIndex
 
 A document reader for LlamaIndex that parses PDFs, Word files, PPTs, images, and Excel files through MinerU and returns LlamaIndex-compatible `Document` objects for indexing and retrieval.
 
@@ -346,9 +506,6 @@ from llama_index.readers.mineru import MinerUReader
 reader = MinerUReader(
     mode="precision",
     token="your-api-token",  # or set MINERU_TOKEN
-    ocr=True,
-    formula=True,
-    table=True,
     pages="1-20",
 )
 documents = reader.load_data("/path/to/paper.pdf")
@@ -371,13 +528,48 @@ print(response)
 
 Default is `mode="flash"` with no token required. Switch to `mode="precision"` when you need higher parsing fidelity. For PDF-based RAG pipelines, `split_pages=True` is recommended so each page becomes a separate `Document`.
 
+---
+
+## 🤖 AI Agent Skills (`skills/`)
+
+Pre-built skills for AI coding agents, wrapping the `mineru-open-api` CLI for use in agent workflows.
+
+- **[OpenClaw / ClawHub](https://clawhub.ai/MinerU-Extract/mineru-ai)** — View skill details
+- **[One-click download](https://cdn-mineru.openxlab.org.cn/open-api-cli/skill.zip)** — Skill package
+- Compatible with Claude Code, OpenClaw, ZeroClaw, and other skill-interface agents
+
+---
+
+## 🔗 All Integrations
+
+| Framework / Tool | Status | Notes |
+|---|---|---|
+| LangChain | ✅ Official | `pip install langchain-mineru` |
+| LlamaIndex | ✅ Community | See MinerU-Ecosystem |
+| RAGFlow | ✅ Supported | Document loader integration |
+| RAG-Anything | ✅ Supported | Multi-modal RAG pipeline |
+| Flowise | ✅ Supported | Node-based RAG builder |
+| Dify | ✅ Native Plugin | Built-in document loader |
+| FastGPT | ✅ Native Plugin | Integration guide |
+| Claude Desktop | ✅ MCP | `uvx mineru-open-mcp` |
+| Cursor | ✅ MCP | `.cursor/mcp.json` config |
+| Windsurf | ✅ MCP | stdio / streamable-http |
+| OpenClaw / ZeroClaw | ✅ Agent Skill | ClawHub |
+| Go SDK | ✅ Official | `go get .../sdk/go@latest` |
+| TypeScript SDK | ✅ Official | `npm install mineru-open-sdk` |
+| Python SDK | ✅ Official | `pip install mineru-open-sdk` |
+
+---
+
 ## 📚 Documentation
 
-| Resource                   | Link                                                                                 |
-| -------------------------- | ------------------------------------------------------------------------------------ |
-| MinerU Open API Docs       | [mineru.net/apiManage/docs](https://mineru.net/apiManage/docs)                       |
-| MinerU Online Demo         | [mineru.net/OpenSourceTools/Extractor](https://mineru.net/OpenSourceTools/Extractor) |
-| MinerU Open Source Project | [github.com/opendatalab/MinerU](https://github.com/opendatalab/MinerU)               |
+| Resource | Link |
+|---|---|
+| MinerU Open API Docs | [mineru.net/apiManage/docs](https://mineru.net/apiManage/docs) |
+| MinerU Online Demo | [mineru.net/OpenSourceTools/Extractor](https://mineru.net/OpenSourceTools/Extractor) |
+| MinerU Open Source | [github.com/opendatalab/MinerU](https://github.com/opendatalab/MinerU) |
+
+---
 
 ## 📄 License
 

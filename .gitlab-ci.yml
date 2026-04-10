@@ -220,6 +220,55 @@ mcp:release:
     url: https://pypi.org/project/mineru-open-mcp/
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  Llama-Index Readers MinerU
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# llama-index-readers-mineru/ 有变更时验证构建和导入
+llama-index-readers:test:
+  stage: test
+  tags:
+    - ecs
+  image: python:3.12-slim
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - changes:
+        - llama-index-readers-mineru/**
+  script:
+    - cd llama-index-readers-mineru
+    - pip install build
+    - python -m build
+    - pip install dist/*.whl --find-links dist/
+    - python -c "from llama_index.readers.mineru import MinerUReader; print('import ok')"
+
+# 打 llama-index-readers-mineru/v* tag 时构建并发布到 PyPI
+llama-index-readers:release:
+  stage: release
+  tags:
+    - ecs
+  image: python:3.12-slim
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^llama-index-readers-mineru\/v/
+  script:
+    - export VERSION=${CI_COMMIT_TAG#llama-index-readers-mineru/v}
+    - cd llama-index-readers-mineru
+
+    # 用 tag 版本覆盖 pyproject.toml 中的 version
+    - sed -i "s/^version = .*/version = \"${VERSION}\"/" pyproject.toml
+    - cat pyproject.toml | grep "^version"
+
+    # 构建
+    - pip install build twine
+    - python -m build
+    - ls -la dist/
+
+    # 发布到 PyPI
+    - twine upload dist/* --non-interactive
+  environment:
+    name: pypi
+    url: https://pypi.org/project/llama-index-readers-mineru/
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  LangChain MinerU
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -235,9 +284,9 @@ langchain:test:
     - changes:
         - langchain_mineru/**
   script:
-    - pip install uv
     - cd langchain_mineru
-    - uv build
+    - pip install build
+    - python -m build
     - pip install dist/*.whl
     - python -c "from langchain_mineru import document_loaders; print('import ok')"
 
@@ -257,9 +306,9 @@ langchain:release:
     - sed -i "s/^version = .*/version = \"${VERSION}\"/" pyproject.toml
     - cat pyproject.toml | grep "^version"
 
-    # 构建（uv_build 后端）
-    - pip install uv twine
-    - uv build
+    # 构建（build 后端）
+    - pip install build twine
+    - python -m build
     - ls -la dist/
 
     # 发布到 PyPI

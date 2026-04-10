@@ -1,215 +1,347 @@
-"""MCP tool registration for MinerU document parsing."""
+﻿"""MCP tool registration for MinerU document parsing."""
 
 import contextlib
-from typing import Annotated, Any, Dict, List, Optional
+from pathlib import Path
+from typing import Annotated, Any, Dict, List, Optional, Union
 
 from fastmcp import Context, FastMCP
 from pydantic import Field
 
 from .. import config
-from ..language import get_language_list
-from .handlers import parse_remote
+from .extract import extract_sources
 
-_FILE_SOURCES_REMOTE_FIELD = Field(
+_ALL_LANGUAGES: List[str] = [
+    "ch (Chinese, English, Chinese Traditional)",
+    "ch_server (Chinese, English, Chinese Traditional, Japanese)",
+    "en (English)",
+    "korean (Korean, English)",
+    "japan (Chinese, English, Chinese Traditional, Japanese)",
+    "chinese_cht (Chinese, English, Chinese Traditional, Japanese)",
+    "ta (Tamil, English)",
+    "te (Telugu, English)",
+    "ka (Kannada)",
+    "el (Greek, English)",
+    "th (Thai, English)",
+    (
+        "latin (French, German, Afrikaans, Italian, Spanish, Bosnian, Portuguese, Czech, Welsh, "
+        "Danish, Estonian, Irish, Croatian, Uzbek, Hungarian, Serbian (Latin), Indonesian, "
+        "Occitan, Icelandic, Lithuanian, Maori, Malay, Dutch, Norwegian, Polish, Slovak, "
+        "Slovenian, Albanian, Swedish, Swahili, Tagalog, Turkish, Latin, Azerbaijani, Kurdish, "
+        "Latvian, Maltese, Pali, Romanian, Vietnamese, Finnish, Basque, Galician, Luxembourgish, "
+        "Romansh, Catalan, Quechua)"
+    ),
+    "arabic (Arabic, Persian, Uyghur, Urdu, Pashto, Kurdish, Sindhi, Balochi, English)",
+    "east_slavic (Russian, Belarusian, Ukrainian, English)",
+    (
+        "cyrillic (Russian, Belarusian, Ukrainian, Serbian (Cyrillic), Bulgarian, Mongolian, "
+        "Abkhazian, Adyghe, Kabardian, Avar, Dargin, Ingush, Chechen, Lak, Lezgin, Tabasaran, "
+        "Kazakh, Kyrgyz, Tajik, Macedonian, Tatar, Chuvash, Bashkir, Malian, Moldovan, Udmurt, "
+        "Komi, Ossetian, Buryat, Kalmyk, Tuvan, Sakha, Karakalpak, English)"
+    ),
+    (
+        "devanagari (Hindi, Marathi, Nepali, Bihari, Maithili, Angika, Bhojpuri, Magahi, "
+        "Santali, Newari, Konkani, Sanskrit, Haryanvi, English)"
+    ),
+]
+
+_CONTENT_MAX_PER_FILE = 20_000
+_CONTENT_MAX_TOTAL = 60_000
+
+
+def _brand_message(saved_paths: Optional[List[tuple[str, str]]] = None) -> str:
+    """Build the user-facing completion message."""
+    
+    if not saved_paths:
+        return f"Parsing complete!\n"
+    if len(saved_paths) == 1:
+        _, path = saved_paths[0]
+        return f"Parsing complete!\nSaved to: {path}\n"
+    lines = ["Parsing complete!", "Files saved to:"]
+    for i, (filename, path) in enumerate(saved_paths, 1):
+        lines.append(f"  [{i}] {filename} → {path}")
+
+    return "\n".join(lines)
+
+
+def _save_full_markdown(entry: Dict[str, Any], content: str, out_dir: Path) -> None:
+    """Persist full markdown for truncated inline responses."""
+    try:
+        filename = entry.get("filename", "output")
+        stem = Path(filename).stem or "output"
+        md_path = out_dir / f"{stem}.md"
+        if md_path.exists():
+            counter = 1
+            while (out_dir / f"{stem}_{counter}.md").exists():
+                counter += 1
+            md_path = out_dir / f"{stem}_{counter}.md"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        md_path.write_text(content, encoding="utf-8")
+        entry["extract_path"] = str(md_path)
+    except Exception as exc:
+        config.logger.warning(
+            "Failed to save truncated Markdown for %s: %s",
+            entry.get("filename", "?"),
+            exc,
+        )
+
+
+def _apply_content_limits(results: List[Dict[str, Any]], output_dir: str = "") -> List[Dict[str, Any]]:
+    """Trim oversized inline content and save the full markdown to disk."""
+    success_with_content = sum(
+        1 for result in results if result.get("status") == "success" and "content" in result
+    )
+    per_file_cap = min(_CONTENT_MAX_PER_FILE, _CONTENT_MAX_TOTAL // max(success_with_content, 1))
+    out_dir = Path(output_dir) if output_dir else None
+    normalized: List[Dict[str, Any]] = []
+    for result in results:
+        if result.get("status") == "success" and "content" in result:
+            result = result.copy()
+            full_content = result["content"]
+            result["content_chars"] = len(full_content)
+            if len(full_content) > per_file_cap:
+                if out_dir and "extract_path" not in result:
+                    _save_full_markdown(result, full_content, out_dir)
+                result["content"] = full_content[:per_file_cap]
+                result["truncated"] = True
+            else:
+                result["truncated"] = False
+        normalized.append(result)
+    return normalized
+
+
+def _format_results(
+    results: List[Dict[str, Any]],
+    output_dir: str = "",
+    include_content: bool = True,
+) -> Dict[str, Any]:
+    """Collapse raw result entries into the standard tool response shape."""
+    if include_content:
+        results = _apply_content_limits(results, output_dir=output_dir)
+    else:
+        results = [{k: v for k, v in r.items() if k != "content"} for r in results]
+
+    # Strip zip_url — not exposed to the user
+    results = [{k: v for k, v in r.items() if k != "zip_url"} for r in results]
+
+    success_count = sum(1 for r in results if r.get("status") == "success")
+    error_count = len(results) - success_count
+    saved_paths = [
+        (r.get("filename", ""), r["extract_path"])
+        for r in results
+        if r.get("status") == "success" and r.get("extract_path")
+    ]
+
+    response: Dict[str, Any] = {
+        "status": "error" if success_count == 0 else "partial_success" if error_count > 0 else "success",
+        "results": results,
+        "summary": {
+            "total_files": len(results),
+            "success_count": success_count,
+            "error_count": error_count,
+        },
+    }
+    if success_count > 0:
+        response["message"] = _brand_message(saved_paths=saved_paths or None)
+    return response
+
+
+async def _validate_sources(
+    sources: List[str],
+    ctx: Context,
+) -> tuple[List[str], List[Dict[str, Any]]]:
+    """Split sources into valid entries and pre-validation errors."""
+    valid_sources: List[str] = []
+    pre_errors: List[Dict[str, Any]] = []
+    for source in sources:
+        if source.startswith(("http://", "https://")):
+            valid_sources.append(source)
+        elif not Path(source).exists():
+            if ctx and ctx.request_context:
+                await ctx.warning(f"File not found, skipping: {source}")
+            pre_errors.append(
+                {
+                    "filename": Path(source).name,
+                    "status": "error",
+                    "error": f"File not found: {source}",
+                }
+            )
+        else:
+            valid_sources.append(source)
+    return valid_sources, pre_errors
+
+
+async def _parse(
+    file_sources: List[str],
+    enable_ocr: Optional[bool],
+    language: str,
+    page_ranges_map: Optional[Dict[int, str]],
+    output_dir: str,
+    ctx: Context,
+    token: Optional[str] = None,
+    model: Optional[str] = None,
+    save_to_file: bool = False,
+) -> Dict[str, Any]:
+    """Parse files using the MinerU SDK."""
+    if not file_sources:
+        return _format_results([], output_dir=output_dir)
+
+    valid_sources, pre_errors = await _validate_sources(file_sources, ctx)
+
+    remapped: Optional[Dict[int, str]] = None
+    if page_ranges_map and valid_sources:
+        valid_index = 0
+        remap: Dict[int, str] = {}
+        for file_index, source in enumerate(file_sources):
+            if valid_index < len(valid_sources) and valid_sources[valid_index] == source:
+                if file_index in page_ranges_map:
+                    remap[valid_index] = page_ranges_map[file_index]
+                valid_index += 1
+        remapped = remap or None
+
+    all_results: List[Dict[str, Any]] = list(pre_errors)
+    if valid_sources:
+        sdk_results = await extract_sources(
+            sources=valid_sources,
+            enable_ocr=enable_ocr,
+            language=language,
+            model=model,
+            page_ranges_map=remapped,
+            output_dir=output_dir,
+            ctx=ctx,
+            token=token,
+            save_to_file=save_to_file,
+        )
+        all_results.extend(sdk_results)
+
+    return _format_results(all_results, output_dir=output_dir, include_content=not save_to_file)
+
+
+_FILE_SOURCES_FIELD = Field(
     description=(
-        "File paths or URLs to parse. Pass any local path (e.g. /Users/foo/doc.pdf) "
-        "or a remote URL pointing to a PDF, Word doc, PPT, or image. "
-        "Mixed lists of paths and URLs are supported.\n"
-        "要解析的文件路径或 URL 列表，支持本地路径与远程 URL 混合传入，"
-        "格式涵盖 PDF、Word、PPT 及图片（jpg/jpeg/png）。"
+        "Files to parse. Each entry is either:\n"
+        "  - a plain string: a local file path or URL\n"
+        "  - a dict {\"source\": \"...\", \"pages\": \"N-M\"}: with an optional page range\n"
+        "Page range: \"N\" (single page) or \"N-M\" (for example \"1-10\"). PDF only. "
+        "Duplicate sources are allowed, for example the same PDF with different ranges.\n"
+        "Examples:\n"
+        "  [\"report.pdf\"]\n"
+        "  [{\"source\": \"report.pdf\", \"pages\": \"1-5\"}]\n"
+        "  [{\"source\": \"a.pdf\", \"pages\": \"1-3\"}, {\"source\": \"a.pdf\", \"pages\": \"10-15\"}]\n"
+        "  [\"https://example.com/doc.pdf\", \"local.docx\"]"
+    )
+)
+
+_ENABLE_OCR_FIELD = Field(
+    description=(
+        "OCR mode:\n"
+        "  null (default) - auto-detect: the server decides whether OCR is needed.\n"
+        "  true           - force OCR on when the user mentions poor scan quality.\n"
+        "  false          - disable OCR.\n"
+        "Omit this parameter unless the user explicitly mentions scan quality issues."
+    )
+)
+
+_LANGUAGE_FIELD = Field(
+    description=(
+        "OCR language code. Omit if unknown; the server defaults to \"ch\" (Chinese + English). "
+        "Infer from the document filename when possible, for example \"manual_en.pdf\" -> \"en\". "
+        "Common codes: \"ch\", \"en\", \"japan\", \"korean\", \"latin\", "
+        "\"arabic\", \"cyrillic\", \"devanagari\". Full list: call get_ocr_languages."
+    )
+)
+
+_OUTPUT_DIR_FIELD = Field(
+    description=(
+        "Directory used when parsed results need to be saved locally, such as batch parsing "
+        "or oversized inline content. Defaults to the server-configured directory."
+    )
+)
+
+_MODEL_FIELD = Field(
+    description=(
+        "Parsing model. Set to \"html\" only when all file_sources are web page URLs. "
+        "Otherwise omit it and let MinerU auto-select the appropriate model. Ignored in Flash mode."
     )
 )
 
 
 def _extract_request_token() -> Optional[str]:
-    """Extract the MinerU API token from the current HTTP request.
-
-    Checks (in order):
-    1. ``?api_key=`` query parameter
-    2. ``Authorization: Bearer <token>`` header
-
-    Returns None when not running under HTTP transport (e.g. stdio mode).
-    """
+    """Extract the MinerU API token from the current HTTP request."""
     with contextlib.suppress(Exception):
         from fastmcp.server.dependencies import get_http_request
+
         request = get_http_request()
-        # 1. Query param ?api_key=
         api_key = request.query_params.get("api_key")
         if api_key:
             return api_key
-        # 2. Authorization: Bearer <token>
         auth = request.headers.get("Authorization", "")
         if auth.lower().startswith("bearer "):
             return auth[7:].strip() or None
     return None
 
 
-_ENABLE_OCR_FIELD = Field(
-    description=(
-        "Enable OCR for scanned PDFs or images containing text. Default False. "
-        "/ 对扫描版PDF或含文字图片启用OCR识别，默认 False。"
-    )
-)
-
-_LANGUAGE_FIELD = Field(
-    description=(
-        'Language of the document. The model does NOT auto-detect language — '
-        'always infer this from the document content or the user\'s request and pass it. '
-        'Pass the full language name in English: "Chinese", "English", "Japanese", '
-        '"Korean", "French", "Arabic", "Tamil", "Macedonian". '
-        'The server maps the name to the correct SDK code automatically. '
-        'Default is "Chinese". '
-        '/ 文档语言。模型不会自动检测语言，必须传入此参数。'
-        '请根据文档内容或用户请求推断语言并传入。'
-        '使用英文语言名称，如 "Chinese"、"English"、"Japanese"、"Korean"、'
-        '"French"、"Arabic"、"Tamil"、"Macedonian"。服务端会自动映射到 SDK 代码。'
-        '默认为 "Chinese"。'
-    )
-)
-
-_OUTPUT_DIR_FIELD = Field(
-    description=(
-        "Directory path to save output files. Defaults to the server-configured directory. "
-        "/ 输出文件保存目录，默认使用服务器配置的目录。"
-    )
-)
-
-_MODEL_FIELD = Field(
-    description=(
-        'Parsing model. Rules for setting this: '
-        '(1) If ALL file_sources are web page URLs (http/https pointing to HTML pages), '
-        'set model="html". '
-        '(2) If file_sources are documents or images, or a mix of documents and URLs, '
-        'leave this blank — MinerU auto-selects "vlm" for documents and "html" for web pages. '
-        '(e.g. Tamil, Telugu, Greek, Thai, Arabic, Cyrillic-script, Devanagari). '
-        'Ignored in Flash mode. '
-        '/ 解析模型。使用规则：'
-        '(1) 若 file_sources 全部为网页 URL（http/https HTML 页面），设置 model="html"。'
-        '(2) 若为文档/图片，或文档与 URL 混合，留空——MinerU 自动选择（文档用 "vlm"，网页用 "html"）。'
-        'Flash 模式下忽略此参数。'
-    )
-)
-
-_EXTRA_FORMATS_FIELD = Field(
-    description=(
-        'Additional output formats to generate alongside Markdown. '
-        'Accepted values: "docx" (Word), "html", "latex", "all" (all three). '
-        'Ask the user if they need Word, HTML, or LaTeX output in addition to Markdown, '
-        'then pass the requested formats here. '
-        'Not available in Flash mode (no API token — Flash outputs markdown only). '
-        '/ 除 Markdown 外的额外输出格式。可选值："docx"（Word）、"html"、"latex"、"all"（全部三种）。'
-        '如用户需要 Word、HTML 或 LaTeX 格式，请传入此参数。'
-        '注意：Flash 模式（无 Token）不支持此参数，仅输出 Markdown。'
-    )
-)
+def _normalize_file_sources(
+    file_sources: List[Union[str, Dict[str, str]]],
+) -> tuple[List[str], Optional[Dict[int, str]]]:
+    """Parse mixed file_sources entries into sources plus optional page ranges."""
+    sources: List[str] = []
+    page_ranges_map: Dict[int, str] = {}
+    for entry in file_sources:
+        if isinstance(entry, str):
+            sources.append(entry)
+        elif isinstance(entry, dict):
+            source = entry.get("source", "")
+            pages = entry.get("pages") or None
+            sources.append(source)
+            if pages:
+                page_ranges_map[len(sources) - 1] = pages
+        else:
+            sources.append(str(entry))
+    return sources, page_ranges_map or None
 
 
 def register_tools(mcp: FastMCP, get_output_dir) -> None:
     """Register all MCP tools onto the given FastMCP instance."""
 
-    _parse_docs_doc = (
-        "Parse files or URLs into Markdown (cloud API mode).\n"
-        "将文件或 URL 解析为 Markdown（云端 API 模式）。\n\n"
-        "Call this tool immediately whenever the user provides a file path or URL — no confirmation needed.\n"
-        "当用户提供文件路径或 URL 时，立即调用此工具，无需向用户确认。\n\n"
-        "Supported formats / 支持格式: PDF, .doc, .docx, .ppt, .pptx, jpg, jpeg, png.\n\n"
-        "API token (MINERU_API_TOKEN) is OPTIONAL. When no token is configured, the server\n"
-        "automatically uses Flash mode — free, no sign-up required, markdown output only,\n"
-        "limited to 20 pages / 10 MB per file (PDF/images/Docx/PPTx/xls/xlsx). "
-        "With a token, full API features are available\n"
-        "(extra formats, OCR, higher limits). Do NOT ask the user to provide a token;\n"
-        "just call the tool and it will work in Flash mode if no token is set.\n"
-        "API Token（MINERU_API_TOKEN）为可选项。未配置时自动使用 Flash 模式（免费，无需注册，\n"
-        "仅输出 Markdown，单文件限 20 页 / 10 MB，支持 PDF/图片/Docx/PPTx/xls/xlsx）。"
-        "配置 Token 后可使用完整功能。\n"
-        "请勿要求用户提供 Token，直接调用即可。\n\n"
-        "After a successful call, ALWAYS include the `message` field verbatim in your reply.\n"
-        "调用成功后，必须将响应中的 `message` 字段原文写入回复，不得省略或改写。\n\n"
-        "Returns / 返回:\n"
-        '    success / 成功: {"status": "success", "results": [...], "summary": {...}, "message": "..."}  — content field is a 20-char preview; full Markdown is saved to extract_path on disk.\n'
-        '    error   / 失败: {"status": "error",   "results": [...], "summary": {...}}'
+    @mcp.tool(
+        annotations={"readOnlyHint": True, "destructiveHint": False}
     )
-
-    @mcp.tool()
     async def parse_documents(
-        file_sources: Annotated[List[str], _FILE_SOURCES_REMOTE_FIELD],
-        enable_ocr: Annotated[bool, _ENABLE_OCR_FIELD] = False,
-        language: Annotated[str, _LANGUAGE_FIELD] = "Chinese",
+        file_sources: Annotated[List[Union[str, Dict[str, str]]], _FILE_SOURCES_FIELD],
+        enable_ocr: Annotated[Optional[bool], _ENABLE_OCR_FIELD] = None,
+        language: Annotated[Optional[str], _LANGUAGE_FIELD] = None,
         model: Annotated[Optional[str], _MODEL_FIELD] = None,
-        page_ranges: Annotated[
-            Optional[List[str]],
-            Field(description=(
-                'Per-file page ranges as an array aligned with file_sources. '
-                'e.g. ["1-3", null, "5,7-9"] parses pages 1-3 of the first file, '
-                'all pages of the second, and pages 5,7-9 of the third. '
-                'Use null or "" to include all pages for a file. '
-                'Range syntax: "2,4-6" for pages 2,4,5,6 or "2--2" for page 2 to second-last.\n'
-                '按 file_sources 顺序对应的页码范围数组，如 ["1-3", null, "5,7-9"]；'
-                '对应位置填 null 或 "" 表示解析该文件全部页面。'
-                '范围语法："2,4-6" 表示第2、4-6页，"2--2" 表示第2页至倒数第2页。'
-            )),
-        ] = None,
-        extra_formats: Annotated[Optional[List[str]], _EXTRA_FORMATS_FIELD] = None,
         output_dir: Annotated[Optional[str], _OUTPUT_DIR_FIELD] = None,
         ctx: Context = None,
     ) -> Dict[str, Any]:
-        return await parse_remote(
-            file_sources, enable_ocr, language, page_ranges,
-            output_dir or get_output_dir(), ctx,
+        """High-quality document parsing: converts PDF, Word, PPT, Excel (in Flash Mode), and images to Markdown.
+
+        Powered by SOTA MinerU PDF extraction — supports full document parsing (200+ pages),
+        academic paper parsing, formula recognition, table extraction, multi-column layouts,
+        scanned document OCR, and webpage-to-Markdown conversion.
+        Designed for AI workflows. Unlike basic readers limited to the first 10 pages,
+        MinerU processes entire documents end-to-end.
+        """
+        sources, page_ranges_map = _normalize_file_sources(file_sources)
+        resolved_output_dir = output_dir or get_output_dir()
+        return await _parse(
+            sources,
+            enable_ocr,
+            language or "ch",
+            page_ranges_map,
+            resolved_output_dir,
+            ctx,
             token=_extract_request_token(),
-            extra_formats=extra_formats,
             model=model,
+            save_to_file=len(sources) > 1,
         )
 
-    parse_documents.__doc__ = _parse_docs_doc
-
-    @mcp.tool()
+    @mcp.tool(
+        annotations={"readOnlyHint": True, "destructiveHint": False}
+    )
     async def get_ocr_languages() -> Dict[str, Any]:
-        """List all OCR languages supported by MinerU.
-        列出 MinerU 支持的所有 OCR 语言。
-
-        Call this when the user asks which languages are available for OCR.
-        当用户询问 OCR 支持哪些语言时调用此工具。
-
-        Returns / 返回:
-            success / 成功: {"status": "success", "languages": [...]}
-            error   / 失败: {"status": "error",   "error":   "<message>"}
-        """
+        """List all OCR languages supported by MinerU."""
         try:
-            return {"status": "success", "languages": get_language_list()}
-        except Exception as e:
-            return {"status": "error", "error": str(e)}
-
-    if config.ENABLE_LOG:
-        @mcp.tool()
-        async def clean_logs() -> Dict[str, Any]:
-            """Delete old MinerU MCP log files, keeping only the current session's log.
-            删除旧的 MinerU MCP 日志文件，仅保留当前会话的日志。
-
-            Call this when the user asks to clean up or delete old log files.
-            当用户要求清理或删除旧日志文件时调用此工具。
-
-            Returns / 返回:
-                success / 成功: {"status": "success", "deleted": <count>, "bytes_freed": <bytes>}
-                error   / 失败: {"status": "error",   "error":   "<message>"}
-            """
-            try:
-                log_dir = config.LOG_DIR
-                current = config.CURRENT_LOG_FILE
-
-                if not log_dir.exists():
-                    return {"status": "success", "deleted": 0, "bytes_freed": 0}
-
-                deleted = 0
-                bytes_freed = 0
-                for log_file in log_dir.glob("*.txt"):
-                    if current and log_file.resolve() == current.resolve():
-                        continue
-                    size = log_file.stat().st_size
-                    log_file.unlink()
-                    deleted += 1
-                    bytes_freed += size
-
-                return {"status": "success", "deleted": deleted, "bytes_freed": bytes_freed}
-            except Exception as e:
-                return {"status": "error", "error": str(e)}
+            return {"status": "success", "languages": _ALL_LANGUAGES}
+        except Exception as exc:
+            return {"status": "error", "error": str(exc)}

@@ -1,0 +1,8 @@
+[project]
+name = "mineru-open-mcp-bundle"
+version = "1.0.15"
+description = "MinerU Open MCP — UV runtime bundle"
+requires-python = ">=3.10,<4.0"
+dependencies = [
+    "mineru-open-mcp==1.0.15",
+]
