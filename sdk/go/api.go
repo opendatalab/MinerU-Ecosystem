@@ -57,7 +57,9 @@ func (a *apiClient) get(ctx context.Context, path string) (json.RawMessage, erro
 }
 
 func (a *apiClient) putFile(ctx context.Context, url string, data []byte) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewReader(data))
+	uploadCtx, cancel := context.WithTimeout(ctx, DefaultUploadTimeout)
+	defer cancel()
+	req, err := http.NewRequestWithContext(uploadCtx, http.MethodPut, url, bytes.NewReader(data))
 	if err != nil {
 		return err
 	}

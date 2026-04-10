@@ -19,6 +19,9 @@ const (
 	// DefaultRequestTimeout is the timeout for a single HTTP request (e.g., upload, query).
 	DefaultRequestTimeout = 60 * time.Second
 
+	// DefaultUploadTimeout is the timeout for file upload requests (PUT to pre-signed URL).
+	DefaultUploadTimeout = 300 * time.Second
+
 	// DefaultSinglePollTimeout is the total time to wait for a single document extraction.
 	DefaultSinglePollTimeout = 5 * time.Minute
 

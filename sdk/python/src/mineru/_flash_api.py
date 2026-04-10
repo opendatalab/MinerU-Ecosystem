@@ -6,10 +6,8 @@ from typing import Any
 
 import httpx
 
-from ._constants import DEFAULT_FLASH_BASE_URL
+from ._constants import DEFAULT_FLASH_BASE_URL, REQUEST_TIMEOUT, UPLOAD_TIMEOUT
 from .exceptions import raise_for_code
-
-_TIMEOUT = httpx.Timeout(30.0, read=120.0)
 
 
 class FlashApiClient:
@@ -20,7 +18,7 @@ class FlashApiClient:
         self._client = httpx.Client(
             base_url=base_url,
             headers={"Content-Type": "application/json"},
-            timeout=_TIMEOUT,
+            timeout=REQUEST_TIMEOUT,
         )
 
     @property
@@ -44,7 +42,7 @@ class FlashApiClient:
         return self._handle(resp)
 
     def put_file(self, url: str, data: bytes) -> None:
-        resp = httpx.put(url, content=data, timeout=_TIMEOUT)
+        resp = httpx.put(url, content=data, timeout=UPLOAD_TIMEOUT)
         resp.raise_for_status()
 
     def download_text(self, url: str) -> str:
