@@ -79,6 +79,7 @@ cli:release:
     - echo ${VERSION} > VERSION
     - ./ossutil cp VERSION oss://${OSS_BUCKET}/${OSS_PATH}/VERSION -f --acl public-read --meta Content-Type:text/plain
   artifacts:
+    untracked: true
     paths:
       - output/
     expire_in: 1 hour
