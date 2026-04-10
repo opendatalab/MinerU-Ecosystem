@@ -78,10 +78,23 @@ cli:release:
     - ./ossutil cp cli/mineru-open-api/install/install.ps1 oss://${OSS_BUCKET}/${OSS_PATH}/install.ps1 -f --acl public-read --meta Content-Type:text/plain
     - echo ${VERSION} > VERSION
     - ./ossutil cp VERSION oss://${OSS_BUCKET}/${OSS_PATH}/VERSION -f --acl public-read --meta Content-Type:text/plain
+  artifacts:
+    paths:
+      - output/
+    expire_in: 1 hour
 
-    # 发布到 npm
+# CLI 发布到 npm（依赖 cli:release 的 artifacts）
+cli:npm:
+  stage: release
+  tags:
+    - ecs
+  image: node:20-slim
+  needs: [cli:release]
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^cli\/mineru-open-api\/v/
+  script:
+    - export VERSION=${CI_COMMIT_TAG#cli/mineru-open-api/}
     - export NPM_VERSION=${VERSION#v}
-    - apk add --no-cache nodejs npm || true
     - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
 
     # 复制二进制到平台包目录
@@ -112,6 +125,58 @@ cli:release:
     - sed -i "s/\"0.0.0\"/\"${NPM_VERSION}\"/g" package.json
     - cat package.json
     - npm publish --access public
+  environment:
+    name: npm
+    url: https://www.npmjs.com/package/mineru-open-api
+
+# CLI 发布到 PyPI（依赖 cli:release 的 artifacts）
+cli:pypi:
+  stage: release
+  tags:
+    - ecs
+  image: python:3.12-slim
+  needs: [cli:release]
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^cli\/mineru-open-api\/v/
+  script:
+    - export VERSION=${CI_COMMIT_TAG#cli/mineru-open-api/}
+    - export PKG_VERSION=${VERSION#v}
+    - pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --timeout 120 build wheel twine
+
+    - cd cli/mineru-open-api/pypi
+    - sed -i "s/^version = .*/version = \"${PKG_VERSION}\"/" pyproject.toml
+    - mkdir -p dist
+    - >
+      PLATFORMS="linux-amd64:manylinux_2_17_x86_64.manylinux2014_x86_64
+      linux-arm64:manylinux_2_17_aarch64.manylinux2014_aarch64
+      darwin-amd64:macosx_10_9_x86_64
+      darwin-arm64:macosx_11_0_arm64
+      windows-amd64:win_amd64
+      windows-arm64:win_arm64"
+    - >
+      for entry in ${PLATFORMS}; do
+        plat=$(echo ${entry} | cut -d: -f1) ;
+        tag=$(echo ${entry} | cut -d: -f2) ;
+        os_name=$(echo ${plat} | cut -d- -f1) ;
+        echo "=== Building wheel for ${plat} (tag: ${tag}) ===" ;
+        rm -rf src/mineru_open_api/bin ;
+        mkdir -p src/mineru_open_api/bin ;
+        if [ "${os_name}" = "windows" ]; then
+          cp ${CI_PROJECT_DIR}/output/${BINARY_NAME}-${plat}.exe src/mineru_open_api/bin/mineru-open-api-${plat}.exe ;
+        else
+          cp ${CI_PROJECT_DIR}/output/${BINARY_NAME}-${plat} src/mineru_open_api/bin/mineru-open-api-${plat} ;
+        fi ;
+        python -m build --wheel ;
+        python -m wheel tags --platform-tag ${tag} --remove dist/*.whl ;
+        mkdir -p ${CI_PROJECT_DIR}/all_wheels ;
+        mv dist/*.whl ${CI_PROJECT_DIR}/all_wheels/ ;
+        rm -rf dist ;
+        mkdir -p dist ;
+      done
+    - twine upload ${CI_PROJECT_DIR}/all_wheels/*.whl --non-interactive
+  environment:
+    name: pypi
+    url: https://pypi.org/project/mineru-open-api/
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  Python SDK
