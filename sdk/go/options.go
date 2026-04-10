@@ -171,6 +171,9 @@ func Bool(v bool) *bool { return &v }
 type flashExtractConfig struct {
 	language string
 	pages    *string
+	ocr      *bool
+	formula  *bool
+	table    *bool
 	timeout  time.Duration // Business polling timeout
 }
 
@@ -192,6 +195,21 @@ func WithFlashLanguage(lang string) FlashExtractOption {
 // WithFlashPages sets the page range for flash extraction, e.g. "1-10".
 func WithFlashPages(pages string) FlashExtractOption {
 	return func(c *flashExtractConfig) { c.pages = &pages }
+}
+
+// WithFlashOCR enables OCR for scanned documents in flash extraction.
+func WithFlashOCR(enabled bool) FlashExtractOption {
+	return func(c *flashExtractConfig) { c.ocr = &enabled }
+}
+
+// WithFlashFormula controls formula recognition in flash extraction.
+func WithFlashFormula(enabled bool) FlashExtractOption {
+	return func(c *flashExtractConfig) { c.formula = &enabled }
+}
+
+// WithFlashTable controls table recognition in flash extraction.
+func WithFlashTable(enabled bool) FlashExtractOption {
+	return func(c *flashExtractConfig) { c.table = &enabled }
 }
 
 // WithFlashTimeout sets the maximum polling duration for flash extraction.

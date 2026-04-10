@@ -208,3 +208,78 @@ func TestFlashExtract_WithLanguage(t *testing.T) {
 		t.Fatal("markdown is empty")
 	}
 }
+
+func TestFlashExtract_WithOCR(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	c := newFlashTestClient()
+	result := flashExtractOrSkip(t, c, flashTestPDFURL,
+		mineru.WithFlashOCR(true),
+		mineru.WithFlashPages("1-1"),
+	)
+	if result.State != "done" {
+		t.Fatalf("expected state=done, got %s", result.State)
+	}
+	if result.Markdown == "" {
+		t.Fatal("markdown is empty")
+	}
+}
+
+func TestFlashExtract_WithFormula(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	c := newFlashTestClient()
+	result := flashExtractOrSkip(t, c, flashTestPDFURL,
+		mineru.WithFlashFormula(true),
+		mineru.WithFlashPages("1-1"),
+	)
+	if result.State != "done" {
+		t.Fatalf("expected state=done, got %s", result.State)
+	}
+	if result.Markdown == "" {
+		t.Fatal("markdown is empty")
+	}
+}
+
+func TestFlashExtract_WithTable(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	c := newFlashTestClient()
+	result := flashExtractOrSkip(t, c, flashTestPDFURL,
+		mineru.WithFlashTable(true),
+		mineru.WithFlashPages("1-1"),
+	)
+	if result.State != "done" {
+		t.Fatalf("expected state=done, got %s", result.State)
+	}
+	if result.Markdown == "" {
+		t.Fatal("markdown is empty")
+	}
+}
+
+func TestFlashExtract_WithAllOptions(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	c := newFlashTestClient()
+	result := flashExtractOrSkip(t, c, flashTestPDFURL,
+		mineru.WithFlashLanguage("en"),
+		mineru.WithFlashPages("1-1"),
+		mineru.WithFlashOCR(true),
+		mineru.WithFlashFormula(true),
+		mineru.WithFlashTable(false),
+	)
+	if result.State != "done" {
+		t.Fatalf("expected state=done, got %s", result.State)
+	}
+	if result.Markdown == "" {
+		t.Fatal("markdown is empty")
+	}
+}
