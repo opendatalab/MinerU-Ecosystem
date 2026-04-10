@@ -215,6 +215,7 @@ sdk:python:release:
     - cat pyproject.toml | grep "^version"
 
     # 构建
+    - pip install --upgrade pip
     - pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --timeout 120 build twine
     - python -m build
     - ls -la dist/
