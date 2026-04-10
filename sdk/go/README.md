@@ -207,6 +207,9 @@ These defaults apply to `Extract()`, `ExtractBatch()`, `Submit()`, and `SubmitBa
 | :--- | :--- | :--- |
 | `WithFlashLanguage(...)` | `"ch"` | Chinese is the default |
 | `WithFlashPages(...)` | not set | Full page range allowed by the flash API |
+| `WithFlashOCR(...)` | not set | OCR is off (API default) |
+| `WithFlashFormula(...)` | not set | Formula recognition is on (API default) |
+| `WithFlashTable(...)` | not set | Table recognition is on (API default) |
 | `WithFlashTimeout(...)` | `5 * time.Minute` | Total polling timeout |
 
 ---

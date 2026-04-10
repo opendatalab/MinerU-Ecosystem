@@ -165,6 +165,9 @@ These defaults apply to `extract()`, `submit()`, `extractBatch()`, and `submitBa
 | :--- | :--- | :--- |
 | `language` | `"ch"` | Chinese is the default |
 | `pageRange` | `undefined` | Full page range allowed by the flash API |
+| `ocr` | `undefined` | OCR is off (API default) |
+| `formula` | `undefined` | Formula recognition is on (API default) |
+| `table` | `undefined` | Table recognition is on (API default) |
 | `timeout` | `300` seconds | Max total polling time |
 
 ---

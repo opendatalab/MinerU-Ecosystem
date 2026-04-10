@@ -79,6 +79,40 @@ cli:release:
     - echo ${VERSION} > VERSION
     - ./ossutil cp VERSION oss://${OSS_BUCKET}/${OSS_PATH}/VERSION -f --acl public-read --meta Content-Type:text/plain
 
+    # 发布到 npm
+    - export NPM_VERSION=${VERSION#v}
+    - apk add --no-cache nodejs npm || true
+    - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+
+    # 复制二进制到平台包目录
+    - NPM_DIR=cli/mineru-open-api/npm
+    - mkdir -p ${NPM_DIR}/mineru-open-api-linux-x64/bin
+    - mkdir -p ${NPM_DIR}/mineru-open-api-linux-arm64/bin
+    - mkdir -p ${NPM_DIR}/mineru-open-api-darwin-x64/bin
+    - mkdir -p ${NPM_DIR}/mineru-open-api-darwin-arm64/bin
+    - mkdir -p ${NPM_DIR}/mineru-open-api-win32-x64/bin
+    - mkdir -p ${NPM_DIR}/mineru-open-api-win32-arm64/bin
+    - cp ./output/${BINARY_NAME}-linux-amd64        ${NPM_DIR}/mineru-open-api-linux-x64/bin/mineru-open-api
+    - cp ./output/${BINARY_NAME}-linux-arm64        ${NPM_DIR}/mineru-open-api-linux-arm64/bin/mineru-open-api
+    - cp ./output/${BINARY_NAME}-darwin-amd64       ${NPM_DIR}/mineru-open-api-darwin-x64/bin/mineru-open-api
+    - cp ./output/${BINARY_NAME}-darwin-arm64       ${NPM_DIR}/mineru-open-api-darwin-arm64/bin/mineru-open-api
+    - cp ./output/${BINARY_NAME}-windows-amd64.exe  ${NPM_DIR}/mineru-open-api-win32-x64/bin/mineru-open-api.exe
+    - cp ./output/${BINARY_NAME}-windows-arm64.exe  ${NPM_DIR}/mineru-open-api-win32-arm64/bin/mineru-open-api.exe
+
+    # 更新版本号并发布平台包
+    - >
+      for pkg in linux-x64 linux-arm64 darwin-x64 darwin-arm64 win32-x64 win32-arm64; do
+        cd ${CI_PROJECT_DIR}/${NPM_DIR}/mineru-open-api-${pkg} ;
+        npm version ${NPM_VERSION} --no-git-tag-version --allow-same-version ;
+        npm publish --access public ;
+      done
+
+    # 更新主包版本号（含 optionalDependencies 版本）并发布
+    - cd ${CI_PROJECT_DIR}/${NPM_DIR}/mineru-open-api
+    - sed -i "s/\"0.0.0\"/\"${NPM_VERSION}\"/g" package.json
+    - cat package.json
+    - npm publish --access public
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  Python SDK
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
