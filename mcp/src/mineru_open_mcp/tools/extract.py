@@ -76,11 +76,10 @@ async def _build_result_entry(
     }
 
     if save_to_file:
-        stem_dir = out_dir / stem
-        md_path = stem_dir / f"{stem}.md"
+        md_path = out_dir / f"{stem}.md"
         try:
-            result.save_markdown(str(md_path), with_images=True)
-            extract_path = str(stem_dir)
+            md_path.write_text(result.markdown, encoding="utf-8")
+            extract_path = str(md_path)
         except Exception as exc:
             config.logger.warning("Failed to save Markdown for %s: %s", filename, exc)
             extract_path = str(out_dir)
@@ -139,7 +138,10 @@ async def _extract_flash(
 
             loop = asyncio.get_running_loop()
             result = await loop.run_in_executor(None, _run_one)
-            stem = _unique_stem(Path(filename).stem, used_stems)
+            base = Path(filename).stem
+            if page_range:
+                base = f"{base}_{page_range}"
+            stem = _unique_stem(base, used_stems)
             used_stems.add(stem)
             entry = await _build_result_entry(result, filename, stem, out_dir, ctx, save_to_file)
         except (MinerUError, Exception) as exc:
@@ -206,7 +208,11 @@ async def _extract_batch(
     for index, result in enumerate(results):
         source = sources[index] if index < len(sources) else ""
         filename = result.filename or _source_filename(source)
-        stem = _unique_stem(Path(filename).stem, used_stems)
+        page_range = page_ranges_map.get(index) if page_ranges_map else None
+        base = Path(filename).stem
+        if page_range:
+            base = f"{base}_{page_range}"
+        stem = _unique_stem(base, used_stems)
         used_stems.add(stem)
         entry = await _build_result_entry(result, filename, stem, out_dir, ctx, save_to_file)
         processed.append(entry)
@@ -242,7 +248,7 @@ async def extract_sources(
                 f"Flash mode: {len(sources)} file(s), markdown only, 20 pages / 10 MB limit."
             )
         else:
-            await ctx.info(f"Processing {len(sources)} file(s).")
+            await ctx.info(f"Processing {len(sources)} file(s) with full capability. Max 600 pages or 200 MB per file.")
 
     used_stems: Set[str] = set()
 

@@ -68,11 +68,15 @@ def _save_full_markdown(entry: Dict[str, Any], content: str, out_dir: Path) -> N
     try:
         filename = entry.get("filename", "output")
         stem = Path(filename).stem or "output"
-        stem_dir = out_dir / stem
-        stem_dir.mkdir(parents=True, exist_ok=True)
-        md_path = stem_dir / f"{stem}.md"
+        md_path = out_dir / f"{stem}.md"
+        if md_path.exists():
+            counter = 1
+            while (out_dir / f"{stem}_{counter}.md").exists():
+                counter += 1
+            md_path = out_dir / f"{stem}_{counter}.md"
+        out_dir.mkdir(parents=True, exist_ok=True)
         md_path.write_text(content, encoding="utf-8")
-        entry["extract_path"] = str(stem_dir)
+        entry["extract_path"] = str(md_path)
     except Exception as exc:
         config.logger.warning(
             "Failed to save truncated Markdown for %s: %s",
@@ -310,7 +314,14 @@ def register_tools(mcp: FastMCP, get_output_dir) -> None:
         output_dir: Annotated[Optional[str], _OUTPUT_DIR_FIELD] = None,
         ctx: Context = None,
     ) -> Dict[str, Any]:
-        """Parse local files or URLs into Markdown."""
+        """High-quality document parsing: converts PDF, Word, PPT, Excel (in Flash Mode), and images to Markdown.
+
+        Powered by SOTA MinerU PDF extraction — supports full document parsing (200+ pages),
+        academic paper parsing, formula recognition, table extraction, multi-column layouts,
+        scanned document OCR, and webpage-to-Markdown conversion.
+        Designed for AI workflows. Unlike basic readers limited to the first 10 pages,
+        MinerU processes entire documents end-to-end.
+        """
         sources, page_ranges_map = _normalize_file_sources(file_sources)
         resolved_output_dir = output_dir or get_output_dir()
         return await _parse(
