@@ -1,70 +1,101 @@
-"""MinerU File转Markdown服务的命令行界面。"""
+"""Command-line interface for the MinerU MCP server."""
 
-import sys
 import argparse
+import sys
 
 from . import config
 from . import server
-from .banner import print_banner
+
+_BANNER = r"""
+  +----------------------------------------------------------+
+  |  __  __ _                  _   _   __  __  ____  ____   |
+  | |  \/  (_)_ __   ___ _ __ | | | | |  \/  |/ ___||  _ \  |
+  | | |\/| | | '_ \ / _ \ '__|| | | | | |\/| | |    | |_) | |
+  | | |  | | | | | |  __/ |   | |_| | | |  | | |___ |  __/  |
+  | |_|  |_|_|_| |_|\___|_|    \___/  |_|  |_|\____||_|     |
+  +----------------------------------------------------------+
+"""
+
+_INFO_TEMPLATE = """\
+  Transport   : {transport}
+  Host        : {host}
+  Output dir  : {output_dir}
+  Output mode : {output_mode}
+
+  Tools available:
+    * parse_documents   - Convert PDF / Word / PPT / images -> Markdown
+    * get_ocr_languages - List supported OCR languages
+
+  Powered by MinerU  -  https://mineru.net/
+"""
 
 
-def main():
-    """命令行界面的入口点。"""
-    parser = argparse.ArgumentParser(description="MinerU File转Markdown转换服务")
-
-    parser.add_argument(
-        "--output-dir", "-o", type=str, help="保存转换后文件的目录 (默认: ~/mineru-downloads)"
+def _print_banner(transport: str, host: str, output_dir: str) -> None:
+    """Print the startup banner to stderr without touching the MCP stdio wire."""
+    display_host = host if transport == "streamable-http" else "(stdio, no network port)"
+    if not output_dir:
+        output_dir = "~/mineru-downloads (default)"
+    output_mode = "single-file inline; batch and oversized results saved to output dir"
+    print(_BANNER, file=sys.stderr)
+    print(
+        _INFO_TEMPLATE.format(
+            transport=transport,
+            host=display_host,
+            output_dir=output_dir,
+            output_mode=output_mode,
+        ),
+        file=sys.stderr,
     )
 
+
+def main() -> None:
+    """Entry point for the CLI."""
+    parser = argparse.ArgumentParser(description="MinerU document-to-Markdown MCP server")
+
+    parser.add_argument(
+        "--output-dir",
+        "-o",
+        type=str,
+        help="Directory used for saved batch results and oversized inline content (default: ~/mineru-downloads)",
+    )
     parser.add_argument(
         "--transport",
         "-t",
         type=str,
         default="stdio",
-        help="协议类型 (默认: stdio,可选: sse,streamable-http)",
+        help="Transport mode: stdio (default), streamable-http",
     )
-
     parser.add_argument(
         "--port",
         "-p",
         type=int,
         default=8001,
-        help="服务器端口 (默认: 8001, 仅在使用HTTP协议时有效)",
+        help="Server port (default: 8001, HTTP transports only)",
     )
-
     parser.add_argument(
         "--host",
         type=str,
         default="0.0.0.0",
-        help="服务器主机地址 (默认: 0.0.0.0, 仅在使用HTTP协议时有效)",
+        help="Server host (default: 0.0.0.0, HTTP transports only)",
     )
 
     args = parser.parse_args()
 
-    # 检查参数有效性
-    if args.transport == "stdio" and (args.host != "127.0.0.1" or args.port != 8001):
-        print("警告: 在STDIO模式下，--host和--port参数将被忽略", file=sys.stderr)
+    if args.transport == "stdio" and (args.host != "0.0.0.0" or args.port != 8001):
+        print("Warning: --host and --port are ignored in stdio mode.", file=sys.stderr)
 
-    # Warn (don't exit) if no API key is configured — per-request keys via ?api_key= are also supported
     if not config.MINERU_API_TOKEN:
         print(
-            "警告: 未设置 MINERU_API_TOKEN 环境变量。\n"
-            "可通过 MCP 服务器 URL 中的 ?api_key=YOUR_KEY 参数按请求传入。",
+            "Warning: MINERU_API_TOKEN is not set; Flash mode will be used "
+            "(free, 20 pages / 10 MB per file).",
             file=sys.stderr,
         )
 
-    # 如果提供了输出目录，则进行设置
     if args.output_dir:
         server.set_output_dir(args.output_dir)
 
-    # Print startup banner — always to stderr so stdio MCP wire is never touched
-    host_display = f"{args.host}:{args.port}" if args.transport in ("sse", "streamable-http") else ""
-    print_banner(
-        transport=args.transport,
-        host=host_display,
-        output_dir=server.get_output_dir(),
-    )
-
+    host_display = f"{args.host}:{args.port}" if args.transport == "streamable-http" else ""
+    _print_banner(args.transport, host_display, server.get_output_dir())
     server.run_server(mode=args.transport, port=args.port, host=args.host)
 
 

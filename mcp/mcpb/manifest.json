@@ -1,0 +1,88 @@
+{
+  "manifest_version": "0.4",
+  "name": "mineru-open-mcp",
+  "display_name": "MinerU Open MCP",
+  "version": "1.0.15",
+  "description": "Parse PDFs, Word docs, PowerPoint files, spreadsheets, and images into Markdown using MinerU's document parsing API.",
+  "long_description": "MinerU Open MCP connects any MCP-compatible AI client to MinerU's document parsing engine. Convert PDFs, DOCX, PPTX, JPG, PNG, and HTML files into clean Markdown (and optionally Word, HTML, or LaTeX with an API token). Flash mode works out of the box — free, no sign-up required, up to 20 pages / 10 MB per file. Provide a MinerU API token to unlock higher limits and additional output formats.",
+  "author": {
+    "name": "OpenDataLab",
+    "email": "OpenDataLab@pjlab.org.cn",
+    "url": "https://github.com/opendatalab/MinerU-Ecosystem"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/opendatalab/MinerU-Ecosystem.git"
+  },
+  "homepage": "https://mineru.net",
+  "documentation": "https://github.com/opendatalab/MinerU-Ecosystem/blob/main/mcp/README.md",
+  "support": "https://github.com/opendatalab/MinerU-Ecosystem/issues",
+  "server": {
+    "type": "uv",
+    "entry_point": "pyproject.toml",
+    "mcp_config": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${__dirname}",
+        "mineru-open-mcp"
+      ],
+      "env": {
+        "MINERU_API_TOKEN": "${user_config.MINERU_API_TOKEN}",
+        "OUTPUT_DIR": "${user_config.OUTPUT_DIR}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "parse_documents",
+      "description": "Convert local files and/or remote URLs to Markdown. Supports PDF, DOCX, PPTX, JPG, PNG, HTML, XLSX. Optionally specify page ranges, OCR language, and parsing model."
+    },
+    {
+      "name": "get_ocr_languages",
+      "description": "List all OCR languages supported by MinerU (Chinese, English, Korean, Japanese, Arabic, Cyrillic, Devanagari, and more)."
+    }
+  ],
+  "keywords": [
+    "pdf",
+    "document",
+    "parsing",
+    "markdown",
+    "ocr",
+    "mineru",
+    "converter",
+    "docx",
+    "pptx"
+  ],
+  "license": "MIT",
+  "privacy_policies": [
+    "https://mineru.net/privacyPolicy"
+  ],
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "python": ">=3.10,<4.0"
+    }
+  },
+  "user_config": {
+    "MINERU_API_TOKEN": {
+      "type": "string",
+      "title": "MinerU API Token",
+      "description": "API token for full capability — higher page limits and extra output formats (Word, HTML, LaTeX). Leave empty to use free Flash mode (Markdown only, 20 pages / 10 MB per file). Get your token at https://mineru.net.",
+      "sensitive": true,
+      "required": false,
+      "default": ""
+    },
+    "OUTPUT_DIR": {
+      "type": "directory",
+      "title": "Output Directory",
+      "description": "Local directory where parsed results are saved (used for batch parsing or oversized content). Defaults to ~/mineru-downloads if not set.",
+      "required": false
+    }
+  }
+}
