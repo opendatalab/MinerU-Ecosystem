@@ -118,9 +118,9 @@ class MinerUReader(BaseReader):
         timeout: Max seconds to wait for task completion, default ``600``.
         split_pages: If ``True``, split each PDF into one-page chunks and
             yield one Document per page.
-        ocr: Enable OCR (precision mode only).
-        formula: Enable formula recognition (precision mode only).
-        table: Enable table recognition (precision mode only).
+        ocr: Enable OCR.
+        formula: Enable formula recognition.
+        table: Enable table recognition.
 
     """
 

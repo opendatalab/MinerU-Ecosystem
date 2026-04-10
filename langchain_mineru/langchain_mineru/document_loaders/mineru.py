@@ -93,12 +93,6 @@ class MinerULoader(BaseLoader):
             raise ValueError("source list must not be empty")
         if self.mode not in {"flash", "precision"}:
             raise ValueError("mode must be 'flash' or 'precision'")
-        if self.mode == "flash":
-            if self.formula is not True or self.table is not True:
-                raise ValueError(
-                    "formula/table are only supported in precision mode. "
-                    "Use mode='precision' to enable them."
-                )
         if self.mode == "precision" and not (self.token or os.environ.get("MINERU_TOKEN")):
             raise ValueError(
                 "precision mode requires token. "

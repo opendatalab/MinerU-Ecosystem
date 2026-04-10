@@ -32,7 +32,8 @@ MinerU-Ecosystem/
 │   ├── go/               #   Go SDK
 │   └── typescript/       #   TypeScript SDK
 ├── langchain_mineru/     # LangChain 文档加载器集成
-├── mcp/           # Model Context Protocol 服务器（Python）
+├── llama-index-readers-mineru/     # LlamaIndex 文档解析器集成
+├── mcp/                  # Model Context Protocol 服务器（Python）
 └── skills/               # AI 智能体技能（Claude Code、OpenClaw 等）
 ```
 
@@ -40,15 +41,46 @@ MinerU-Ecosystem/
 
 本仓库所有组件均适配 **两种** API 模式：
 
-| 对比维度 | 🎯 精准解析 API | ⚡ Agent 轻量解析 API |
-|---------|---------------|---------------------|
-| 是否需要 Token | ✅ 需要 | ❌ 无需（IP 限频）|
-| 模型版本 | `pipeline`（默认）/ `vlm`（推荐）/ `MinerU-HTML` | 固定 pipeline 轻量模型 |
-| 表格/公式识别 | ✅ 支持（可配置）| ❌ 禁用（追求速度）|
-| 文件大小限制 | ≤ 200MB | ≤ 10MB |
-| 页数限制 | ≤ 600 页 | ≤ 20 页 |
-| 批量支持 | ✅ 支持（≤ 200 个）| ❌ 单文件 |
-| 输出格式 | Markdown、JSON、Zip，且可导出为 DOCX / HTML / LaTeX | 仅 Markdown |
+| 对比维度       | 🎯 精准解析 API                                     | ⚡ Agent 轻量解析 API  |
+| -------------- | --------------------------------------------------- | ---------------------- |
+| 是否需要 Token | ✅ 需要                                             | ❌ 无需（IP 限频）     |
+| 模型版本       | `pipeline`（默认）/ `vlm`（推荐）/ `MinerU-HTML`    | 固定 pipeline 轻量模型 |
+| 文件大小限制   | ≤ 200MB                                             | ≤ 10MB                 |
+| 页数限制       | ≤ 600 页                                            | ≤ 20 页                |
+| 批量支持       | ✅ 支持（≤ 200 个）                                 | ❌ 单文件              |
+| 输出格式       | Markdown、JSON、Zip，且可导出为 DOCX / HTML / LaTeX | 仅 Markdown            |
+
+## 🧭 按使用场景选择接入方式
+
+不确定该从哪里开始时，先按你的目标选择路径：
+
+```text
+我想要……
+│
+├── 🌐 立即体验，不安装也不写代码
+│   └── Web App → https://mineru.net/OpenSourceTools/Extractor
+│
+├── 💻 在终端里直接解析文档
+│   └── CLI → cli/
+│       flash-extract：免 Token，适合快速预览
+│       extract：功能完整，适合生产处理
+│
+├── 🐍 集成到 Python / Go / TypeScript 项目
+│   └── SDK → sdk/python/ | sdk/go/ | sdk/typescript/
+│
+├── 🤖 让 AI Agent 具备文档解析能力
+│   ├── 直接调用命令行工具 → cli/
+│   ├── 自然语言技能接入（OpenClaw、ZeroClaw 等）→ skills/
+│   └── 标准 MCP 协议接入（Cursor、Claude Desktop、Windsurf 等）→ mcp/
+│
+├── 📚 搭建 RAG / 知识库
+│   ├── LangChain Loader → langchain_mineru/
+│   └── LlamaIndex Reader → llama-index-readers-mineru/
+│       flash 模式：零 Token，快速起步
+│       precision 模式：支持 OCR、表格、公式等更完整能力
+```
+
+如果你只是想先验证效果，优先从 Web App 或 `flash` 模式开始；如果你已经进入正式集成阶段，需要更高精度、OCR、表格和公式识别，优先选择 `precision` 模式。
 
 ## 🚀 快速开始
 
@@ -183,7 +215,7 @@ print(result.images)  # 获取提取出的图片列表
 
 ### LangChain 集成 (`langchain_mineru/`)
 
-一个 LangChain 文档加载器，一行代码即可将 PDF 等文档转换为 LangChain 兼容的 `Document` 对象，直接接入 RAG 流水线。
+一个 LangChain 文档加载器，可将 PDF、Word、PPT、图片等文档解析为 LangChain 兼容的 `Document` 对象，便于直接接入切分、向量化与检索流程。
 
 #### 安装
 
@@ -192,6 +224,8 @@ pip install langchain-mineru
 ```
 
 #### 使用
+
+**1. 基础用法（默认 `flash` 模式，无需 Token）**
 
 ```python
 from langchain_mineru import MinerULoader
@@ -203,15 +237,121 @@ print(docs[0].page_content[:500])
 print(docs[0].metadata)
 ```
 
-默认使用 `mode="flash"`（无需 API Token）。切换到 `mode="precision"` 可获得更高精度的解析结果（需要 Token 认证）。
+默认使用 `mode="flash"`，适合快速预览和轻量解析。
+
+**2. Precision 模式（需 Token）**
+
+适合扫描件、长文档，以及对 OCR、表格、公式识别要求更高的场景。
+
+```python
+from langchain_mineru import MinerULoader
+
+loader = MinerULoader(
+    source="/path/to/manual.pdf",
+    mode="precision",
+    token="your-api-token",  # 或设置 MINERU_TOKEN 环境变量
+    split_pages=True,
+    pages="1-5",
+    ocr=True,
+    formula=True,
+    table=True,
+)
+
+docs = loader.load()
+for doc in docs:
+    print(doc.metadata.get("page"), doc.page_content[:200])
+```
+
+**3. 接入 LangChain RAG 流水线**
+
+```python
+from langchain_mineru import MinerULoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
+
+loader = MinerULoader(source="demo.pdf", split_pages=True)
+docs = loader.load()
+
+splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=200)
+chunks = splitter.split_documents(docs)
+
+vs = FAISS.from_documents(chunks, OpenAIEmbeddings())
+results = vs.similarity_search("这个文档的核心结论是什么？", k=3)
+for r in results:
+    print(r.page_content[:200])
+```
+
+默认使用 `mode="flash"`（无需 API Token）；切换到 `mode="precision"` 可获得更高精度的解析结果（需要 Token 认证）。如果用于 RAG，建议对 PDF 开启 `split_pages=True`，这样可以得到更细粒度的页级 `Document`。
+
+### LlamaIndex 集成 (`llama-index-readers-mineru/`)
+
+一个面向 LlamaIndex 的文档读取器，可将 PDF、Word、PPT、图片、Excel 等文件通过 MinerU 解析为 LlamaIndex 兼容的 `Document` 对象，便于直接接入索引与检索流程。
+
+#### 安装
+
+```bash
+pip install llama-index-readers-mineru
+```
+
+#### 使用
+
+**1. Flash 模式（默认，无需 Token）**
+
+适合快速接入和轻量解析，返回 Markdown 结果。
+
+```python
+from llama_index.readers.mineru import MinerUReader
+
+reader = MinerUReader()
+documents = reader.load_data("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
+
+print(documents[0].text[:500])
+print(documents[0].metadata)
+```
+
+**2. Precision 模式（需 Token）**
+
+适合扫描件、长文档以及对表格、公式识别要求更高的场景。可通过参数启用 OCR、公式和表格识别。
+
+```python
+from llama_index.readers.mineru import MinerUReader
+
+reader = MinerUReader(
+    mode="precision",
+    token="your-api-token",  # 或设置 MINERU_TOKEN 环境变量
+    ocr=True,
+    formula=True,
+    table=True,
+    pages="1-20",
+)
+documents = reader.load_data("/path/to/paper.pdf")
+```
+
+**3. 直接接入 LlamaIndex 索引**
+
+```python
+from llama_index.core import VectorStoreIndex
+from llama_index.readers.mineru import MinerUReader
+
+reader = MinerUReader(split_pages=True)
+documents = reader.load_data("/path/to/paper.pdf")
+
+index = VectorStoreIndex.from_documents(documents)
+query_engine = index.as_query_engine()
+response = query_engine.query("总结这篇文档的核心结论")
+print(response)
+```
+
+默认使用 `mode="flash"`，无需 Token；切换为 `mode="precision"` 后需要先在 `https://mineru.net` 申请 Token。若用于 RAG，建议开启 `split_pages=True` 获取更细粒度的页级 `Document`。
 
 ## 📚 相关文档
 
-| 资源 | 链接 |
-|---|---|
-| MinerU Open API 文档 | [mineru.net/apiManage/docs](https://mineru.net/apiManage/docs) |
-| MinerU 在线体验 | [mineru.net/OpenSourceTools/Extractor](https://mineru.net/OpenSourceTools/Extractor) |
-| MinerU 开源项目 | [github.com/opendatalab/MinerU](https://github.com/opendatalab/MinerU) |
+| 资源                 | 链接                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------ |
+| MinerU Open API 文档 | [mineru.net/apiManage/docs](https://mineru.net/apiManage/docs)                       |
+| MinerU 在线体验      | [mineru.net/OpenSourceTools/Extractor](https://mineru.net/OpenSourceTools/Extractor) |
+| MinerU 开源项目      | [github.com/opendatalab/MinerU](https://github.com/opendatalab/MinerU)               |
 
 ## 📄 开源许可
 

@@ -32,6 +32,7 @@ MinerU-Ecosystem/
 │   ├── go/               #   Go SDK
 │   └── typescript/       #   TypeScript SDK
 ├── langchain_mineru/     # LangChain document loader integration
+├── llama-index-readers-mineru/     # LlamaIndex document reader integration
 ├── mcp/                  # Model Context Protocol server (Python)
 └── skills/               # AI agent skills (Claude Code, OpenClaw, etc.)
 ```
@@ -40,15 +41,46 @@ MinerU-Ecosystem/
 
 All components in this repository support **both** API modes:
 
-| Comparison | 🎯 Precision Extract API | ⚡ Quick Parse API (Agent-Oriented) |
-|---|---|---|
-| Auth | ✅ Token required | ❌ Not required (IP rate-limited) |
-| Model Versions | `pipeline` (default) / `vlm` (recommended) / `MinerU-HTML` | Fixed lightweight pipeline model |
-| Table / Formula Recognition | ✅ Supported (configurable) | ❌ Disabled (speed-first) |
-| File Size Limit | ≤ 200 MB | ≤ 10 MB |
-| Page Limit | ≤ 600 pages | ≤ 20 pages |
-| Batch Support | ✅ Supported (≤ 200 files) | ❌ Single file only |
-| Output Formats | Markdown, JSON, Zip; optional export to DOCX / HTML / LaTeX | Markdown only |
+| Comparison      | 🎯 Precision Extract API                                    | ⚡ Quick Parse API (Agent-Oriented) |
+| --------------- | ----------------------------------------------------------- | ----------------------------------- |
+| Auth            | ✅ Token required                                           | ❌ Not required (IP rate-limited)   |
+| Model Versions  | `pipeline` (default) / `vlm` (recommended) / `MinerU-HTML`  | Fixed lightweight pipeline model    |
+| File Size Limit | ≤ 200 MB                                                    | ≤ 10 MB                             |
+| Page Limit      | ≤ 600 pages                                                 | ≤ 20 pages                          |
+| Batch Support   | ✅ Supported (≤ 200 files)                                  | ❌ Single file only                 |
+| Output Formats  | Markdown, JSON, Zip; optional export to DOCX / HTML / LaTeX | Markdown only                       |
+
+## 🧭 Choose Your Integration Path
+
+Not sure where to start? Pick the path that matches your use case:
+
+```text
+I want to...
+│
+├── 🌐 Try it instantly, with no install and no code
+│   └── Web App → https://mineru.net/OpenSourceTools/Extractor
+│
+├── 💻 Parse documents from the terminal
+│   └── CLI → cli/
+│       flash-extract: no token, best for quick previews
+│       extract: full features, better for production workflows
+│
+├── 🐍 Integrate it into my Python / Go / TypeScript project
+│   └── SDK → sdk/python/ | sdk/go/ | sdk/typescript/
+│
+├── 🤖 Enable my AI agent to parse documents
+│   ├── Call the CLI directly → cli/
+│   ├── Use natural-language skills (OpenClaw, ZeroClaw, etc.) → skills/
+│   └── Use MCP protocol (Cursor, Claude Desktop, Windsurf, etc.) → mcp/
+│
+├── 📚 Build a RAG pipeline / knowledge base
+│   ├── LangChain Loader → langchain_mineru/
+│   └── LlamaIndex Reader → llama-index-readers-mineru/
+│       flash mode: zero-token quick start
+│       precision mode: OCR, tables, formulas, and higher fidelity
+```
+
+If you just want to validate the parsing quality, start with the Web App or `flash` mode. If you are moving into a production integration and need OCR, table extraction, or formula recognition, use `precision` mode.
 
 ## 🚀 Quick Start
 
@@ -191,7 +223,7 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) server implementati
 
 ### LangChain Integration (`langchain_mineru/`)
 
-A LangChain Document Loader that turns PDFs and documents into LangChain-compatible `Document` objects with one line of code — ready to plug into RAG pipelines.
+A LangChain Document Loader that converts PDFs, Word files, PPTs, images, and other documents into LangChain-compatible `Document` objects, ready for splitting, embedding, and retrieval.
 
 #### Installation
 
@@ -200,6 +232,8 @@ pip install langchain-mineru
 ```
 
 #### Usage
+
+**1. Basic usage (`flash` mode by default, no token required)**
 
 ```python
 from langchain_mineru import MinerULoader
@@ -211,21 +245,139 @@ print(docs[0].page_content[:500])
 print(docs[0].metadata)
 ```
 
-Default is `mode="flash"` (no API token required). Switch to `mode="precision"` for higher fidelity with token auth.
+Default is `mode="flash"`, which is ideal for quick previews and lightweight integrations.
 
-Two parsing modes are available:
+**2. Precision mode (token required)**
 
-See the full documentation and RAG pipeline examples in [`langchain_mineru/`](langchain_mineru/).
+Best for scanned PDFs, long documents, and workflows that need OCR, table extraction, or formula recognition.
 
+```python
+from langchain_mineru import MinerULoader
 
+loader = MinerULoader(
+    source="/path/to/manual.pdf",
+    mode="precision",
+    token="your-api-token",  # or set MINERU_TOKEN
+    split_pages=True,
+    pages="1-5",
+    ocr=True,
+    formula=True,
+    table=True,
+)
+
+docs = loader.load()
+for doc in docs:
+    print(doc.metadata.get("page"), doc.page_content[:200])
+```
+
+**3. Mixed local and remote sources**
+
+```python
+from langchain_mineru import MinerULoader
+
+loader = MinerULoader(
+    source=[
+        "/path/to/demo_a.pdf",
+        "/path/to/demo_b.docx",
+        "https://cdn-mineru.openxlab.org.cn/demo/example.pdf",
+    ]
+)
+
+docs = loader.load()
+for doc in docs:
+    print(doc.metadata["source"], "-", doc.page_content[:100])
+```
+
+**4. Use it in a LangChain RAG pipeline**
+
+```python
+from langchain_mineru import MinerULoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
+
+loader = MinerULoader(source="demo.pdf", split_pages=True)
+docs = loader.load()
+
+splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=200)
+chunks = splitter.split_documents(docs)
+
+vs = FAISS.from_documents(chunks, OpenAIEmbeddings())
+results = vs.similarity_search("What are the key conclusions in this document?", k=3)
+for r in results:
+    print(r.page_content[:200])
+```
+
+Default is `mode="flash"` (no API token required). Switch to `mode="precision"` for higher fidelity with token auth. For RAG use cases, `split_pages=True` is usually a better default for PDFs because it gives you page-level `Document` granularity.
+
+### LlamaIndex Integration (`llama-index-readers-mineru/`)
+
+A document reader for LlamaIndex that parses PDFs, Word files, PPTs, images, and Excel files through MinerU and returns LlamaIndex-compatible `Document` objects for indexing and retrieval.
+
+#### Installation
+
+```bash
+pip install llama-index-readers-mineru
+```
+
+#### Usage
+
+**1. Flash mode (default, no token required)**
+
+Good for quick setup and lightweight parsing. Output is returned as Markdown.
+
+```python
+from llama_index.readers.mineru import MinerUReader
+
+reader = MinerUReader()
+documents = reader.load_data("https://cdn-mineru.openxlab.org.cn/demo/example.pdf")
+
+print(documents[0].text[:500])
+print(documents[0].metadata)
+```
+
+**2. Precision mode (token required)**
+
+Best for scanned files, longer documents, and use cases that need OCR, formula parsing, or table recognition.
+
+```python
+from llama_index.readers.mineru import MinerUReader
+
+reader = MinerUReader(
+    mode="precision",
+    token="your-api-token",  # or set MINERU_TOKEN
+    ocr=True,
+    formula=True,
+    table=True,
+    pages="1-20",
+)
+documents = reader.load_data("/path/to/paper.pdf")
+```
+
+**3. Use it in a LlamaIndex pipeline**
+
+```python
+from llama_index.core import VectorStoreIndex
+from llama_index.readers.mineru import MinerUReader
+
+reader = MinerUReader(split_pages=True)
+documents = reader.load_data("/path/to/paper.pdf")
+
+index = VectorStoreIndex.from_documents(documents)
+query_engine = index.as_query_engine()
+response = query_engine.query("Summarize the main findings of this document")
+print(response)
+```
+
+Default is `mode="flash"` with no token required. Switch to `mode="precision"` when you need higher parsing fidelity. For PDF-based RAG pipelines, `split_pages=True` is recommended so each page becomes a separate `Document`.
 
 ## 📚 Documentation
 
-| Resource | Link |
-|---|---|
-| MinerU Open API Docs | [mineru.net/apiManage/docs](https://mineru.net/apiManage/docs) |
-| MinerU Online Demo | [mineru.net/OpenSourceTools/Extractor](https://mineru.net/OpenSourceTools/Extractor) |
-| MinerU Open Source Project | [github.com/opendatalab/MinerU](https://github.com/opendatalab/MinerU) |
+| Resource                   | Link                                                                                 |
+| -------------------------- | ------------------------------------------------------------------------------------ |
+| MinerU Open API Docs       | [mineru.net/apiManage/docs](https://mineru.net/apiManage/docs)                       |
+| MinerU Online Demo         | [mineru.net/OpenSourceTools/Extractor](https://mineru.net/OpenSourceTools/Extractor) |
+| MinerU Open Source Project | [github.com/opendatalab/MinerU](https://github.com/opendatalab/MinerU)               |
 
 ## 📄 License
 

@@ -205,18 +205,18 @@ for r in results:
 
 ## Parameters
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `source` | `str \| list[str]` | *required* | Local file path(s) or URL(s). Supported formats depend on `mode`: `precision` supports .pdf, images, .DOC, .DOCX, .PPT, .PPTX, html; `flash` supports .pdf, images, DOCX, PPTX, XLS, XLSX. |
-| `mode` | `str` | `"flash"` | Parsing mode. `"flash"` is speed-first and token-free; `"precision"` uses standard API and requires token. |
-| `token` | `str \| None` | `None` | MinerU API token. Required for `mode="precision"`. Apply at [https://mineru.net/apiManage/token](https://mineru.net/apiManage/token). If omitted, `MINERU_TOKEN` environment variable is used. |
-| `language` | `str` | `"ch"` | Document language code for OCR. Common values: `"ch"` (Chinese), `"en"` (English). For the complete list, refer to the [standard API documentation](https://mineru.net/apiManage/docs). |
-| `pages` | `str \| None` | `None` | Page range to extract, e.g. `"1-5"` or `"3"`. Only applies to PDF files. When `split_pages=False`, the range is forwarded to the API. When `split_pages=True`, only the specified pages are split and parsed locally — reducing API calls and processing time. |
-| `timeout` | `int` | `1200` | Maximum seconds to wait for extraction per file. |
-| `split_pages` | `bool` | `False` | PDF only. When `True`, splits the PDF into one `Document` per page. Each page is parsed independently, so `metadata["page"]` is available. Non-PDF files are unaffected — they always produce one `Document`. |
-| `ocr` | `bool` | `False` | Effective when `mode="precision"`. In `mode="flash"`, OCR is built in and this parameter is ignored. |
-| `formula` | `bool` | `True` | Effective only when `mode="precision"`. Enables formula recognition. Passing non-default value in `mode="flash"` raises an error. |
-| `table` | `bool` | `True` | Effective only when `mode="precision"`. Enables table recognition. Passing non-default value in `mode="flash"` raises an error. |
+| Parameter     | Type               | Default    | Description                                                                                                                                                                                                                                                    |
+| ------------- | ------------------ | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `source`      | `str \| list[str]` | _required_ | Local file path(s) or URL(s). Supported formats depend on `mode`: `precision` supports .pdf, images, .DOC, .DOCX, .PPT, .PPTX, html; `flash` supports .pdf, images, DOCX, PPTX, XLS, XLSX.                                                                     |
+| `mode`        | `str`              | `"flash"`  | Parsing mode. `"flash"` is speed-first and token-free; `"precision"` uses standard API and requires token.                                                                                                                                                     |
+| `token`       | `str \| None`      | `None`     | MinerU API token. Required for `mode="precision"`. Apply at [https://mineru.net/apiManage/token](https://mineru.net/apiManage/token). If omitted, `MINERU_TOKEN` environment variable is used.                                                                 |
+| `language`    | `str`              | `"ch"`     | Document language code for OCR. Common values: `"ch"` (Chinese), `"en"` (English). For the complete list, refer to the [standard API documentation](https://mineru.net/apiManage/docs).                                                                        |
+| `pages`       | `str \| None`      | `None`     | Page range to extract, e.g. `"1-5"` or `"3"`. Only applies to PDF files. When `split_pages=False`, the range is forwarded to the API. When `split_pages=True`, only the specified pages are split and parsed locally — reducing API calls and processing time. |
+| `timeout`     | `int`              | `1200`     | Maximum seconds to wait for extraction per file.                                                                                                                                                                                                               |
+| `split_pages` | `bool`             | `False`    | PDF only. When `True`, splits the PDF into one `Document` per page. Each page is parsed independently, so `metadata["page"]` is available. Non-PDF files are unaffected — they always produce one `Document`.                                                  |
+| `ocr`         | `bool`             | `False`    | Whether to enable OCR                                                                                                                                                                                                                                          |
+| `formula`     | `bool`             | `True`     | Enables formula recognition.                                                                                                                                                                                                                                   |
+| `table`       | `bool`             | `True`     | Enables table recognition.                                                                                                                                                                                                                                     |
 
 ## Document Metadata
 
