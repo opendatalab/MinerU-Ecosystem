@@ -250,7 +250,7 @@ async def extract_sources(
         else:
             await ctx.info(f"Processing {len(sources)} file(s) with full capability. Max 600 pages or 200 MB per file.")
 
-    used_stems: Set[str] = set()
+    used_stems: Set[str] = {p.stem for p in out_dir.glob("*.md")} if save_to_file and out_dir.exists() else set()
 
     if use_flash:
         return await _extract_flash(
