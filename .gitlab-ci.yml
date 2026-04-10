@@ -28,15 +28,15 @@ cli:build:
       --build-arg TARGETS="verify"
       -f cli/mineru-open-api/Dockerfile.ci .
 
-# 打 cli/v* tag 时交叉编译 + 上传 OSS
+# 打 cli/mineru-open-api/v* tag 时交叉编译 + 上传 OSS
 cli:release:
   stage: release
   tags:
     - ecs
   rules:
-    - if: $CI_COMMIT_TAG =~ /^cli\/v/
+    - if: $CI_COMMIT_TAG =~ /^cli\/mineru-open-api\/v/
   script:
-    - export VERSION=${CI_COMMIT_TAG#cli/}
+    - export VERSION=${CI_COMMIT_TAG#cli/mineru-open-api/}
     - >
       export LDFLAGS="-s -w
       -X github.com/opendatalab/MinerU-Ecosystem/cli/mineru-open-api/cmd.version=${VERSION}
@@ -116,7 +116,7 @@ sdk:python:release:
     - cat pyproject.toml | grep "^version"
 
     # 构建
-    - pip install build twine
+    - pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --timeout 120 build twine
     - python -m build
     - ls -la dist/
 
@@ -209,7 +209,7 @@ mcp:release:
     - cat pyproject.toml | grep "^version"
 
     # 构建
-    - pip install build twine
+    - pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --timeout 120 build twine
     - python -m build
     - ls -la dist/
 
@@ -258,7 +258,7 @@ llama-index-readers:release:
     - cat pyproject.toml | grep "^version"
 
     # 构建
-    - pip install build twine
+    - pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --timeout 120 build twine
     - python -m build
     - ls -la dist/
 
@@ -307,7 +307,7 @@ langchain:release:
     - cat pyproject.toml | grep "^version"
 
     # 构建（build 后端）
-    - pip install build twine
+    - pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --timeout 120 build twine
     - python -m build
     - ls -la dist/
 
