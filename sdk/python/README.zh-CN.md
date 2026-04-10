@@ -29,7 +29,7 @@ pip install mineru-open-sdk
 
 ## 🛠️ 快速上手
 
-### 1. Agent 轻量解析 (Flash Extract - 免登录，只支持Markdown)
+### 1. Agent 轻量解析 (Flash Extract - 免登录)
 适合快速预览。无需配置 Token。
 ```python
 from mineru import MinerU
@@ -112,7 +112,7 @@ print(result.images) # 获取提取出的图片列表
 | **文件大小上限** | 最大 10 MB | 最大 200 MB |
 | **文件页数上限** | 最大 20 页 | 最大 600 页 |
 | **支持格式** | PDF, 图片, Docx, PPTx, Excel | PDF, 图片, Doc/x, Ppt/x, Html |
-| **内容完整度** | 仅文本 (图片、表格、公式显示占位符) | 完整资源 (图片、表格、公式全部保留) |
+| **内容完整度** | Markdown（公式和表格默认开启，OCR 默认关闭） | 完整资源 (图片、表格、公式全部保留) |
 | **输出格式** | Markdown | MD, Docx, LaTeX, HTML, JSON |
 
 ---

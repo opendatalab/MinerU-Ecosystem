@@ -58,7 +58,7 @@ All components support both API modes:
 | File Size | ≤ 200 MB | ≤ 10 MB |
 | Page Limit | ≤ 600 pages | ≤ 20 pages |
 | Batch | ✅ Supported (≤ 200 files) | ❌ Single file only |
-| Output Formats | Markdown, JSON, Zip + optional DOCX / HTML / LaTeX | Markdown only |
+| Output Formats | Markdown, JSON, Zip + optional DOCX / HTML / LaTeX | Markdown (formula & table on, OCR off) |
 
 ---
 
@@ -80,7 +80,7 @@ curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
 irm https://cdn-mineru.openxlab.org.cn/open-api-cli/install.ps1 | iex
 ```
 
-**Flash Extract (no login, Markdown only)**
+**Flash Extract (no login)**
 
 ```bash
 mineru-open-api flash-extract report.pdf

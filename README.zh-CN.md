@@ -58,7 +58,7 @@ MinerU-Ecosystem/
 | 文件大小 | ≤ 200 MB | ≤ 10 MB |
 | 页数限制 | ≤ 600 页 | ≤ 20 页 |
 | 批量支持 | ✅ 支持（≤ 200 个）| ❌ 单文件 |
-| 输出格式 | Markdown、JSON、Zip，可导出为 DOCX / HTML / LaTeX | 仅 Markdown |
+| 输出格式 | Markdown、JSON、Zip，可导出为 DOCX / HTML / LaTeX | Markdown（公式和表格默认开启，OCR 默认关闭） |
 
 ---
 
@@ -78,7 +78,7 @@ curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
 irm https://cdn-mineru.openxlab.org.cn/open-api-cli/install.ps1 | iex
 ```
 
-**Agent 轻量解析（免登录，仅 Markdown）**
+**Agent 轻量解析（免登录）**
 
 ```bash
 mineru-open-api flash-extract 报告.pdf

@@ -31,7 +31,7 @@ npm install mineru-open-sdk
 
 ## 🛠️ Quick Start
 
-### 1. Flash Extract (Fast, No Auth, Markdown-only)
+### 1. Flash Extract (Fast, No Auth)
 Ideal for quick previews. No token required.
 
 ```typescript
@@ -119,7 +119,7 @@ console.log(result.images);
 | **File Limit** | Max 10 MB | Max 200 MB |
 | **Page Limit** | Max 20 Pages | Max 600 Pages |
 | **Formats** | PDF, Images, Docx, PPTx, Excel | PDF, Images, Doc/x, Ppt/x, Html |
-| **Content** | Markdown only (Placeholders) | Full assets (Images, Tables, Formulas) |
+| **Content** | Markdown (formula & table on by default, OCR off) | Full assets (Images, Tables, Formulas) |
 | **Output** | Markdown | MD, Docx, LaTeX, HTML, JSON |
 
 ---
