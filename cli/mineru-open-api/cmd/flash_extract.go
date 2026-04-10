@@ -52,9 +52,9 @@ func init() {
 	flashExtractCmd.Flags().StringVarP(&flashOutput, "output", "o", "", "Output path (file or dir); omit for stdout")
 	flashExtractCmd.Flags().StringVar(&flashLanguage, "language", "ch", "Document language")
 	flashExtractCmd.Flags().StringVar(&flashPages, "pages", "", "Page range, e.g. '1-10'")
-	flashExtractCmd.Flags().BoolVar(&flashOCR, "ocr", false, "Enable OCR for scanned documents")
-	flashExtractCmd.Flags().BoolVar(&flashFormula, "formula", false, "Enable formula recognition")
-	flashExtractCmd.Flags().BoolVar(&flashTable, "table", false, "Enable table recognition")
+	flashExtractCmd.Flags().BoolVar(&flashOCR, "ocr", false, "OCR for scanned documents (default off)")
+	flashExtractCmd.Flags().BoolVar(&flashFormula, "formula", false, "Formula recognition (default on, use --formula=false to disable)")
+	flashExtractCmd.Flags().BoolVar(&flashTable, "table", false, "Table recognition (default on, use --table=false to disable)")
 	flashExtractCmd.Flags().IntVar(&flashTimeout, "timeout", 0, "Timeout in seconds (default 300)")
 }
 
