@@ -14,7 +14,6 @@ import (
 
 const (
 	flashTestPDFURL  = "https://cdn-mineru.openxlab.org.cn/demo/example.pdf"
-	flashTestBaseURL = "https://staging.mineru.org.cn/api/v1/agent"
 	flashTestTimeout = 5 * time.Minute
 )
 
@@ -94,20 +93,42 @@ func TestNew_FlashExtractAlsoWorks(t *testing.T) {
 // ═══════════════════════════════════════════════════════════════════
 
 func newFlashTestClient() *mineru.Client {
-	return mineru.NewFlash(mineru.WithFlashBaseURL(flashTestBaseURL))
+	return mineru.NewFlash()
 }
 
 func flashExtractOrSkip(t *testing.T, c *mineru.Client, source string, opts ...mineru.FlashExtractOption) *mineru.ExtractResult {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), flashTestTimeout)
 	defer cancel()
+	t.Logf("FlashExtract start: source=%q timeout=%s", source, flashTestTimeout)
 	result, err := c.FlashExtract(ctx, source, opts...)
 	if err != nil {
 		errMsg := err.Error()
+		t.Logf("FlashExtract error: source=%q err=%v", source, err)
 		if strings.Contains(errMsg, "405") || strings.Contains(errMsg, "404") || strings.Contains(errMsg, "503") {
 			t.Skip("flash API not available (not deployed yet?)")
 		}
 		t.Fatalf("FlashExtract: %v", err)
+	}
+	if result.Progress != nil {
+		t.Logf(
+			"FlashExtract done: task_id=%q state=%q error=%q progress=%d/%d start_time=%q markdown_len=%d",
+			result.TaskID,
+			result.State,
+			result.Error,
+			result.Progress.ExtractedPages,
+			result.Progress.TotalPages,
+			result.Progress.StartTime,
+			len(result.Markdown),
+		)
+	} else {
+		t.Logf(
+			"FlashExtract done: task_id=%q state=%q error=%q markdown_len=%d",
+			result.TaskID,
+			result.State,
+			result.Error,
+			len(result.Markdown),
+		)
 	}
 	return result
 }
@@ -200,6 +221,82 @@ func TestFlashExtract_WithLanguage(t *testing.T) {
 	result := flashExtractOrSkip(t, c, flashTestPDFURL,
 		mineru.WithFlashLanguage("en"),
 		mineru.WithFlashPages("1-1"),
+	)
+	if result.State != "done" {
+		t.Fatalf("expected state=done, got %s", result.State)
+	}
+	if result.Markdown == "" {
+		t.Fatal("markdown is empty")
+	}
+}
+
+func TestFlashExtract_WithOCR(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	c := newFlashTestClient()
+	t.Log("FlashExtract options: pages=1-1 is_ocr=true")
+	result := flashExtractOrSkip(t, c, flashTestPDFURL,
+		mineru.WithFlashOCR(true),
+		mineru.WithFlashPages("1-1"),
+	)
+	if result.State != "done" {
+		t.Fatalf("expected state=done, got %s (task_id=%s error=%s)", result.State, result.TaskID, result.Error)
+	}
+	if result.Markdown == "" {
+		t.Fatalf("markdown is empty (task_id=%s state=%s error=%s)", result.TaskID, result.State, result.Error)
+	}
+}
+
+func TestFlashExtract_WithFormula(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	c := newFlashTestClient()
+	result := flashExtractOrSkip(t, c, flashTestPDFURL,
+		mineru.WithFlashFormula(true),
+		mineru.WithFlashPages("1-1"),
+	)
+	if result.State != "done" {
+		t.Fatalf("expected state=done, got %s", result.State)
+	}
+	if result.Markdown == "" {
+		t.Fatal("markdown is empty")
+	}
+}
+
+func TestFlashExtract_WithTable(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	c := newFlashTestClient()
+	result := flashExtractOrSkip(t, c, flashTestPDFURL,
+		mineru.WithFlashTable(true),
+		mineru.WithFlashPages("1-1"),
+	)
+	if result.State != "done" {
+		t.Fatalf("expected state=done, got %s", result.State)
+	}
+	if result.Markdown == "" {
+		t.Fatal("markdown is empty")
+	}
+}
+
+func TestFlashExtract_WithAllOptions(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	c := newFlashTestClient()
+	result := flashExtractOrSkip(t, c, flashTestPDFURL,
+		mineru.WithFlashLanguage("en"),
+		mineru.WithFlashPages("1-1"),
+		mineru.WithFlashOCR(true),
+		mineru.WithFlashFormula(true),
+		mineru.WithFlashTable(false),
 	)
 	if result.State != "done" {
 		t.Fatalf("expected state=done, got %s", result.State)

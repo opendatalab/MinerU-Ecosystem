@@ -77,6 +77,9 @@ export interface BatchOptions {
 export interface FlashExtractOptions {
   language?: string;
   pageRange?: string;
+  ocr?: boolean;
+  formula?: boolean;
+  table?: boolean;
   /** Max total seconds to wait for task completion (polling). */
   timeout?: number;
 }
@@ -445,13 +448,13 @@ export class MinerU {
     source: string,
     options: FlashExtractOptions = {},
   ): Promise<ExtractResult> {
-    const { language = "ch", pageRange, timeout = DEFAULT_TIMEOUT_POLL_SINGLE } = options;
+    const { language = "ch", pageRange, ocr, formula, table, timeout = DEFAULT_TIMEOUT_POLL_SINGLE } = options;
 
     let taskId: string;
     if (isUrl(source)) {
-      taskId = await this.flashSubmitUrl(source, language, pageRange);
+      taskId = await this.flashSubmitUrl(source, language, pageRange, ocr, formula, table);
     } else {
-      taskId = await this.flashSubmitFile(source, language, pageRange);
+      taskId = await this.flashSubmitFile(source, language, pageRange, ocr, formula, table);
     }
 
     return this.flashWait(taskId, timeout);
@@ -463,9 +466,15 @@ export class MinerU {
     url: string,
     language: string,
     pageRange?: string,
+    ocr?: boolean,
+    formula?: boolean,
+    table?: boolean,
   ): Promise<string> {
     const payload: Record<string, unknown> = { url, language };
     if (pageRange != null) payload["page_range"] = pageRange;
+    if (ocr != null) payload["is_ocr"] = ocr;
+    if (formula != null) payload["enable_formula"] = formula;
+    if (table != null) payload["enable_table"] = table;
     const body = await this.flashApi.post("/parse/url", payload);
     return body.data["task_id"] as string;
   }
@@ -474,10 +483,16 @@ export class MinerU {
     filePath: string,
     language: string,
     pageRange?: string,
+    ocr?: boolean,
+    formula?: boolean,
+    table?: boolean,
   ): Promise<string> {
     const fileName = basename(filePath);
     const payload: Record<string, unknown> = { file_name: fileName, language };
     if (pageRange != null) payload["page_range"] = pageRange;
+    if (ocr != null) payload["is_ocr"] = ocr;
+    if (formula != null) payload["enable_formula"] = formula;
+    if (table != null) payload["enable_table"] = table;
     const body = await this.flashApi.post("/parse/file", payload);
     const taskId = body.data["task_id"] as string;
     const fileUrl = body.data["file_url"] as string;

@@ -6,9 +6,8 @@ from typing import Any
 
 import httpx
 
+from ._constants import REQUEST_TIMEOUT, UPLOAD_TIMEOUT
 from .exceptions import raise_for_code
-
-_TIMEOUT = httpx.Timeout(30.0, read=120.0)
 
 
 class ApiClient:
@@ -22,7 +21,7 @@ class ApiClient:
                 "Authorization": f"Bearer {token}",
                 "Content-Type": "application/json",
             },
-            timeout=_TIMEOUT,
+            timeout=REQUEST_TIMEOUT,
         )
 
     @property
@@ -49,7 +48,7 @@ class ApiClient:
 
     def put_file(self, url: str, data: bytes) -> None:
         """Upload file bytes to a pre-signed URL (no auth headers needed)."""
-        resp = httpx.put(url, content=data, timeout=_TIMEOUT)
+        resp = httpx.put(url, content=data, timeout=UPLOAD_TIMEOUT)
         resp.raise_for_status()
 
     def download(self, url: str) -> bytes:

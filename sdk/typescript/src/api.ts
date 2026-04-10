@@ -1,4 +1,5 @@
 import { raiseForCode } from "./errors.js";
+import { UPLOAD_TIMEOUT_MS } from "./constants.js";
 
 interface ApiResponse {
   code: number;
@@ -53,6 +54,7 @@ export class ApiClient {
     const resp = await fetch(url, {
       method: "PUT",
       body: data,
+      signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
     });
     if (!resp.ok) {
       throw new Error(`Upload failed: ${resp.status} ${resp.statusText}`);

@@ -16,6 +16,9 @@ var (
 	flashOutput   string
 	flashLanguage string
 	flashPages    string
+	flashOCR      bool
+	flashFormula  bool
+	flashTable    bool
 	flashTimeout  int
 )
 
@@ -36,7 +39,9 @@ For precise layout retention and all assets (images/tables/formulas), use 'extra
   mineru-open-api flash-extract report.pdf -o ./out/           # save to file
   mineru-open-api flash-extract https://cdn-mineru.openxlab.org.cn/demo/example.pdf    # URL mode
   mineru-open-api flash-extract report.pdf --language en       # specify language
-  mineru-open-api flash-extract report.pdf --pages 1-10        # page range`,
+  mineru-open-api flash-extract report.pdf --pages 1-10        # page range
+  mineru-open-api flash-extract report.pdf --ocr               # enable OCR
+  mineru-open-api flash-extract report.pdf --formula --table   # enable formula & table recognition`,
 	Args: cobra.ExactArgs(1),
 	RunE: runFlashExtract,
 }
@@ -47,6 +52,9 @@ func init() {
 	flashExtractCmd.Flags().StringVarP(&flashOutput, "output", "o", "", "Output path (file or dir); omit for stdout")
 	flashExtractCmd.Flags().StringVar(&flashLanguage, "language", "ch", "Document language")
 	flashExtractCmd.Flags().StringVar(&flashPages, "pages", "", "Page range, e.g. '1-10'")
+	flashExtractCmd.Flags().BoolVar(&flashOCR, "ocr", false, "Enable OCR for scanned documents")
+	flashExtractCmd.Flags().BoolVar(&flashFormula, "formula", false, "Enable formula recognition")
+	flashExtractCmd.Flags().BoolVar(&flashTable, "table", false, "Enable table recognition")
 	flashExtractCmd.Flags().IntVar(&flashTimeout, "timeout", 0, "Timeout in seconds (default 300)")
 }
 
@@ -61,6 +69,15 @@ func runFlashExtract(cmd *cobra.Command, args []string) error {
 	}
 	if flashPages != "" {
 		opts = append(opts, mineru.WithFlashPages(flashPages))
+	}
+	if flashOCR {
+		opts = append(opts, mineru.WithFlashOCR(true))
+	}
+	if flashFormula {
+		opts = append(opts, mineru.WithFlashFormula(true))
+	}
+	if flashTable {
+		opts = append(opts, mineru.WithFlashTable(true))
 	}
 
 	timeout := 5 * time.Minute
