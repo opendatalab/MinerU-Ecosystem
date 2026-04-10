@@ -11,7 +11,7 @@ WORKDIR /workspace
 COPY sdk/go/ /workspace/sdk/go/
 COPY cli/    /workspace/cli/
 
-WORKDIR /workspace/cli
+WORKDIR /workspace/cli/mineru-open-api
 
 RUN if [ "$TARGETS" = "verify" ]; then \
       go build ./... && go vet ./... ; \
