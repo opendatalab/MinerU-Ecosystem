@@ -51,7 +51,7 @@ In flash mode,
 Supported input formats: PDF, images (`png`/`jpg`/`jpeg`/`jp2`/`webp`/`gif`/`bmp`), Docx, PPTx, xls, xlsx.
 
 In precise mode (when `MINERU_API_TOKEN` is set),
-Supported input formats: PDF, images (`png`/`jpg`/`jpeg`/`jp2`/`webp`/`gif`/`bmp`), Docx, PPTx.
+Supported input formats: PDF, images (`png`/`jpg`/`jpeg`/`jp2`/`webp`/`gif`/`bmp`), Doc、Docx、Ppt、PPTx
 
 
 ## After calling parse_documents
