@@ -1,6 +1,8 @@
 variables:
   BINARY_NAME: mineru-open-api-cli
   OSS_PATH: open-api-cli
+  PIP_INDEX_URL: https://pypi.tuna.tsinghua.edu.cn/simple
+  PIP_TRUSTED_HOST: pypi.tuna.tsinghua.edu.cn
 
 stages:
   - build
@@ -142,7 +144,8 @@ cli:pypi:
   script:
     - export VERSION=${CI_COMMIT_TAG#cli/mineru-open-api/}
     - export PKG_VERSION=${VERSION#v}
-    - pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --timeout 120 build wheel twine
+    - pip install --upgrade pip
+    - pip install --timeout 120 build wheel twine
 
     - cd cli/mineru-open-api/pypi
     - sed -i "s/^version = .*/version = \"${PKG_VERSION}\"/" pyproject.toml
@@ -217,7 +220,7 @@ sdk:python:release:
 
     # 构建
     - pip install --upgrade pip
-    - pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --timeout 120 build twine
+    - pip install --timeout 120 build twine
     - python -m build
     - ls -la dist/
 
@@ -310,7 +313,8 @@ mcp:release:
     - cat pyproject.toml | grep "^version"
 
     # 构建
-    - pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --timeout 120 build twine
+    - pip install --upgrade pip
+    - pip install --timeout 120 build twine
     - python -m build
     - ls -la dist/
 
@@ -359,7 +363,8 @@ llama-index-readers:release:
     - cat pyproject.toml | grep "^version"
 
     # 构建
-    - pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --timeout 120 build twine
+    - pip install --upgrade pip
+    - pip install --timeout 120 build twine
     - python -m build
     - ls -la dist/
 
@@ -408,7 +413,8 @@ langchain:release:
     - cat pyproject.toml | grep "^version"
 
     # 构建（build 后端）
-    - pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --timeout 120 build twine
+    - pip install --upgrade pip
+    - pip install --timeout 120 build twine
     - python -m build
     - ls -la dist/
 
