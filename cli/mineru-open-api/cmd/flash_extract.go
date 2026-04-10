@@ -70,14 +70,14 @@ func runFlashExtract(cmd *cobra.Command, args []string) error {
 	if flashPages != "" {
 		opts = append(opts, mineru.WithFlashPages(flashPages))
 	}
-	if flashOCR {
-		opts = append(opts, mineru.WithFlashOCR(true))
+	if cmd.Flags().Changed("ocr") {
+		opts = append(opts, mineru.WithFlashOCR(flashOCR))
 	}
-	if flashFormula {
-		opts = append(opts, mineru.WithFlashFormula(true))
+	if cmd.Flags().Changed("formula") {
+		opts = append(opts, mineru.WithFlashFormula(flashFormula))
 	}
-	if flashTable {
-		opts = append(opts, mineru.WithFlashTable(true))
+	if cmd.Flags().Changed("table") {
+		opts = append(opts, mineru.WithFlashTable(flashTable))
 	}
 
 	timeout := 5 * time.Minute
