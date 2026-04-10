@@ -33,7 +33,7 @@ The MCP client launches `mineru-open-mcp` as a subprocess automatically.
 ```
 
 
-> **No API key?** The server runs in Flash mode — free, markdown-only, 20 pages / 10 MB per file (PDF, images, Docx, PPTx, xls, xlsx).
+> **No API key?** The server runs in Flash mode — free, markdown-only, learn more at [Flash Mode Docs](https://mineru.net/apiManage/docs)
 
 > **`mineru-open-mcp` not on PATH?** Use the full path: `"/Users/you/.local/bin/mineru-open-mcp"`, or use the `uvx` approach above which handles this automatically.
 
@@ -45,13 +45,13 @@ The MCP client launches `mineru-open-mcp` as a subprocess automatically.
 - MinerU uploads and parses the PDF
 - Returns clean Markdown with tables (HTML) and formulas (Latex) preserved
 - Returns markdown texts in the chat if length permitted along with the output path, and the zip url if you prefer
-- Claude summarizes the content
+- MCP client summarizes the content
 
 ### Example 2: Parse a remote url hosting a file
 **User prompt:** "Extract contents from this paper: https://arxiv.org/pdf/2509.22186"
 **What happens:**
 - MinerU parses the paper into markdown
-- Claude formats and explains the tables
+- MCP client formats and explains the tables
 
 ### Example 3:  Parse local PDF files with independent page ranges 
 **User prompt:** "Parse \<file1\> page 1-5, \<file2\> page 2-9, \<file3\> page 3 into markdown"
@@ -59,7 +59,7 @@ The MCP client launches `mineru-open-mcp` as a subprocess automatically.
 - MinerU uploads and parses the files separatedly
 - Returns target format ouputs, the zip url for you to download, markdown abstract, the directory you 
 want to save the output to
-- Claude uses the content for further analysis
+- MCP client uses the content for further analysis
 
 ### Example 4: Advanced custom preferences
 **User prompt1:** "use pipeline model to parse this Korean file your_path_here"
@@ -95,7 +95,7 @@ MINERU_API_TOKEN=your_key mineru-open-mcp --transport streamable-http --port 800
 
 - **`parse_documents`** ? convert local files and/or remote URLs to Markdown; Input supports PDF, images（png/jpg/jpeg/jp2/webp/gif/bmp, Doc, Docx, Ppt, PPTx. Flash Mode also supports xlsx.
 - **`get_ocr_languages`** — list all OCR languages supported by MinerU
-- **Flash mode** — works without an API key (free, markdown output only, 20 pages / 10 MB per file, supports PDF/images/Docx/PPTx/xls/xlsx); For full features, please provide `MINERU_API_TOKEN`, which will disable flash mode.
+- **Flash mode** — works without an API key (free, markdown output only, supports PDF/images/Docx/PPTx/xls/xlsx); For full features, please provide `MINERU_API_TOKEN`, which will disable flash mode.
 - **Output behavior** ? single-file parses return inline Markdown by default; batch parses save results to disk and return file metadata. Oversized inline content is also saved locally and returned via `extract_path`.
 - **Two transport modes** ? `stdio`, `streamable-http`
 

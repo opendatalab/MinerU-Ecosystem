@@ -34,7 +34,8 @@ MCP 客户端会自动以子进程方式启动 `mineru-open-mcp`。
 }
 ```
 
-> **没有 API 密钥？** 服务器将以 Flash 模式运行 — 免费，仅输出 Markdown，单文件限制 20 页 / 10 MB（支持 PDF、图片、Docx、PPTx、xls、xlsx）。
+> **没有 API 密钥？** 服务器将以 Flash 模式运行 — 免费，仅输出 Markdown, 了解详情 [Flash Mode Docs](https://mineru.net/apiManage/docs)
+
 
 > **`mineru-open-mcp` 不在 PATH 中？** 请使用完整路径：`"/Users/you/.local/bin/mineru-open-mcp"`，或使用上述 `uvx` 方式（会自动处理路径问题）。
 
@@ -105,7 +106,7 @@ MINERU_API_TOKEN=your_key mineru-open-mcp --transport streamable-http --port 800
 
 - **`parse_documents`** — 将本地文件和/或远程 URL 转换为 Markdown；支持PDF、图片（png/jpg/jpeg/jp2/webp/gif/bmp）、Doc、Docx、Ppt、PPTx。Flash 模式还支持 xlsx。
 - **`get_ocr_languages`** — 列出 MinerU 支持的所有 OCR 语言
-- **Flash 模式** — 无需 API 密钥即可使用（免费，仅输出 Markdown，单文件限制 20 页 / 10 MB，支持 PDF/图片/Docx/PPTx/xls/xlsx）；如需完整功能，请提供 `MINERU_API_TOKEN`，将自动退出 Flash 模式。
+- **Flash 模式** — 无需 API 密钥即可使用（免费，仅输出 Markdown，支持 PDF/图片/Docx/PPTx/xls/xlsx）；如需完整功能，请提供 `MINERU_API_TOKEN`，将自动退出 Flash 模式。
 - **输出行为** — 单文件解析默认以内联 Markdown 形式返回；批量解析将结果保存至磁盘并返回文件元数据。超大内联内容也会自动保存至本地，并通过 `extract_path` 返回路径。
 - **两种传输模式** — `stdio`、`streamable-http`
 
