@@ -207,6 +207,9 @@ func main() {
 | :--- | :--- | :--- |
 | `WithFlashLanguage(...)` | `"ch"` | 默认中文 |
 | `WithFlashPages(...)` | 不设置 | 默认处理 flash API 允许的完整页范围 |
+| `WithFlashOCR(...)` | 未设置 | OCR 默认关闭（API 默认行为） |
+| `WithFlashFormula(...)` | 未设置 | 公式识别默认开启（API 默认行为） |
+| `WithFlashTable(...)` | 未设置 | 表格识别默认开启（API 默认行为） |
 | `WithFlashTimeout(...)` | `5 * time.Minute` | 总轮询超时 |
 
 ---

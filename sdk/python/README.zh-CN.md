@@ -152,6 +152,9 @@ print(result.images) # 获取提取出的图片列表
 | :--- | :--- | :--- |
 | `language` | `"ch"` | 默认中文 |
 | `page_range` | `None` | 默认处理 flash API 允许的完整页范围 |
+| `is_ocr` | `None` | OCR 默认关闭（API 默认行为） |
+| `enable_formula` | `None` | 公式识别默认开启（API 默认行为） |
+| `enable_table` | `None` | 表格识别默认开启（API 默认行为） |
 | `timeout` | `300` 秒 | 总轮询超时 |
 
 ### `crawl()` / `crawl_batch()`

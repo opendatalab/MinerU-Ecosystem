@@ -54,7 +54,7 @@ All components support both API modes:
 |---|---|---|
 | Auth | ✅ Token required | ❌ Not required (IP rate-limited) |
 | Model | `pipeline` (default) / `vlm` (recommended) / `MinerU-HTML` | Fixed lightweight pipeline model |
-| Table / Formula | ✅ Supported (configurable) | ❌ Disabled (speed-first) |
+| Table / Formula | ✅ Supported (configurable) | ✅ Supported (configurable, formula & table on by default, OCR off) |
 | File Size | ≤ 200 MB | ≤ 10 MB |
 | Page Limit | ≤ 600 pages | ≤ 20 pages |
 | Batch | ✅ Supported (≤ 200 files) | ❌ Single file only |

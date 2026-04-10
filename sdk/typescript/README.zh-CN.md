@@ -165,6 +165,9 @@ console.log(result.images);
 | :--- | :--- | :--- |
 | `language` | `"ch"` | 默认中文 |
 | `pageRange` | `undefined` | 默认处理 flash API 允许的完整页范围 |
+| `ocr` | `undefined` | OCR 默认关闭（API 默认行为） |
+| `formula` | `undefined` | 公式识别默认开启（API 默认行为） |
+| `table` | `undefined` | 表格识别默认开启（API 默认行为） |
 | `timeout` | `300` 秒 | 总轮询超时 |
 
 ---
