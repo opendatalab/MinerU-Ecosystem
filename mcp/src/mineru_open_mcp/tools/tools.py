@@ -1,4 +1,4 @@
-﻿"""MCP tool registration for MinerU document parsing."""
+"""MCP tool registration for MinerU document parsing."""
 
 import contextlib
 from pathlib import Path
@@ -46,6 +46,28 @@ _ALL_LANGUAGES: List[str] = [
 
 _CONTENT_MAX_PER_FILE = 20_000
 _CONTENT_MAX_TOTAL = 60_000
+
+# Tool-level description for MCP clients (e.g. Glama): explicit side effects, auth, limits, and when to use.
+_PARSE_DOCUMENTS_DESCRIPTION = (
+    "Convert PDFs, Word (DOCX), PowerPoint (PPTX), Excel (XLSX in Flash mode), images, and public "
+    "document URLs—or HTML page URLs—into Markdown using the MinerU cloud API.\n\n"
+    "**World effects:** Reads local paths you pass; fetches http(s) URLs. Uploads file or URL content "
+    "to mineru.net for processing (do not use for data you must not send off-device). Does not modify "
+    "or delete originals. May write Markdown (and sometimes images) under `output_dir` or the server "
+    "default when results are saved or inline content is too large.\n\n"
+    "**Auth & limits:** Without `MINERU_API_TOKEN`, uses free Flash mode: Markdown-only output"
+    ", service limits apply. With `MINERU_API_TOKEN`, higher per-file "
+    "page limits and optional extra output formats per MinerU plans; token is read from env (or HTTP "
+    "Bearer when using streamable HTTP).\n\n"
+    "**Use this when:** The user needs full-document extraction, tables/formulas as HTML/Latexa, "
+    "batch conversion, or per-file PDF page ranges. **Do not use** for listing supported OCR script codes—"
+    "call `get_ocr_languages` instead. **Not a substitute** for offline-only or strictly local parsers.\n\n"
+    "**Parameters (intent):** `file_sources` is a list of path/URL strings or `{\"source\": \"…\", "
+    "\"pages\": \"1-5\"}` objects (PDF page ranges; Flash allows simple `N` or `N-M`). `enable_ocr` "
+    "defaults to true. `language` is an OCR/script code (default `ch`); see `get_ocr_languages` for "
+    "valid values. Set `model` to `\"html\"` only when every source is a web page URL; otherwise omit. "
+    "`output_dir` overrides where large or batch results are written."
+)
 
 
 def _brand_message(saved_paths: Optional[List[tuple[str, str]]] = None) -> str:
@@ -304,7 +326,13 @@ def register_tools(mcp: FastMCP, get_output_dir) -> None:
     """Register all MCP tools onto the given FastMCP instance."""
 
     @mcp.tool(
-        annotations={"readOnlyHint": True, "destructiveHint": False}
+        title="Parse documents to Markdown",
+        description=_PARSE_DOCUMENTS_DESCRIPTION,
+        annotations={
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "openWorldHint": True,
+        },
     )
     async def parse_documents(
         file_sources: Annotated[List[Union[str, Dict[str, str]]], _FILE_SOURCES_FIELD],
@@ -314,14 +342,7 @@ def register_tools(mcp: FastMCP, get_output_dir) -> None:
         output_dir: Annotated[Optional[str], _OUTPUT_DIR_FIELD] = None,
         ctx: Context = None,
     ) -> Dict[str, Any]:
-        """High-quality document parsing: converts PDF, Word, PPT, Excel (in Flash Mode), and images to Markdown.
-
-        Powered by SOTA MinerU PDF extraction — supports full document parsing (200+ pages),
-        academic paper parsing, formula recognition, table extraction, multi-column layouts,
-        scanned document OCR, and webpage-to-Markdown conversion.
-        Designed for AI workflows. Unlike basic readers limited to the first 10 pages,
-        MinerU processes entire documents end-to-end.
-        """
+        """Route to MinerU document parsing (see tool `description` for full agent guidance)."""
         sources, page_ranges_map = _normalize_file_sources(file_sources)
         resolved_output_dir = output_dir or get_output_dir()
         return await _parse(
@@ -337,10 +358,16 @@ def register_tools(mcp: FastMCP, get_output_dir) -> None:
         )
 
     @mcp.tool(
-        annotations={"readOnlyHint": True, "destructiveHint": False}
+        title="List OCR language codes",
+        description=(
+            "Return the supported MinerU OCR / script language codes (e.g. ch, en, japan, latin). "
+            "Read-only; no uploads. Use before setting `language` on `parse_documents` for scanned "
+            "or multilingual documents. Do not use for converting files—call `parse_documents` instead."
+        ),
+        annotations={"readOnlyHint": True, "destructiveHint": False, "openWorldHint": False},
     )
     async def get_ocr_languages() -> Dict[str, Any]:
-        """List all OCR languages supported by MinerU."""
+        """Return supported OCR language codes (see tool `description`)."""
         try:
             return {"status": "success", "languages": _ALL_LANGUAGES}
         except Exception as exc:
