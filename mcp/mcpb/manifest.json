@@ -2,7 +2,7 @@
   "manifest_version": "0.4",
   "name": "mineru-open-mcp",
   "display_name": "MinerU Open MCP",
-  "version": "1.0.15",
+  "version": "1.0.20",
   "description": "Parse PDFs, Word docs, PowerPoint files, spreadsheets, and images into Markdown using MinerU's document parsing API.",
   "long_description": "MinerU Open MCP connects any MCP-compatible AI client to MinerU's document parsing engine. Convert PDFs, DOCX, PPTX, JPG, PNG, and HTML files into clean Markdown (and optionally Word, HTML, or LaTeX with an API token). Flash mode works out of the box — free, no sign-up required, up to 20 pages / 10 MB per file. Provide a MinerU API token to unlock higher limits and additional output formats.",
   "author": {
