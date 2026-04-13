@@ -1,0 +1,46 @@
+#!/usr/bin/env node
+
+const { execFileSync } = require("child_process");
+const path = require("path");
+const os = require("os");
+
+const PLATFORMS = {
+  darwin: { arm64: "mineru-open-api-darwin-arm64", x64: "mineru-open-api-darwin-x64" },
+  linux:  { arm64: "mineru-open-api-linux-arm64",  x64: "mineru-open-api-linux-x64" },
+  win32:  { arm64: "mineru-open-api-win32-arm64",  x64: "mineru-open-api-win32-x64" },
+};
+
+function getBinaryPath() {
+  const platform = PLATFORMS[process.platform];
+  if (!platform) {
+    throw new Error(`Unsupported platform: ${process.platform}`);
+  }
+  const pkgName = platform[process.arch];
+  if (!pkgName) {
+    throw new Error(`Unsupported architecture: ${process.platform}-${process.arch}`);
+  }
+  const binName = process.platform === "win32" ? "mineru-open-api.exe" : "mineru-open-api";
+  try {
+    return require.resolve(`${pkgName}/bin/${binName}`);
+  } catch {
+    throw new Error(
+      `Could not find binary for ${process.platform}-${process.arch}.\n` +
+      `Expected package "${pkgName}" to be installed.\n` +
+      `Try: npm install ${pkgName}`
+    );
+  }
+}
+
+try {
+  const binPath = getBinaryPath();
+  const result = execFileSync(binPath, process.argv.slice(2), {
+    stdio: "inherit",
+    env: process.env,
+  });
+} catch (e) {
+  if (e.status !== undefined) {
+    process.exit(e.status);
+  }
+  console.error(e.message);
+  process.exit(1);
+}

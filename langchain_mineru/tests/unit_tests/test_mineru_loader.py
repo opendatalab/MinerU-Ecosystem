@@ -80,21 +80,18 @@ class TestValidation:
         assert loader.mode == "precision"
         assert loader.token == "test-token"
 
-    @pytest.mark.parametrize(
-        ("kwargs", "match"),
-        [
-            ({"formula": False}, "formula/table are only supported in precision mode"),
-            ({"table": False}, "formula/table are only supported in precision mode"),
-        ],
-    )
-    def test_flash_mode_rejects_precision_only_options(self, kwargs, match):
-        with pytest.raises(ValueError, match=match):
-            _make_loader(source="a.pdf", mode="flash", **kwargs)
-
-    def test_flash_mode_accepts_ocr_option(self):
-        loader = _make_loader(source="a.pdf", mode="flash", ocr=True)
+    def test_flash_mode_accepts_ocr_formula_table_options(self):
+        loader = _make_loader(
+            source="a.pdf",
+            mode="flash",
+            ocr=True,
+            formula=False,
+            table=False,
+        )
         assert loader.mode == "flash"
         assert loader.ocr is True
+        assert loader.formula is False
+        assert loader.table is False
 
 
 # ---------------------------------------------------------------------------
@@ -140,6 +137,9 @@ class TestSingleSource:
             "doc.pdf",
             language="ch",
             page_range="1-5",
+            is_ocr=False,
+            enable_formula=True,
+            enable_table=True,
             timeout=1200,
         )
 
@@ -408,7 +408,15 @@ class TestMetadata:
 
 class TestFlashExtractCall:
     def test_calls_flash_extract(self):
-        loader = _make_loader(source="test.pdf", language="en", pages="2-5", timeout=300)
+        loader = _make_loader(
+            source="test.pdf",
+            language="en",
+            pages="2-5",
+            timeout=300,
+            ocr=True,
+            formula=False,
+            table=False,
+        )
         loader._client.flash_extract = MagicMock(
             return_value=make_result(markdown="content")
         )
@@ -419,6 +427,9 @@ class TestFlashExtractCall:
             "test.pdf",
             language="en",
             page_range="2-5",
+            is_ocr=True,
+            enable_formula=False,
+            enable_table=False,
             timeout=300,
         )
 
@@ -433,6 +444,9 @@ class TestFlashExtractCall:
         loader._client.flash_extract.assert_called_once_with(
             "test.pdf",
             language="ch",
+            is_ocr=False,
+            enable_formula=True,
+            enable_table=True,
             timeout=1200,
         )
 
@@ -456,6 +470,9 @@ class TestFlashExtractCall:
             assert loader._client.flash_extract.call_count == 2
             for called in loader._client.flash_extract.call_args_list:
                 assert "page_range" not in called.kwargs
+                assert called.kwargs["is_ocr"] is False
+                assert called.kwargs["enable_formula"] is True
+                assert called.kwargs["enable_table"] is True
 
     def test_set_source_called_on_client(self):
         """MinerU client.set_source() must be called with the langchain-mineru tag."""

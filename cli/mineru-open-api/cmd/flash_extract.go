@@ -16,6 +16,9 @@ var (
 	flashOutput   string
 	flashLanguage string
 	flashPages    string
+	flashOCR      bool
+	flashFormula  bool
+	flashTable    bool
 	flashTimeout  int
 )
 
@@ -29,14 +32,16 @@ Capabilities & Limits:
   - No API Token Required
   - Supports: PDF, Images (png, jpg, webp, etc.), Docx, PPTx, Excel (xls, xlsx)
   - File Limits: Max 10MB and 20 pages per document
-  - Content: Markdown only (Images, Tables, and Formulas are replaced with placeholders)
+  - Content: Markdown only
 
 For precise layout retention and all assets (images/tables/formulas), use 'extract' command.`,
 	Example: `  mineru-open-api flash-extract report.pdf                     # markdown to stdout
   mineru-open-api flash-extract report.pdf -o ./out/           # save to file
   mineru-open-api flash-extract https://cdn-mineru.openxlab.org.cn/demo/example.pdf    # URL mode
   mineru-open-api flash-extract report.pdf --language en       # specify language
-  mineru-open-api flash-extract report.pdf --pages 1-10        # page range`,
+  mineru-open-api flash-extract report.pdf --pages 1-10        # page range
+  mineru-open-api flash-extract report.pdf --ocr               # enable OCR
+  mineru-open-api flash-extract report.pdf --formula --table   # enable formula & table recognition`,
 	Args: cobra.ExactArgs(1),
 	RunE: runFlashExtract,
 }
@@ -47,6 +52,9 @@ func init() {
 	flashExtractCmd.Flags().StringVarP(&flashOutput, "output", "o", "", "Output path (file or dir); omit for stdout")
 	flashExtractCmd.Flags().StringVar(&flashLanguage, "language", "ch", "Document language")
 	flashExtractCmd.Flags().StringVar(&flashPages, "pages", "", "Page range, e.g. '1-10'")
+	flashExtractCmd.Flags().BoolVar(&flashOCR, "ocr", false, "OCR for scanned documents (default off)")
+	flashExtractCmd.Flags().BoolVar(&flashFormula, "formula", false, "Formula recognition (default on, use --formula=false to disable)")
+	flashExtractCmd.Flags().BoolVar(&flashTable, "table", false, "Table recognition (default on, use --table=false to disable)")
 	flashExtractCmd.Flags().IntVar(&flashTimeout, "timeout", 0, "Timeout in seconds (default 300)")
 }
 
@@ -61,6 +69,15 @@ func runFlashExtract(cmd *cobra.Command, args []string) error {
 	}
 	if flashPages != "" {
 		opts = append(opts, mineru.WithFlashPages(flashPages))
+	}
+	if cmd.Flags().Changed("ocr") {
+		opts = append(opts, mineru.WithFlashOCR(flashOCR))
+	}
+	if cmd.Flags().Changed("formula") {
+		opts = append(opts, mineru.WithFlashFormula(flashFormula))
+	}
+	if cmd.Flags().Changed("table") {
+		opts = append(opts, mineru.WithFlashTable(flashTable))
 	}
 
 	timeout := 5 * time.Minute

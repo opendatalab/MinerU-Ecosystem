@@ -88,7 +88,14 @@ class TestMinerUReaderLoadData:
         assert docs[0].text == "# Test\n\nHello world"
         assert docs[0].metadata["source"] == "https://example.com/test.pdf"
         assert docs[0].metadata["mode"] == "flash"
-        client.flash_extract.assert_called_once()
+        client.flash_extract.assert_called_once_with(
+            "https://example.com/test.pdf",
+            language="ch",
+            timeout=600,
+            is_ocr=False,
+            enable_formula=True,
+            enable_table=True,
+        )
 
     def test_load_multiple_sources(self):
         reader, client = self._make_reader()
@@ -136,6 +143,30 @@ class TestMinerUReaderLoadData:
         assert len(docs) == 1
         mock_client.extract.assert_called_once()
         mock_client.flash_extract.assert_not_called()
+
+    def test_flash_mode_forwards_ocr_formula_table(self):
+        reader, client = self._make_reader(
+            ocr=True,
+            formula=False,
+            table=False,
+            pages="1-2",
+            timeout=120,
+            language="en",
+        )
+        client.flash_extract.return_value = self._make_result()
+
+        docs = reader.load_data("https://example.com/test.pdf")
+
+        assert len(docs) == 1
+        client.flash_extract.assert_called_once_with(
+            "https://example.com/test.pdf",
+            language="en",
+            timeout=120,
+            page_range="1-2",
+            is_ocr=True,
+            enable_formula=False,
+            enable_table=False,
+        )
 
     def test_failed_result_raises(self):
         reader, client = self._make_reader()

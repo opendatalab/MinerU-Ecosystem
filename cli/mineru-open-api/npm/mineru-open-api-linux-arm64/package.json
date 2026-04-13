@@ -1,0 +1,17 @@
+{
+  "name": "mineru-open-api-linux-arm64",
+  "version": "0.0.0",
+  "description": "mineru-open-api binary for linux arm64",
+  "license": "Apache-2.0",
+  "os": ["linux"],
+  "cpu": ["arm64"],
+  "bin": {
+    "mineru-open-api": "bin/mineru-open-api"
+  },
+  "files": ["bin/mineru-open-api"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/opendatalab/MinerU-Ecosystem",
+    "directory": "cli/mineru-open-api"
+  }
+}

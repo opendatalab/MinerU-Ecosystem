@@ -54,7 +54,7 @@ print(docs[0].metadata)
 ## 模式说明
 
 - `precision`：精准解析模式，调用 MinerU 标准 `extract` 接口，需要 Token。支持格式：.pdf、图片、.DOC、.DOCX、.PPT、.PPTX、html。
-- `flash`：快速解析模式，调用 MinerU flash API，无需 Token。支持格式：.pdf、图片、DOCX、PPTX、XLS、XLSX。
+- `flash`：快速解析模式，调用 MinerU flash API，无需 Token。在 flash 能力范围内支持 OCR、公式、表格开关。支持格式：.pdf、图片、DOCX、PPTX、XLS、XLSX。
 
 `precision` 模式 Token 申请地址：[https://mineru.net/apiManage/token](https://mineru.net/apiManage/token)。
 
@@ -118,9 +118,6 @@ loader = MinerULoader(
     split_pages=True,
     pages="1-5",
     timeout=300,
-    ocr=True,
-    formula=True,
-    table=True,
 )
 
 docs = loader.load()
@@ -188,9 +185,6 @@ loader = MinerULoader(
     source="manual.pdf",
     mode="precision",
     token="your-token",  # 或设置 MINERU_TOKEN
-    ocr=True,
-    formula=True,
-    table=True,
 )
 docs = loader.load()
 

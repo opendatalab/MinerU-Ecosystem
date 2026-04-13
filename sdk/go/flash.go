@@ -12,8 +12,6 @@ import (
 // NewFlash creates a [Client] for flash (agent) mode only. No API token is
 // required. The returned client supports [Client.FlashExtract]; calling
 // standard methods like [Client.Extract] will return an error.
-//
-// TODO(docs): 补充 flash 模式 vs 标准模式的差异说明（多端统一文案待定）
 func NewFlash(opts ...ClientOption) *Client {
 	cfg := defaultClientConfig()
 	for _, opt := range opts {
@@ -65,6 +63,15 @@ func (c *Client) flashSubmitURL(ctx context.Context, srcURL string, cfg flashExt
 	if cfg.pages != nil {
 		payload["page_range"] = *cfg.pages
 	}
+	if cfg.ocr != nil {
+		payload["is_ocr"] = *cfg.ocr
+	}
+	if cfg.formula != nil {
+		payload["enable_formula"] = *cfg.formula
+	}
+	if cfg.table != nil {
+		payload["enable_table"] = *cfg.table
+	}
 
 	data, err := c.flashApi.post(ctx, "/parse/url", payload)
 	if err != nil {
@@ -88,6 +95,15 @@ func (c *Client) flashSubmitFile(ctx context.Context, filePath string, cfg flash
 	}
 	if cfg.pages != nil {
 		payload["page_range"] = *cfg.pages
+	}
+	if cfg.ocr != nil {
+		payload["is_ocr"] = *cfg.ocr
+	}
+	if cfg.formula != nil {
+		payload["enable_formula"] = *cfg.formula
+	}
+	if cfg.table != nil {
+		payload["enable_table"] = *cfg.table
 	}
 
 	data, err := c.flashApi.post(ctx, "/parse/file", payload)

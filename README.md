@@ -110,7 +110,7 @@ curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
 irm https://cdn-mineru.openxlab.org.cn/open-api-cli/install.ps1 | iex
 ```
 
-**Flash Extract (no login, Markdown only)**
+**Flash Extract (no login)**
 
 ```bash
 mineru-open-api flash-extract report.pdf
@@ -235,9 +235,6 @@ fmt.Println(result.Markdown)
 ```go
 result, err := client.Extract(ctx, "./paper.pdf",
     mineru.WithModel("vlm"),
-    mineru.WithOCR(true),
-    mineru.WithFormula(true),
-    mineru.WithTable(true),
     mineru.WithLanguage("en"),
     mineru.WithPages("1-20"),
     mineru.WithExtraFormats("docx"),
@@ -316,9 +313,6 @@ import { MinerU, saveAll } from "mineru-open-sdk";
 const client = new MinerU("your-api-token");
 const result = await client.extract("./paper.pdf", {
   model: "vlm",       // "vlm" | "pipeline" | "html"
-  ocr: true,
-  formula: true,
-  table: true,
   language: "en",
   pages: "1-20",
   extraFormats: ["docx"],
@@ -429,7 +423,7 @@ Default is `mode="flash"`, which is ideal for quick previews and lightweight int
 
 **2. Precision mode (token required)**
 
-Best for scanned PDFs, long documents, and workflows that need OCR, table extraction, or formula recognition.
+Best for long documents, larger files, and workflows that need higher-fidelity extraction or standard API outputs. Flash mode also supports OCR, table, and formula switches within flash API limits.
 
 ```python
 from langchain_mineru import MinerULoader
@@ -498,7 +492,7 @@ print(documents[0].metadata)
 
 **2. Precision mode (token required)**
 
-Best for scanned files, longer documents, and use cases that need OCR, formula parsing, or table recognition.
+Best for longer documents, larger files, and use cases that need higher-fidelity extraction or standard API outputs. Flash mode also supports OCR, formula, and table switches within flash API limits.
 
 ```python
 from llama_index.readers.mineru import MinerUReader

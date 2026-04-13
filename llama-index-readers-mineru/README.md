@@ -55,9 +55,6 @@ from llama_index.readers.mineru import MinerUReader
 reader = MinerUReader(
     mode="precision",
     token="your-api-token",  # or set MINERU_TOKEN env var
-    ocr=True,
-    formula=True,
-    table=True,
     language="en",
     pages="1-20",
 )

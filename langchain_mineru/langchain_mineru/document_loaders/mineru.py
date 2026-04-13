@@ -180,6 +180,13 @@ class MinerULoader(BaseLoader):
         kwargs: dict = {"language": self.language, "timeout": self.timeout}
 
         if self.mode == "flash":
+            kwargs.update(
+                {
+                    "is_ocr": self.ocr,
+                    "enable_formula": self.formula,
+                    "enable_table": self.table,
+                }
+            )
             if use_page_range and self.pages:
                 kwargs["page_range"] = self.pages
             return self._client.flash_extract(src, **kwargs)

@@ -54,7 +54,7 @@ Default is `mode="flash"` and no API token is required.
 ## Mode Selection
 
 - `precision`: Calls MinerU standard `extract` API. Token required. Supported formats: .pdf, images, .DOC, .DOCX, .PPT, .PPTX, html.
-- `flash`: Calls MinerU flash API, optimized for speed, no token required. Supported formats: .pdf, images, DOCX, PPTX, XLS, XLSX.
+- `flash`: Calls MinerU flash API, optimized for speed, no token required. Supports OCR, formula, and table switches within flash limits. Supported formats: .pdf, images, DOCX, PPTX, XLS, XLSX.
 
 Apply for a `precision` mode token here: [https://mineru.net/apiManage/token](https://mineru.net/apiManage/token).
 
@@ -118,9 +118,6 @@ loader = MinerULoader(
     split_pages=True,
     pages="1-5",
     timeout=300,
-    ocr=True,
-    formula=True,
-    table=True,
 )
 
 docs = loader.load()
@@ -188,9 +185,6 @@ loader = MinerULoader(
     source="manual.pdf",
     mode="precision",
     token="your-token",  # or set MINERU_TOKEN
-    ocr=True,
-    formula=True,
-    table=True,
 )
 docs = loader.load()
 

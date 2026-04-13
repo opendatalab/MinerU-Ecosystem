@@ -175,6 +175,30 @@ func TestExtractFormulaTableDefaultNotSent(t *testing.T) {
 	}
 }
 
+func TestFlashExtractOCRFormulaTableFlagsAccepted(t *testing.T) {
+	// --ocr, --formula, --table flags on flash-extract should be accepted without error
+	r := run(t, "flash-extract", "report.pdf", "--ocr", "--formula", "--table")
+	// Should fail due to file not found or API, but NOT due to unknown flag
+	if strings.Contains(r.stderr, "unknown flag") {
+		t.Errorf("--ocr/--formula/--table flags not recognized: %s", r.stderr)
+	}
+}
+
+func TestFlashExtractOCRFlagOnly(t *testing.T) {
+	r := run(t, "flash-extract", "report.pdf", "--ocr")
+	if strings.Contains(r.stderr, "unknown flag") {
+		t.Errorf("--ocr flag not recognized: %s", r.stderr)
+	}
+}
+
+func TestFlashExtractDefaultNoUnknownFlags(t *testing.T) {
+	// Without new flags, flash-extract should not mention them in errors
+	r := run(t, "flash-extract", "report.pdf")
+	if strings.Contains(r.stderr, "unknown flag") {
+		t.Errorf("default flash-extract caused unknown flag error: %s", r.stderr)
+	}
+}
+
 // ── real API tests ──
 
 func requireToken(t *testing.T) string {

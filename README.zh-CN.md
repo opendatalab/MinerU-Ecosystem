@@ -110,7 +110,7 @@ curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
 irm https://cdn-mineru.openxlab.org.cn/open-api-cli/install.ps1 | iex
 ```
 
-**Agent 轻量解析（免登录，仅 Markdown）**
+**Agent 轻量解析（免登录）**
 
 ```bash
 mineru-open-api flash-extract 报告.pdf
@@ -219,9 +219,6 @@ func main() {
 ```go
 result, err := client.Extract(ctx, "./paper.pdf",
     mineru.WithModel("vlm"),
-    mineru.WithOCR(true),
-    mineru.WithFormula(true),
-    mineru.WithTable(true),
     mineru.WithLanguage("ch"),
     mineru.WithPages("1-20"),
     mineru.WithExtraFormats("docx"),
@@ -275,9 +272,6 @@ import { MinerU, saveAll } from "mineru-open-sdk";
 const client = new MinerU("your-api-token");
 const result = await client.extract("./paper.pdf", {
   model: "vlm",        // "vlm" | "pipeline" | "html"
-  ocr: true,
-  formula: true,
-  table: true,
   language: "ch",
   pages: "1-20",
   extraFormats: ["docx"],
@@ -381,7 +375,7 @@ print(docs[0].metadata)
 
 **2. Precision 模式（需 Token）**
 
-适合扫描件、长文档，以及对 OCR、表格、公式识别要求更高的场景。
+适合长文档、大文件，以及对解析保真度或标准 API 输出要求更高的场景。Flash 模式也支持 OCR、公式、表格开关，但仍受 flash API 自身限制。
 
 ```python
 from langchain_mineru import MinerULoader
@@ -449,7 +443,7 @@ print(documents[0].metadata)
 
 **2. Precision 模式（需 Token）**
 
-适合扫描件、长文档以及对表格、公式识别要求更高的场景。可通过参数启用 OCR、公式和表格识别。
+适合长文档、大文件，以及对解析保真度或标准 API 输出要求更高的场景。Flash 模式也支持 OCR、公式和表格开关，但仍受 flash API 自身限制。
 
 ```python
 from llama_index.readers.mineru import MinerUReader

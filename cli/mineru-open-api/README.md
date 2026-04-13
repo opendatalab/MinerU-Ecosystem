@@ -44,7 +44,7 @@ curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
 
 | Command | Auth | Purpose |
 |---|---|---|
-| `flash-extract` | No | Fast document extraction, Markdown only |
+| `flash-extract` | No | Fast document extraction, Markdown output |
 | `extract` | Yes | Precision document extraction |
 | `crawl` | Yes | Web page extraction |
 | `auth` | Optional | Save, inspect, or verify token configuration |
@@ -61,7 +61,7 @@ curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
 | **File Formats** | PDF, Images (png, jpg, webp, etc.), Docx, PPTx, Excel (xls, xlsx) | PDF, Images (png, jpg, etc.), Doc, Docx, Ppt, Pptx, Html |
 | **File Size** | Max 10 MB | Max 200 MB |
 | **Page Limit** | Max 20 pages | Max 600 pages |
-| **Output** | Markdown only (images/tables/formulas as placeholders) | Markdown, HTML, LaTeX, Docx, JSON |
+| **Output** | Markdown (formula & table on by default, OCR off) | Markdown, HTML, LaTeX, Docx, JSON |
 | **Batch** | One file at a time | Multiple files and URLs |
 
 ---
@@ -140,7 +140,7 @@ Fast no-auth extraction for quick previews and agent workflows.
 
 - token not required
 - one input at a time
-- Markdown output only
+- Markdown output (formula & table on by default, OCR off)
 - supports local file or URL input
 - intended for smaller files and shorter documents
 
@@ -150,6 +150,9 @@ Fast no-auth extraction for quick previews and agent workflows.
 |---|---|---|
 | `--language` | `ch` | Only sent when changed |
 | `--pages` | unset | Full document/page range allowed by API |
+| `--ocr` | unset | OCR is off by default; use `--ocr` to enable |
+| `--formula` | unset | Formula recognition is on by default; use `--formula=false` to disable |
+| `--table` | unset | Table recognition is on by default; use `--table=false` to disable |
 | `--timeout` | `300` seconds | Total wait time for polling |
 | `-o`, `--output` | unset | Print Markdown to `stdout` |
 
@@ -160,6 +163,9 @@ Fast no-auth extraction for quick previews and agent workflows.
 | `-o`, `--output` | Output file or directory; omit for `stdout` |
 | `--language` | Document language |
 | `--pages` | Page range such as `1-10` |
+| `--ocr` | OCR for scanned documents (default off) |
+| `--formula` | Formula recognition (default on, use `--formula=false` to disable) |
+| `--table` | Table recognition (default on, use `--table=false` to disable) |
 | `--timeout` | Poll timeout in seconds |
 
 ### Examples
