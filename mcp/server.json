@@ -3,7 +3,7 @@
   "name": "io.github.opendatalab/mineru-open-mcp",
   "title": "MinerU Open MCP",
   "description": "Parse PDFs, images, doc, docx, ppt, pptx, xls, xlsx, html into Markdown using MinerU API.",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "repository": {
     "url": "https://github.com/opendatalab/MinerU-Ecosystem",
     "source": "github"
@@ -12,7 +12,7 @@
     {
       "registryType": "pypi",
       "identifier": "mineru-open-mcp",
-      "version": "1.0.20",
+      "version": "1.0.21",
       "transport": {
         "type": "stdio"
       },
