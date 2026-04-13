@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.opendatalab/mineru-open-mcp",
   "title": "MinerU Open MCP",
-  "description": "Parse PDFs, Word docs, PowerPoint files, spreadsheets, and images into Markdown using MinerU's document parsing API. Flash mode works without an API key.",
+  "description": "Parse PDFs, images, doc, docx, ppt, pptx, xls, xlsx, html into Markdown using MinerU API.",
   "version": "1.0.20",
   "repository": {
     "url": "https://github.com/opendatalab/MinerU-Ecosystem",
