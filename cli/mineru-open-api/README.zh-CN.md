@@ -43,7 +43,7 @@ curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
 
 | 命令 | 是否需要鉴权 | 用途 |
 |---|---|---|
-| `flash-extract` | 否 | 极速文档解析，仅输出 Markdown |
+| `flash-extract` | 否 | 极速文档解析，输出 Markdown |
 | `extract` | 是 | 精准文档解析 |
 | `crawl` | 是 | 网页抓取与解析 |
 | `auth` | 可选 | 保存、查看、校验 Token 配置 |
@@ -60,7 +60,7 @@ curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
 | **支持格式** | PDF, 图片 (png, jpg, webp 等), Docx, PPTx, Excel (xls, xlsx) | PDF, 图片 (png, jpg 等), Doc, Docx, Ppt, Pptx, Html |
 | **文件大小** | 最大 10 MB | 最大 200 MB |
 | **页数限制** | 最大 20 页 | 最大 600 页 |
-| **输出内容** | 仅 Markdown（图片/表格/公式以占位符替代） | Markdown, HTML, LaTeX, Docx, JSON |
+| **输出内容** | Markdown（公式和表格默认开启，OCR 默认关闭） | Markdown, HTML, LaTeX, Docx, JSON |
 | **批量处理** | 一次一个文件 | 支持多文件和 URL |
 
 ---
@@ -139,7 +139,7 @@ mineru-open-api extract report.pdf | some-llm-tool
 
 - 无需 Token
 - 一次只处理一个输入
-- 仅输出 Markdown
+- 输出 Markdown（公式和表格默认开启，OCR 默认关闭）
 - 支持本地文件或 URL
 - 更适合小文件和较短文档
 
@@ -149,6 +149,9 @@ mineru-open-api extract report.pdf | some-llm-tool
 |---|---|---|
 | `--language` | `ch` | 只有改动时才会显式传给 API |
 | `--pages` | 未设置 | 默认处理 API 允许的完整页范围 |
+| `--ocr` | 未设置 | OCR 默认关闭，使用 `--ocr` 开启 |
+| `--formula` | 未设置 | 公式识别默认开启，使用 `--formula=false` 关闭 |
+| `--table` | 未设置 | 表格识别默认开启，使用 `--table=false` 关闭 |
 | `--timeout` | `300` 秒 | 轮询等待总时长 |
 | `-o`, `--output` | 未设置 | 输出 Markdown 到 `stdout` |
 
@@ -159,6 +162,9 @@ mineru-open-api extract report.pdf | some-llm-tool
 | `-o`, `--output` | 输出文件或目录；省略时输出到 `stdout` |
 | `--language` | 文档语言 |
 | `--pages` | 页码范围，例如 `1-10` |
+| `--ocr` | OCR 扫描件识别（默认关闭） |
+| `--formula` | 公式识别（默认开启，用 `--formula=false` 关闭） |
+| `--table` | 表格识别（默认开启，用 `--table=false` 关闭） |
 | `--timeout` | 轮询超时时间，单位秒 |
 
 ### 示例

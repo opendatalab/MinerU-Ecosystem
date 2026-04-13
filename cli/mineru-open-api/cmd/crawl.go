@@ -230,8 +230,10 @@ func outputCrawlResult(result *mineru.ExtractResult, url string, formats []strin
 		return nil
 	}
 
-	base := urlToFilename(url)
-	dir := crawlOutput
+	dir, base := resolveOutputTarget(crawlOutput, url, formats)
+	if base == "" {
+		base = urlToFilename(url)
+	}
 
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)

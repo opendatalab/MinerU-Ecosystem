@@ -113,6 +113,62 @@ class TestFlashExtractURL:
         assert result.markdown is not None
 
 
+
+
+class TestFlashExtractWithOptions:
+    """Flash extract with OCR, formula, and table options."""
+
+    def test_flash_extract_with_ocr(self, flash_client):
+        result = flash_client.flash_extract(
+            FLASH_TEST_PDF_URL,
+            is_ocr=True,
+            page_range="1-1",
+            timeout=FLASH_TEST_TIMEOUT,
+        )
+        assert isinstance(result, ExtractResult)
+        assert result.state == "done"
+        assert result.markdown is not None
+        assert len(result.markdown) > 0
+
+    def test_flash_extract_with_formula(self, flash_client):
+        result = flash_client.flash_extract(
+            FLASH_TEST_PDF_URL,
+            enable_formula=True,
+            page_range="1-1",
+            timeout=FLASH_TEST_TIMEOUT,
+        )
+        assert isinstance(result, ExtractResult)
+        assert result.state == "done"
+        assert result.markdown is not None
+        assert len(result.markdown) > 0
+
+    def test_flash_extract_with_table(self, flash_client):
+        result = flash_client.flash_extract(
+            FLASH_TEST_PDF_URL,
+            enable_table=True,
+            page_range="1-1",
+            timeout=FLASH_TEST_TIMEOUT,
+        )
+        assert isinstance(result, ExtractResult)
+        assert result.state == "done"
+        assert result.markdown is not None
+        assert len(result.markdown) > 0
+
+    def test_flash_extract_with_all_options(self, flash_client):
+        result = flash_client.flash_extract(
+            FLASH_TEST_PDF_URL,
+            language="en",
+            page_range="1-1",
+            is_ocr=True,
+            enable_formula=True,
+            enable_table=True,
+            timeout=FLASH_TEST_TIMEOUT,
+        )
+        assert isinstance(result, ExtractResult)
+        assert result.state == "done"
+        assert result.markdown is not None
+        assert len(result.markdown) > 0
+
 class TestFlashExtractLocalFile:
     """Flash extract from a local file."""
 

@@ -3,7 +3,7 @@ MinerU Reader — parse documents via MinerU API into llama_index Documents.
 
 Supports two parsing modes:
 - flash (default): Fast, no token required, Markdown-only output.
-- precision: Full-featured, token required. Supports OCR, formula/table recognition.
+- precision: Full-featured, token required. Better for larger inputs and higher-fidelity extraction.
 
 Requires: pip install mineru-open-sdk pypdf
 """
@@ -102,10 +102,12 @@ class MinerUReader(BaseReader):
     Supports two parsing modes controlled by the ``mode`` parameter:
 
     - **flash** (default): Uses the MinerU Agent lightweight API. No token
-      required, optimised for speed, Markdown-only output. Max 10 MB / 20 pages.
+      required, optimised for speed, Markdown-only output. Supports OCR,
+      formula, and table switches within flash API limits. Max 10 MB / 20 pages.
     - **precision**: Uses the MinerU standard extraction API. Requires a token
-      (pass ``token`` or set ``MINERU_TOKEN`` env var). Supports OCR, formula
-      and table recognition, multiple model versions. Max 200 MB / 600 pages.
+      (pass ``token`` or set ``MINERU_TOKEN`` env var). Better for larger
+      documents, higher-fidelity extraction, multiple model versions, and
+      workflows that need standard API outputs. Max 200 MB / 600 pages.
 
     Both modes return Documents whose ``text`` is Markdown.
 
@@ -118,9 +120,9 @@ class MinerUReader(BaseReader):
         timeout: Max seconds to wait for task completion, default ``600``.
         split_pages: If ``True``, split each PDF into one-page chunks and
             yield one Document per page.
-        ocr: Enable OCR (precision mode only).
-        formula: Enable formula recognition (precision mode only).
-        table: Enable table recognition (precision mode only).
+        ocr: Enable OCR.
+        formula: Enable formula recognition.
+        table: Enable table recognition.
 
     """
 
@@ -260,6 +262,13 @@ class MinerUReader(BaseReader):
         }
 
         if self.mode == "flash":
+            kwargs.update(
+                {
+                    "is_ocr": self.ocr,
+                    "enable_formula": self.formula,
+                    "enable_table": self.table,
+                }
+            )
             if use_page_range and self.pages:
                 kwargs["page_range"] = self.pages
             return self._client.flash_extract(src, **kwargs)

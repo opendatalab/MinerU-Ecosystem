@@ -1,0 +1,27 @@
+{
+  "name": "mineru-open-api",
+  "version": "0.0.0",
+  "description": "MinerU Open API CLI — one command to turn documents into Markdown",
+  "license": "Apache-2.0",
+  "bin": {
+    "mineru-open-api": "bin/mineru-open-api"
+  },
+  "files": ["bin"],
+  "optionalDependencies": {
+    "mineru-open-api-darwin-arm64": "0.0.0",
+    "mineru-open-api-darwin-x64": "0.0.0",
+    "mineru-open-api-linux-arm64": "0.0.0",
+    "mineru-open-api-linux-x64": "0.0.0",
+    "mineru-open-api-win32-arm64": "0.0.0",
+    "mineru-open-api-win32-x64": "0.0.0"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/opendatalab/MinerU-Ecosystem",
+    "directory": "cli/mineru-open-api"
+  },
+  "keywords": ["mineru", "pdf", "markdown", "ocr", "document-parsing", "cli"]
+}

@@ -54,7 +54,7 @@ print(docs[0].metadata)
 ## 模式说明
 
 - `precision`：精准解析模式，调用 MinerU 标准 `extract` 接口，需要 Token。支持格式：.pdf、图片、.DOC、.DOCX、.PPT、.PPTX、html。
-- `flash`：快速解析模式，调用 MinerU flash API，无需 Token。支持格式：.pdf、图片、DOCX、PPTX、XLS、XLSX。
+- `flash`：快速解析模式，调用 MinerU flash API，无需 Token。在 flash 能力范围内支持 OCR、公式、表格开关。支持格式：.pdf、图片、DOCX、PPTX、XLS、XLSX。
 
 `precision` 模式 Token 申请地址：[https://mineru.net/apiManage/token](https://mineru.net/apiManage/token)。
 
@@ -118,9 +118,6 @@ loader = MinerULoader(
     split_pages=True,
     pages="1-5",
     timeout=300,
-    ocr=True,
-    formula=True,
-    table=True,
 )
 
 docs = loader.load()
@@ -188,9 +185,6 @@ loader = MinerULoader(
     source="manual.pdf",
     mode="precision",
     token="your-token",  # 或设置 MINERU_TOKEN
-    ocr=True,
-    formula=True,
-    table=True,
 )
 docs = loader.load()
 
@@ -205,18 +199,18 @@ for r in results:
 
 ## 参数说明
 
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `source` | `str \| list[str]` | *必填* | 本地文件路径或 URL，支持单个或列表。支持格式依赖 `mode`：`precision` 支持 .pdf、图片、.DOC、.DOCX、.PPT、.PPTX、html；`flash` 支持 .pdf、图片、DOCX、PPTX、XLS、XLSX。 |
-| `mode` | `str` | `"flash"` | 解析模式。`"flash"` 为快速模式（无需 Token）；`"precision"` 为精准模式（需 Token）。 |
-| `token` | `str \| None` | `None` | MinerU API Token。仅 `mode="precision"` 时需要。申请地址：[https://mineru.net/apiManage/token](https://mineru.net/apiManage/token)。不传时会读取环境变量 `MINERU_TOKEN`。 |
-| `language` | `str` | `"ch"` | OCR 识别语言代码。常用值：`"ch"`（中文）、`"en"`（英文）。完整列表请参考[标准 API 文档](https://mineru.net/apiManage/docs)。 |
-| `pages` | `str \| None` | `None` | 页码范围，仅对 PDF 有效，例如 `"1-5"` 或 `"3"`。`split_pages=False` 时，页码范围直接传给 API；`split_pages=True` 时，本地只拆指定页，减少 API 调用次数。 |
-| `timeout` | `int` | `1200` | 单文件最大等待时间（秒）。 |
-| `split_pages` | `bool` | `False` | 仅对 PDF 有效。为 `True` 时，按页拆分 PDF，每页生成一个 `Document`，`metadata["page"]` 可用。非 PDF 文件不受影响，始终返回一个 `Document`。 |
-| `ocr` | `bool` | `False` | 在 `mode="precision"` 下生效并控制 OCR；在 `mode="flash"` 下 OCR 为内置能力，该参数会被忽略。 |
-| `formula` | `bool` | `True` | 仅 `mode="precision"` 生效，是否启用公式识别。`mode="flash"` 下传非默认值会报错。 |
-| `table` | `bool` | `True` | 仅 `mode="precision"` 生效，是否启用表格识别。`mode="flash"` 下传非默认值会报错。 |
+| 参数          | 类型               | 默认值    | 说明                                                                                                                                                                      |
+| ------------- | ------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `source`      | `str \| list[str]` | _必填_    | 本地文件路径或 URL，支持单个或列表。支持格式依赖 `mode`：`precision` 支持 .pdf、图片、.DOC、.DOCX、.PPT、.PPTX、html；`flash` 支持 .pdf、图片、DOCX、PPTX、XLS、XLSX。    |
+| `mode`        | `str`              | `"flash"` | 解析模式。`"flash"` 为快速模式（无需 Token）；`"precision"` 为精准模式（需 Token）。                                                                                      |
+| `token`       | `str \| None`      | `None`    | MinerU API Token。仅 `mode="precision"` 时需要。申请地址：[https://mineru.net/apiManage/token](https://mineru.net/apiManage/token)。不传时会读取环境变量 `MINERU_TOKEN`。 |
+| `language`    | `str`              | `"ch"`    | OCR 识别语言代码。常用值：`"ch"`（中文）、`"en"`（英文）。完整列表请参考[标准 API 文档](https://mineru.net/apiManage/docs)。                                              |
+| `pages`       | `str \| None`      | `None`    | 页码范围，仅对 PDF 有效，例如 `"1-5"` 或 `"3"`。`split_pages=False` 时，页码范围直接传给 API；`split_pages=True` 时，本地只拆指定页，减少 API 调用次数。                  |
+| `timeout`     | `int`              | `1200`    | 单文件最大等待时间（秒）。                                                                                                                                                |
+| `split_pages` | `bool`             | `False`   | 仅对 PDF 有效。为 `True` 时，按页拆分 PDF，每页生成一个 `Document`，`metadata["page"]` 可用。非 PDF 文件不受影响，始终返回一个 `Document`。                               |
+| `ocr`         | `bool`             | `False`   | 是否强制开发 OCR                                                                                                                                                          |
+| `formula`     | `bool`             | `True`    | 是否启用公式识别。                                                                                                                                                        |
+| `table`       | `bool`             | `True`    | 是否启用表格识别。                                                                                                                                                        |
 
 ## Document Metadata 说明
 

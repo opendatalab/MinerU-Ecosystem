@@ -93,12 +93,6 @@ class MinerULoader(BaseLoader):
             raise ValueError("source list must not be empty")
         if self.mode not in {"flash", "precision"}:
             raise ValueError("mode must be 'flash' or 'precision'")
-        if self.mode == "flash":
-            if self.formula is not True or self.table is not True:
-                raise ValueError(
-                    "formula/table are only supported in precision mode. "
-                    "Use mode='precision' to enable them."
-                )
         if self.mode == "precision" and not (self.token or os.environ.get("MINERU_TOKEN")):
             raise ValueError(
                 "precision mode requires token. "
@@ -186,6 +180,13 @@ class MinerULoader(BaseLoader):
         kwargs: dict = {"language": self.language, "timeout": self.timeout}
 
         if self.mode == "flash":
+            kwargs.update(
+                {
+                    "is_ocr": self.ocr,
+                    "enable_formula": self.formula,
+                    "enable_table": self.table,
+                }
+            )
             if use_page_range and self.pages:
                 kwargs["page_range"] = self.pages
             return self._client.flash_extract(src, **kwargs)

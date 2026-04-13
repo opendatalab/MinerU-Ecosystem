@@ -6,14 +6,13 @@ pip install llama-index-readers-mineru
 
 This reader uses the [MinerU](https://mineru.net) document parsing API to extract high-quality Markdown from PDF, Doc/Docx, PPT/PPTx, images, and Excel files. It supports two parsing modes:
 
-| Feature                   | Flash (default)   | Precision                                  |
-| ------------------------- | ----------------- | ------------------------------------------ |
-| **Auth**                  | No token required | Token required                             |
-| **Speed**                 | Blazing fast      | Standard                                   |
-| **File size**             | Max 10 MB         | Max 200 MB                                 |
-| **Page limit**            | Max 20 pages      | Max 600 pages                              |
-| **Formula / Table** | Disabled          | Configurable                               |
-| **Output in this Reader** | Markdown only     | Markdown only                              |
+| Feature                   | Flash (default)   | Precision      |
+| ------------------------- | ----------------- | -------------- |
+| **Auth**                  | No token required | Token required |
+| **Speed**                 | Blazing fast      | Standard       |
+| **File size**             | Max 10 MB         | Max 200 MB     |
+| **Page limit**            | Max 20 pages      | Max 600 pages  |
+| **Output in this Reader** | Markdown only     | Markdown only  |
 
 > Note: MinerU Python SDK precision mode supports extra output formats
 > (images/JSON/docx/html/latex), but `MinerUReader` in this integration
@@ -56,9 +55,6 @@ from llama_index.readers.mineru import MinerUReader
 reader = MinerUReader(
     mode="precision",
     token="your-api-token",  # or set MINERU_TOKEN env var
-    ocr=True,
-    formula=True,
-    table=True,
     language="en",
     pages="1-20",
 )
@@ -162,24 +158,24 @@ print(response)
 
 ### Reader initialization (`MinerUReader(...)`)
 
-| Parameter     | Type          | Default   | Description                                                             |
-| ------------- | ------------- | --------- | ----------------------------------------------------------------------- |
-| `mode`        | `str`         | `"flash"` | Parsing mode: `"flash"` or `"precision"`                                |
+| Parameter     | Type          | Default   | Description                                                                                                                                                   |
+| ------------- | ------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`        | `str`         | `"flash"` | Parsing mode: `"flash"` or `"precision"`                                                                                                                      |
 | `token`       | `str \| None` | `None`    | MinerU API token (precision mode). Falls back to `MINERU_TOKEN` env var. Apply here: [https://mineru.net/apiManage/token](https://mineru.net/apiManage/token) |
-| `language`    | `str`         | `"ch"`    | Document language code                                                  |
-| `pages`       | `str \| None` | `None`    | Page range, e.g. `"1-10"`                                               |
-| `timeout`     | `int`         | `600`     | Max seconds to wait for task completion                                 |
-| `split_pages` | `bool`        | `False`   | Split PDF into per-page Documents                                       |
-| `ocr`         | `bool`        | `False`   | Enable OCR (precision mode only)                                        |
-| `formula`     | `bool`        | `True`    | Enable formula recognition (precision mode only)                        |
-| `table`       | `bool`        | `True`    | Enable table recognition (precision mode only)                          |
+| `language`    | `str`         | `"ch"`    | Document language code                                                                                                                                        |
+| `pages`       | `str \| None` | `None`    | Page range, e.g. `"1-10"`                                                                                                                                     |
+| `timeout`     | `int`         | `600`     | Max seconds to wait for task completion                                                                                                                       |
+| `split_pages` | `bool`        | `False`   | Split PDF into per-page Documents                                                                                                                             |
+| `ocr`         | `bool`        | `False`   | Enable OCR                                                                                                                                                    |
+| `formula`     | `bool`        | `True`    | Enable formula recognition                                                                                                                                    |
+| `table`       | `bool`        | `True`    | Enable table recognition                                                                                                                                      |
 
 ### `load_data(...)` arguments
 
-| Parameter    | Type                                 | Default | Description                                                                    |
-| ------------ | ------------------------------------ | ------- | ------------------------------------------------------------------------------ |
-| `sources`    | `str \| Path \| list[str \| Path]`   | —       | Single file path/URL, or a list of file paths/URLs                            |
-| `extra_info` | `dict \| None`                       | `None`  | Custom metadata merged into each returned `Document.metadata`                  |
+| Parameter    | Type                               | Default | Description                                                   |
+| ------------ | ---------------------------------- | ------- | ------------------------------------------------------------- |
+| `sources`    | `str \| Path \| list[str \| Path]` | —       | Single file path/URL, or a list of file paths/URLs            |
+| `extra_info` | `dict \| None`                     | `None`  | Custom metadata merged into each returned `Document.metadata` |
 
 ## Links
 

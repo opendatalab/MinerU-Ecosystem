@@ -31,7 +31,7 @@ npm install mineru-open-sdk
 
 ## 🛠️ Quick Start
 
-### 1. Flash Extract (Fast, No Auth, Markdown-only)
+### 1. Flash Extract (Fast, No Auth)
 Ideal for quick previews. No token required.
 
 ```typescript
@@ -119,7 +119,7 @@ console.log(result.images);
 | **File Limit** | Max 10 MB | Max 200 MB |
 | **Page Limit** | Max 20 Pages | Max 600 Pages |
 | **Formats** | PDF, Images, Docx, PPTx, Excel | PDF, Images, Doc/x, Ppt/x, Html |
-| **Content** | Markdown only (Placeholders) | Full assets (Images, Tables, Formulas) |
+| **Content** | Markdown (formula & table on by default, OCR off) | Full assets (Images, Tables, Formulas) |
 | **Output** | Markdown | MD, Docx, LaTeX, HTML, JSON |
 
 ---
@@ -165,6 +165,9 @@ These defaults apply to `extract()`, `submit()`, `extractBatch()`, and `submitBa
 | :--- | :--- | :--- |
 | `language` | `"ch"` | Chinese is the default |
 | `pageRange` | `undefined` | Full page range allowed by the flash API |
+| `ocr` | `undefined` | OCR is off (API default) |
+| `formula` | `undefined` | Formula recognition is on (API default) |
+| `table` | `undefined` | Table recognition is on (API default) |
 | `timeout` | `300` seconds | Max total polling time |
 
 ---

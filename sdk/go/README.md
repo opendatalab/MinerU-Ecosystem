@@ -30,7 +30,7 @@ go get github.com/opendatalab/MinerU-Ecosystem/sdk/go@latest
 
 ## 🛠️ Quick Start
 
-### 1. Flash Extract (Fast, No Auth, Markdown-only)
+### 1. Flash Extract (Fast, No Auth)
 Ideal for quick previews. No token required.
 
 ```go
@@ -154,7 +154,7 @@ func main() {
 | **File Limit** | Max 10 MB | Max 200 MB |
 | **Page Limit** | Max 20 Pages | Max 600 Pages |
 | **Formats** | PDF, Images, Docx, PPTx, Excel | PDF, Images, Doc/x, Ppt/x, Html |
-| **Content** | Markdown only (Placeholders) | Full assets (Images, Tables, Formulas) |
+| **Content** | Markdown (formula & table on by default, OCR off) | Full assets (Images, Tables, Formulas) |
 | **Output** | Markdown | MD, Docx, LaTeX, HTML, JSON |
 
 ---
@@ -207,6 +207,9 @@ These defaults apply to `Extract()`, `ExtractBatch()`, `Submit()`, and `SubmitBa
 | :--- | :--- | :--- |
 | `WithFlashLanguage(...)` | `"ch"` | Chinese is the default |
 | `WithFlashPages(...)` | not set | Full page range allowed by the flash API |
+| `WithFlashOCR(...)` | not set | OCR is off (API default) |
+| `WithFlashFormula(...)` | not set | Formula recognition is on (API default) |
+| `WithFlashTable(...)` | not set | Table recognition is on (API default) |
 | `WithFlashTimeout(...)` | `5 * time.Minute` | Total polling timeout |
 
 ---

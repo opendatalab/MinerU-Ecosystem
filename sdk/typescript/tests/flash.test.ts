@@ -180,3 +180,59 @@ describe("flash extract save", () => {
     ).rejects.toThrow();
   });
 });
+
+describe("flash extract with options", () => {
+  const client = new MinerU();
+
+  it("flash extract with OCR", async () => {
+    const result = await client.flashExtract(FLASH_TEST_PDF_URL, {
+      ocr: true,
+      pageRange: "1-1",
+      timeout: FLASH_TEST_TIMEOUT,
+    });
+
+    expect(result.state).toBe("done");
+    expect(result.markdown).not.toBeNull();
+    expect(result.markdown!.length).toBeGreaterThan(0);
+  });
+
+  it("flash extract with formula", async () => {
+    const result = await client.flashExtract(FLASH_TEST_PDF_URL, {
+      formula: true,
+      pageRange: "1-1",
+      timeout: FLASH_TEST_TIMEOUT,
+    });
+
+    expect(result.state).toBe("done");
+    expect(result.markdown).not.toBeNull();
+    expect(result.markdown!.length).toBeGreaterThan(0);
+  });
+
+  it("flash extract with table", async () => {
+    const result = await client.flashExtract(FLASH_TEST_PDF_URL, {
+      table: true,
+      pageRange: "1-1",
+      timeout: FLASH_TEST_TIMEOUT,
+    });
+
+    expect(result.state).toBe("done");
+    expect(result.markdown).not.toBeNull();
+    expect(result.markdown!.length).toBeGreaterThan(0);
+  });
+
+  it("flash extract with all options", async () => {
+    const result = await client.flashExtract(FLASH_TEST_PDF_URL, {
+      language: "en",
+      pageRange: "1-1",
+      ocr: true,
+      formula: true,
+      table: true,
+      timeout: FLASH_TEST_TIMEOUT,
+    });
+
+    expect(result.state).toBe("done");
+    expect(result.markdown).not.toBeNull();
+    expect(result.markdown!.length).toBeGreaterThan(0);
+    expect(result.taskId).toBeTruthy();
+  });
+});

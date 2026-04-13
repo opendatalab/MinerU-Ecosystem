@@ -484,6 +484,9 @@ class MinerU:
         *,
         language: str = "ch",
         page_range: str | None = None,
+        is_ocr: bool | None = None,
+        enable_formula: bool | None = None,
+        enable_table: bool | None = None,
         timeout: int = _DEFAULT_TIMEOUT_POLL_SINGLE,
     ) -> ExtractResult:
         """Parse a document using the flash (agent) API.
@@ -495,6 +498,9 @@ class MinerU:
             source: URL or local file path.
             language: Document language code. Default ``"ch"``.
             page_range: Page range, e.g. ``"1-10"``.
+            is_ocr: Enable OCR. Only sent when explicitly set.
+            enable_formula: Enable formula recognition. Only sent when explicitly set.
+            enable_table: Enable table recognition. Only sent when explicitly set.
             timeout: Maximum seconds to wait for task completion (polling).
 
         Returns:
@@ -504,26 +510,54 @@ class MinerU:
             TimeoutError: If the task does not complete within *timeout* seconds.
         """
         if _is_url(source):
-            task_id = self._flash_submit_url(source, language, page_range)
+            task_id = self._flash_submit_url(source, language, page_range, is_ocr, enable_formula, enable_table)
         else:
-            task_id = self._flash_submit_file(source, language, page_range)
+            task_id = self._flash_submit_file(source, language, page_range, is_ocr, enable_formula, enable_table)
 
         return self._flash_wait(task_id, timeout)
 
     # ── Flash internal helpers ──
 
-    def _flash_submit_url(self, url: str, language: str, page_range: str | None) -> str:
+    def _flash_submit_url(
+        self,
+        url: str,
+        language: str,
+        page_range: str | None,
+        is_ocr: bool | None,
+        enable_formula: bool | None,
+        enable_table: bool | None,
+    ) -> str:
         payload: dict = {"url": url, "language": language}
         if page_range is not None:
             payload["page_range"] = page_range
+        if is_ocr is not None:
+            payload["is_ocr"] = is_ocr
+        if enable_formula is not None:
+            payload["enable_formula"] = enable_formula
+        if enable_table is not None:
+            payload["enable_table"] = enable_table
         body = self._flash_api.post("/parse/url", payload)
         return body["data"]["task_id"]
 
-    def _flash_submit_file(self, file_path: str, language: str, page_range: str | None) -> str:
+    def _flash_submit_file(
+        self,
+        file_path: str,
+        language: str,
+        page_range: str | None,
+        is_ocr: bool | None,
+        enable_formula: bool | None,
+        enable_table: bool | None,
+    ) -> str:
         file_name = Path(file_path).name
         payload: dict = {"file_name": file_name, "language": language}
         if page_range is not None:
             payload["page_range"] = page_range
+        if is_ocr is not None:
+            payload["is_ocr"] = is_ocr
+        if enable_formula is not None:
+            payload["enable_formula"] = enable_formula
+        if enable_table is not None:
+            payload["enable_table"] = enable_table
         body = self._flash_api.post("/parse/file", payload)
         task_id: str = body["data"]["task_id"]
         file_url: str = body["data"]["file_url"]

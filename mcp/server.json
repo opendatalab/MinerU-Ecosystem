@@ -1,0 +1,37 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.opendatalab/mineru-open-mcp",
+  "title": "MinerU Open MCP",
+  "description": "Parse PDFs, images, doc, docx, ppt, pptx, xls, xlsx, html into Markdown using MinerU API.",
+  "version": "1.0.20",
+  "repository": {
+    "url": "https://github.com/opendatalab/MinerU-Ecosystem",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "mineru-open-mcp",
+      "version": "1.0.20",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "MINERU_API_TOKEN",
+          "description": "MinerU API token for full capability (higher limits, extra output formats). Omit to use free Flash mode (Markdown only, 20 pages / 10 MB per file).",
+          "format": "string",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "OUTPUT_DIR",
+          "description": "Directory for saved parse results when content is written to disk.",
+          "format": "string",
+          "isRequired": false,
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}

@@ -29,7 +29,7 @@ pip install mineru-open-sdk
 
 ## 🛠️ Quick Start
 
-### 1. Flash Extract (Fast, No Auth, Markdown-only)
+### 1. Flash Extract (Fast, No Auth)
 Ideal for quick previews. No token required.
 ```python
 from mineru import MinerU
@@ -112,7 +112,7 @@ print(result.images) # Access extracted images
 | **File Limit** | Max 10 MB | Max 200 MB |
 | **Page Limit** | Max 20 Pages | Max 600 Pages |
 | **Formats** | PDF, Images, Docx, PPTx, Excel | PDF, Images, Doc/x, Ppt/x, Html |
-| **Content** | Markdown only (Placeholders) | Full assets (Images, Tables, Formulas) |
+| **Content** | Markdown (formula & table on by default, OCR off) | Full assets (Images, Tables, Formulas) |
 | **Output** | Markdown | MD, Docx, LaTeX, HTML, JSON |
 
 ---
@@ -152,6 +152,9 @@ These defaults apply to `extract()`, `extract_batch()`, `submit()`, `submit_batc
 | :--- | :--- | :--- |
 | `language` | `"ch"` | Default language is Chinese |
 | `page_range` | `None` | Full page range allowed by the flash API |
+| `is_ocr` | `None` | OCR is off (API default) |
+| `enable_formula` | `None` | Formula recognition is on (API default) |
+| `enable_table` | `None` | Table recognition is on (API default) |
 | `timeout` | `300` seconds | Max total polling time |
 
 ### `crawl()` / `crawl_batch()`
