@@ -47,26 +47,19 @@ _ALL_LANGUAGES: List[str] = [
 _CONTENT_MAX_PER_FILE = 20_000
 _CONTENT_MAX_TOTAL = 60_000
 
-# Tool-level description for MCP clients (e.g. Glama): explicit side effects, auth, limits, and when to use.
+
 _PARSE_DOCUMENTS_DESCRIPTION = (
-    "Convert PDFs, Word (DOCX), PowerPoint (PPTX), Excel (XLSX in Flash mode), images, and public "
-    "document URLs—or HTML page URLs—into Markdown using the MinerU cloud API.\n\n"
-    "**World effects:** Reads local paths you pass; fetches http(s) URLs. Uploads file or URL content "
-    "to mineru.net for processing (do not use for data you must not send off-device). Does not modify "
-    "or delete originals. May write Markdown (and sometimes images) under `output_dir` or the server "
-    "default when results are saved or inline content is too large.\n\n"
-    "**Auth & limits:** Without `MINERU_API_TOKEN`, uses free Flash mode: Markdown-only output"
-    ", service limits apply. With `MINERU_API_TOKEN`, higher per-file "
-    "page limits and optional extra output formats per MinerU plans; token is read from env (or HTTP "
-    "Bearer when using streamable HTTP).\n\n"
-    "**Use this when:** The user needs full-document extraction, tables/formulas as HTML/Latexa, "
-    "batch conversion, or per-file PDF page ranges. **Do not use** for listing supported OCR script codes—"
-    "call `get_ocr_languages` instead. **Not a substitute** for offline-only or strictly local parsers.\n\n"
-    "**Parameters (intent):** `file_sources` is a list of path/URL strings or `{\"source\": \"…\", "
-    "\"pages\": \"1-5\"}` objects (PDF page ranges; Flash allows simple `N` or `N-M`). `enable_ocr` "
-    "defaults to true. `language` is an OCR/script code (default `ch`); see `get_ocr_languages` for "
-    "valid values. Set `model` to `\"html\"` only when every source is a web page URL; otherwise omit. "
-    "`output_dir` overrides where large or batch results are written."
+    "Convert PDF, Office (DOCX, PPTX), spreadsheets (XLSX in Flash mode), images, and http(s) URLs "
+    "to Markdown using the MinerU cloud API (content is uploaded to mineru.net; do not use for data "
+    "that must stay on-device). Does not modify source files; may write Markdown under output_dir "
+    "when saving results.\n"
+    "Auth: without MINERU_API_TOKEN, Flash mode applies (Markdown-only, about 20 pages and 10 MB per "
+    "file; service rate limits). With MINERU_API_TOKEN, higher limits and optional formats per plan.\n"
+    "Use for extraction and conversion. Use get_ocr_languages only to list OCR language codes, not "
+    "to parse files. Not for fully offline parsing.\n"
+    "Parameters: file_sources is paths/URLs or objects with source and pages for PDF ranges; language "
+    "is an OCR code (default ch); enable_ocr defaults to auto (null); set model to html only if every "
+    "source is a web page URL."
 )
 
 
@@ -360,9 +353,9 @@ def register_tools(mcp: FastMCP, get_output_dir) -> None:
     @mcp.tool(
         title="List OCR language codes",
         description=(
-            "Return the supported MinerU OCR / script language codes (e.g. ch, en, japan, latin). "
-            "Read-only; no uploads. Use before setting `language` on `parse_documents` for scanned "
-            "or multilingual documents. Do not use for converting files—call `parse_documents` instead."
+            "Return supported MinerU OCR and script language codes (e.g. ch, en, japan, latin). "
+            "Read-only; no uploads. Use before setting the language argument on parse_documents for "
+            "scanned or multilingual documents. Do not use for file conversion; call parse_documents instead."
         ),
         annotations={"readOnlyHint": True, "destructiveHint": False, "openWorldHint": False},
     )
