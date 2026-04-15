@@ -58,7 +58,7 @@ MinerU-Ecosystem/
 | 是否需要 Token | ✅ 需要                                             | ❌ 无需（IP 限频）     |
 | 模型版本       | `pipeline`（默认）/ `vlm`（推荐）/ `MinerU-HTML`    | 固定 pipeline 轻量模型 |
 | 文件大小限制   | ≤ 200MB                                             | ≤ 10MB                 |
-| 页数限制       | ≤ 600 页                                            | ≤ 20 页                |
+| 页数限制       | ≤ 200 页                                            | ≤ 20 页                |
 | 批量支持       | ✅ 支持（≤ 200 个）                                 | ❌ 单文件              |
 | 输出格式       | Markdown、JSON、Zip，且可导出为 DOCX / HTML / LaTeX | 仅 Markdown            |
 

@@ -107,7 +107,7 @@ class MinerUReader(BaseReader):
     - **precision**: Uses the MinerU standard extraction API. Requires a token
       (pass ``token`` or set ``MINERU_TOKEN`` env var). Better for larger
       documents, higher-fidelity extraction, multiple model versions, and
-      workflows that need standard API outputs. Max 200 MB / 600 pages.
+      workflows that need standard API outputs. Max 200 MB / 200 pages.
 
     Both modes return Documents whose ``text`` is Markdown.
 
