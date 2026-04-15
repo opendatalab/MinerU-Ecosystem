@@ -2,6 +2,8 @@
 
 <!-- mcp-name: io.github.opendatalab/mineru-open-mcp -->
 
+[![MinerU-Ecosystem MCP server](https://glama.ai/mcp/servers/opendatalab/MinerU-Ecosystem/badges/card.svg)](https://glama.ai/mcp/servers/opendatalab/MinerU-Ecosystem)
+
 An Official Mineru  MCP server that exposes [MinerU](https://mineru.net)'s document parsing as MCP tools. Connect any MCP-compatible AI client to convert PDFs, Word docs, PowerPoint files, and images into Markdown.
 
 **No API key required** — Flash mode works out of the box, free with no sign-up, for files up to 20 pages / 10 MB. Set `MINERU_API_TOKEN` to unlock higher limits and extra output formats.
