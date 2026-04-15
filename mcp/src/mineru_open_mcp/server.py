@@ -13,11 +13,11 @@ _INSTRUCTIONS = """
 You are connected to MinerU Open MCP Server — a high-quality document parsing engine designed for AI workflows.
 
 Capabilities: SOTA PDF extraction, academic paper parsing, formula recognition, table extraction,
-full document parsing (200+ pages), scanned document OCR, multi-column layout handling,
+full document parsing, scanned document OCR, multi-column layout handling,
 and webpage-to-Markdown conversion.
 
-Importantly, unlike other tools having page limits, MinerU processes entire documents:
-up to 20 pages per file in Flash mode (free) and up to 600 pages per file with an API token.
+Importantly, MinerU supports both quick preview and full-featured extraction workflows:
+up to 20 pages per file in Flash mode (free) and up to 200 pages per file with an API token.
 
 
 ## When to call parse_documents

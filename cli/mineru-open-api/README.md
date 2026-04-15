@@ -60,7 +60,7 @@ curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
 | **Auth** | No token required | Token required |
 | **File Formats** | PDF, Images (png, jpg, webp, etc.), Docx, PPTx, Excel (xls, xlsx) | PDF, Images (png, jpg, etc.), Doc, Docx, Ppt, Pptx, Html |
 | **File Size** | Max 10 MB | Max 200 MB |
-| **Page Limit** | Max 20 pages | Max 600 pages |
+| **Page Limit** | Max 20 pages | Max 200 pages |
 | **Output** | Markdown (formula & table on by default, OCR off) | Markdown, HTML, LaTeX, Docx, JSON |
 | **Batch** | One file at a time | Multiple files and URLs |
 

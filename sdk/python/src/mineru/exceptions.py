@@ -25,7 +25,7 @@ class FileTooLargeError(MinerUError):
 
 
 class PageLimitError(MinerUError):
-    """File exceeds 600 page limit (-60006)."""
+    """File exceeds 200 page limit (-60006)."""
 
 
 class TaskNotFoundError(MinerUError):

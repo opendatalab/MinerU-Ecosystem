@@ -248,7 +248,7 @@ async def extract_sources(
                 f"Flash mode: {len(sources)} file(s), markdown only, 20 pages / 10 MB limit."
             )
         else:
-            await ctx.info(f"Processing {len(sources)} file(s) with full capability. Max 600 pages or 200 MB per file.")
+            await ctx.info(f"Processing {len(sources)} file(s) with full capability. Max 200 pages or 200 MB per file.")
 
     used_stems: Set[str] = {p.stem for p in out_dir.glob("*.md")} if save_to_file and out_dir.exists() else set()
 

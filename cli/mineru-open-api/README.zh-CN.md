@@ -59,7 +59,7 @@ curl -fsSL https://cdn-mineru.openxlab.org.cn/open-api-cli/install.sh | sh
 | **鉴权** | 无需 Token | 需要 Token |
 | **支持格式** | PDF, 图片 (png, jpg, webp 等), Docx, PPTx, Excel (xls, xlsx) | PDF, 图片 (png, jpg 等), Doc, Docx, Ppt, Pptx, Html |
 | **文件大小** | 最大 10 MB | 最大 200 MB |
-| **页数限制** | 最大 20 页 | 最大 600 页 |
+| **页数限制** | 最大 20 页 | 最大 200 页 |
 | **输出内容** | Markdown（公式和表格默认开启，OCR 默认关闭） | Markdown, HTML, LaTeX, Docx, JSON |
 | **批量处理** | 一次一个文件 | 支持多文件和 URL |
 

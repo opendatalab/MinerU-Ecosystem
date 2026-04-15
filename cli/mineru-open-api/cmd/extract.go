@@ -44,7 +44,7 @@ Perfect for high-quality extraction with layout preservation and asset retrieval
 Capabilities & Limits:
   - Auth Required (API Token)
   - Supports: PDF, Images (png, jpg, etc.), Doc, Docx, Ppt, Pptx, Html
-  - File Limits: Max 200MB and 600 pages per document
+  - File Limits: Max 200MB and 200 pages per document
   - Content: Precision extraction with all assets (Images, Tables, Formulas) in multiple formats (Markdown, Docx, LaTeX, etc.)
 
 For quick, No Auth, Markdown-only extraction, use 'flash-extract' command.`,

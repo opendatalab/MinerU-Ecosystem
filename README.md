@@ -56,7 +56,7 @@ All components support both API modes:
 | Auth            | ✅ Token required                                           | ❌ Not required (IP rate-limited)   |
 | Model Versions  | `pipeline` (default) / `vlm` (recommended) / `MinerU-HTML`  | Fixed lightweight pipeline model    |
 | File Size Limit | ≤ 200 MB                                                    | ≤ 10 MB                             |
-| Page Limit      | ≤ 600 pages                                                 | ≤ 20 pages                          |
+| Page Limit      | ≤ 200 pages                                                 | ≤ 20 pages                          |
 | Batch Support   | ✅ Supported (≤ 200 files)                                  | ❌ Single file only                 |
 | Output Formats  | Markdown, JSON, Zip; optional export to DOCX / HTML / LaTeX | Markdown only                       |
 
