@@ -2,6 +2,8 @@
 
 # MinerU Open MCP
 
+[![MinerU-Ecosystem MCP server](https://glama.ai/mcp/servers/opendatalab/MinerU-Ecosystem/badges/card.svg)](https://glama.ai/mcp/servers/opendatalab/MinerU-Ecosystem)
+
 MinerU 官方 MCP 服务器，将 [MinerU](https://mineru.net) 的文档解析能力以 MCP 工具形式对外提供。连接任何 MCP 兼容的 AI 客户端，即可将 PDF、Word 文档、PowerPoint 演示文稿、图片转换为 Markdown。
 
 **无需 API 密钥** — Flash 模式开箱即用，免费无需注册，支持 20 页 / 10 MB 以内的文件。设置 `MINERU_API_TOKEN` 可解锁更高限制和更多输出格式。
