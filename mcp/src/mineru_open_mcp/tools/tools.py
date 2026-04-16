@@ -280,6 +280,17 @@ _MODEL_FIELD = Field(
 )
 
 
+def _validate_output_dir(output_dir: str) -> str:
+    """Resolve output_dir to an absolute path, rejecting obviously invalid values."""
+    try:
+        resolved = Path(output_dir).expanduser().resolve()
+    except (ValueError, OSError) as exc:
+        raise ValueError(f"Invalid output directory path: {exc}") from exc
+    if any(ord(c) < 32 for c in str(resolved)):
+        raise ValueError("Output directory path contains invalid characters")
+    return str(resolved)
+
+
 def _extract_request_token() -> Optional[str]:
     """Extract the MinerU API token from the current HTTP request."""
     with contextlib.suppress(Exception):
@@ -322,7 +333,7 @@ def register_tools(mcp: FastMCP, get_output_dir) -> None:
         title="Parse documents to Markdown",
         description=_PARSE_DOCUMENTS_DESCRIPTION,
         annotations={
-            "readOnlyHint": True,
+            "readOnlyHint": False,
             "destructiveHint": False,
             "openWorldHint": True,
         },
@@ -338,6 +349,10 @@ def register_tools(mcp: FastMCP, get_output_dir) -> None:
         """Route to MinerU document parsing (see tool `description` for full agent guidance)."""
         sources, page_ranges_map = _normalize_file_sources(file_sources)
         resolved_output_dir = output_dir or get_output_dir()
+        try:
+            resolved_output_dir = _validate_output_dir(resolved_output_dir)
+        except ValueError as exc:
+            return {"status": "error", "error": str(exc)}
         return await _parse(
             sources,
             enable_ocr,

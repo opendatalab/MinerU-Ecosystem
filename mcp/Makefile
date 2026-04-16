@@ -1,4 +1,4 @@
-.PHONY: build-wheel clean
+.PHONY: build-wheel build-mcpb clean
 
 # Build a redistributable wheel.
 # Bumps the patch version, then packages with python -m build.
@@ -11,6 +11,14 @@ build-wheel:
 	@echo ""
 	@echo "Wheel ready in dist/:"
 	@ls dist/*.whl
+
+# Build a self-contained MCPB bundle (source code + icon included, no PyPI-only runtime).
+# The bundle version is read from mcpb/manifest.json.
+build-mcpb:
+	python3 scripts/build_mcpb.py
+	@echo ""
+	@echo "MCPB bundle ready in mcpb/:"
+	@ls mcpb/*.mcpb
 
 clean:
 	rm -rf dist/ build/ src/*.egg-info

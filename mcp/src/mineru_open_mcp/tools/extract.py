@@ -147,7 +147,8 @@ async def _extract_flash(
         except (MinerUError, Exception) as exc:
             if ctx and ctx.request_context:
                 await ctx.error(f"Failed ({filename}): {exc}")
-            entry = {"filename": filename, "status": "error", "error": str(exc)}
+            config.logger.warning("Processing failed for %s: %s", filename, exc, exc_info=True)
+            entry = {"filename": filename, "status": "error", "error": "Document processing failed. Check server logs for details."}
 
         processed.append(entry)
 
@@ -202,7 +203,8 @@ async def _extract_batch(
     except (MinerUError, Exception) as exc:
         if ctx and ctx.request_context:
             await ctx.error(f"SDK error: {exc}")
-        return _build_error_entries(sources, str(exc))
+        config.logger.error("SDK batch processing failed: %s", exc, exc_info=True)
+        return _build_error_entries(sources, "Document processing failed. Check server logs for details.")
 
     processed: List[Dict[str, Any]] = []
     for index, result in enumerate(results):
