@@ -6,7 +6,9 @@
 
 MinerU 官方 MCP 服务器，将 [MinerU](https://mineru.net) 的文档解析能力以 MCP 工具形式对外提供。连接任何 MCP 兼容的 AI 客户端，即可将 PDF、Word 文档、PowerPoint 演示文稿、图片转换为 Markdown。
 
-**无需 API 密钥** — Flash 模式开箱即用，免费无需注册，支持 20 页 / 10 MB 以内的文件。设置 `MINERU_API_TOKEN` 可解锁更高限制和更多输出格式。
+**无需 API 密钥** — Flash 模式开箱即用，免费无需注册, 但文件上限有限制。设置 `MINERU_API_TOKEN` 可解锁更高限制和更多输出格式。
+
+**带沙箱的 MCP 客户端说明**：部分 MCP 客户端会将拖入输入框的文件沙箱化到临时目录。若需上传并解析本地文件，请在提示中写明目标文件的完整路径，以免服务器无法找到文件。
 
 ---
 
@@ -127,6 +129,6 @@ MINERU_API_TOKEN=your_key mineru-open-mcp --transport streamable-http --port 800
 
 - **发送的数据**：您提供用于解析的文档内容（文件或 URL）
 - **数据存储**：解析结果由 MinerU 服务器临时缓存，不用于模型训练
-- **第三方**：MinerU API（mineru.net）— 详见 [MinerU 隐私政策](https://mineru.net/privacyPolicy)
+- **第三方**：MinerU API（mineru.net）— 详见 [MinerU 隐私政策](https://webpub.shlab.tech/dps/opendatalab-web/odl_v5.1690/privacy.html)
 - **本地数据**：解析结果将保存至目标输出目录。日志文件（仅在 `ENABLE_LOG=true` 时）保存至 `MINERU_LOG_DIR`
 - **联系方式**：OpenDataLab@pjlab.org.cn（或在 [MinerU-Ecosystem](https://github.com/opendatalab/MinerU-Ecosystem) 提交 issue）

@@ -6,7 +6,9 @@
 
 An Official Mineru  MCP server that exposes [MinerU](https://mineru.net)'s document parsing as MCP tools. Connect any MCP-compatible AI client to convert PDFs, Word docs, PowerPoint files, and images into Markdown.
 
-**No API key required** — Flash mode works out of the box, free with no sign-up, for files up to 20 pages / 10 MB. Set `MINERU_API_TOKEN` to unlock higher limits and extra output formats.
+**No API key required** — Flash mode works out of the box, free with no sign-up but lower limits are applied. Set `MINERU_API_TOKEN` to unlock higher limits and extra output formats.
+
+**Notes for MCP clients with sandbox** - For some MCP clients, your files dragged into the input box are sandboxed into a temporary directory. If you need to upload and parse local files, please provide full paths of the target files in your prompt, in case files cannot be found by the server. 
 
 ---
 
@@ -122,6 +124,6 @@ MINERU_API_TOKEN=your_key mineru-open-mcp --transport streamable-http --port 800
 
 - **Data sent**: Document content (files or URLs you provide for parsing)
 - **Data storage**: Parsed results are temporarily cached by MinerU servers; not used for training
-- **Third-party**: MinerU API (mineru.net) — see [MinerU Privacy Policy](https://mineru.net/privacyPolicy)
+- **Third-party**: MinerU API (mineru.net) — see [OpenDatalab Privacy Policy](https://webpub.shlab.tech/dps/opendatalab-web/odl_v5.2104/privacy-en.html)
 - **Local data**: Parsed results will be saved to target output directory. Log files (only when ENABLE_LOG=true), saved to MINERU_LOG_DIR;
 - **Contact**: OpenDataLab@pjlab.org.cn (or raise an issue at [MinerU-Ecosystem](https://github.com/opendatalab/MinerU-Ecosystem) )
