@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Any
 
 import httpx
@@ -41,8 +42,19 @@ class FlashApiClient:
         resp = self._client.get(path)
         return self._handle(resp)
 
-    def put_file(self, url: str, data: bytes) -> None:
-        resp = httpx.put(url, content=data, timeout=UPLOAD_TIMEOUT)
+    def put_file(
+        self,
+        url: str,
+        data: bytes | Iterable[bytes],
+        *,
+        content_length: int | None = None,
+    ) -> None:
+        headers = (
+            {"Content-Length": str(content_length)}
+            if content_length is not None
+            else None
+        )
+        resp = httpx.put(url, content=data, headers=headers, timeout=UPLOAD_TIMEOUT)
         resp.raise_for_status()
 
     def download_text(self, url: str) -> str:

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import os
 import time
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
-from typing import Iterator
 
 from ._api import ApiClient
 from ._constants import DEFAULT_BASE_URL, DEFAULT_FLASH_BASE_URL
@@ -23,6 +23,8 @@ _DEFAULT_TIMEOUT_REQUEST = 60
 # Default total business timeouts for extraction tasks (in seconds)
 _DEFAULT_TIMEOUT_POLL_SINGLE = 300
 _DEFAULT_TIMEOUT_POLL_BATCH = 1800
+
+_UPLOAD_CHUNK_SIZE = 64 * 1024
 
 _MODEL_MAP = {
     "pipeline": "pipeline",
@@ -52,6 +54,12 @@ def _resolve_model(model: str | None, source: str) -> str:
     if model is not None:
         return _MODEL_MAP.get(model, model)
     return _infer_model(source)
+
+
+def _iter_file_chunks(path: Path) -> Iterator[bytes]:
+    with path.open("rb") as file_handle:
+        while chunk := file_handle.read(_UPLOAD_CHUNK_SIZE):
+            yield chunk
 
 
 _SENTINEL = object()  # distinguishes "not passed" from any real value
@@ -424,8 +432,12 @@ class MinerU:
         upload_urls: list[str] = body["data"]["file_urls"]
 
         for local_path, upload_url in zip(file_paths, upload_urls):
-            data = Path(local_path).read_bytes()
-            api.put_file(upload_url, data)
+            path = Path(local_path)
+            api.put_file(
+                upload_url,
+                _iter_file_chunks(path),
+                content_length=path.stat().st_size,
+            )
 
         return batch_id
 
@@ -562,8 +574,12 @@ class MinerU:
         task_id: str = body["data"]["task_id"]
         file_url: str = body["data"]["file_url"]
 
-        data = Path(file_path).read_bytes()
-        self._flash_api.put_file(file_url, data)
+        path = Path(file_path)
+        self._flash_api.put_file(
+            file_url,
+            _iter_file_chunks(path),
+            content_length=path.stat().st_size,
+        )
         return task_id
 
     def _flash_wait(self, task_id: str, timeout: int) -> ExtractResult:
