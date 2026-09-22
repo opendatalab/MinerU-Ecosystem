@@ -48,8 +48,26 @@ def _print_banner(transport: str, host: str, output_dir: str) -> None:
     )
 
 
+def _force_utf8_stdio() -> None:
+    """Force UTF-8 on the standard streams.
+
+    On Windows with a non-UTF-8 locale (e.g. cp936), stdio attached to a pipe
+    falls back to the ANSI code page. The FastMCP rich banner then emits
+    non-UTF-8 stderr bytes, and strict-UTF-8 MCP clients such as Codex CLI
+    abort their stderr reader on them, close the pipe, and the server dies
+    with a broken-pipe error before completing the MCP handshake.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="backslashreplace")
+        except (AttributeError, ValueError, OSError):
+            pass
+
+
 def main() -> None:
     """Entry point for the CLI."""
+    _force_utf8_stdio()
+
     parser = argparse.ArgumentParser(description="MinerU document-to-Markdown MCP server")
 
     parser.add_argument(

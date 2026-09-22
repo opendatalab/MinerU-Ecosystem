@@ -104,7 +104,9 @@ def run_server(mode=None, port=8001, host="0.0.0.0") -> None:
             uvicorn.run(mcp.http_app(), host=host, port=port)
         else:
             config.logger.info("Starting stdio server")
-            mcp.run("stdio")
+            # FastMCP's rich banner writes box-drawing chars to stderr, which MCP
+            # clients log line by line; our own ASCII banner already says enough.
+            mcp.run("stdio", show_banner=False)
     except Exception as exc:
         config.logger.error("Server exited with error: %s", exc)
         traceback.print_exc()
